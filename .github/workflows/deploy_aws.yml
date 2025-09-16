@@ -9,21 +9,16 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Debug workspace
-        run: |
-          pwd
-          ls -la
-          ls -la infrastructure || true
-
-      - name: Deploy with Docker Compose
-        working-directory: ${{ github.workspace }}   # корінь твого репо на раннері
+      - name: Deploy from /home/ubuntu/geoai
         run: |
           set -e
-          ls -la
-          # якщо compose в корені репо:
+          cd /home/ubuntu/geoai
+          # оновити код з GitHub
+          git fetch --all
+          git reset --hard origin/main
+          # перевірка що compose-файл є тут
+          ls -la docker-compose.yml
+          # деплой
           docker compose -f docker-compose.yml pull || true
           docker compose -f docker-compose.yml up -d --build
           docker image prune -f || true
