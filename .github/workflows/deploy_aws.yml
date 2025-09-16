@@ -6,27 +6,25 @@ on:
 
 jobs:
   deploy:
-    # Під ці лейбли підбирається твій раннер
     runs-on: [self-hosted, Linux, X64]
 
     steps:
-      # Клонує код у робочу теку раннера
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Логування версії Docker (для діагностики)
-      - name: Show Docker info
+      - name: Debug workspace
         run: |
-          docker --version
-          docker compose version || true
+          pwd
+          ls -la
+          ls -la infrastructure || true
 
-      # Запускаємо/перезапускаємо сервіси
-      # Виконується у корені репозиторію, який чекнув раннер
       - name: Deploy with Docker Compose
-        working-directory: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}   # корінь твого репо на раннері
         run: |
           set -e
-          # якщо потрібні секрети/ENV — створюй тут .env або використовуй secrets
-          docker compose pull || true
-          docker compose up -d --build
+          ls -la
+          # якщо compose в корені репо:
+          docker compose -f docker-compose.yml pull || true
+          docker compose -f docker-compose.yml up -d --build
           docker image prune -f || true
+
