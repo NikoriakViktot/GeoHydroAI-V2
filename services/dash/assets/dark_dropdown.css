@@ -1,0 +1,94 @@
+/* assets/dark_dropdown.css
+
+
+/* Для всієї сторінки */
+body, .Select-control, .Select-menu-outer {
+    background-color: #23272b !important;
+    color: #eeeeee !important;
+}
+
+/* Основне поле Dropdown */
+.Select-control, .Select-menu {
+    background-color: #23272b !important;
+    color: #eeeeee !important;
+    border-color: #888 !important;
+}
+
+/* Вибраний елемент */
+.Select-value-label, .Select-value, .Select-placeholder {
+    color: #eeeeee !important;
+}
+
+/* Всі опції в списку */
+.VirtualizedSelectOption {
+    background-color: #23272b !important;
+    color: #eeeeee !important;
+}
+
+/* Ховер по опції */
+.VirtualizedSelectFocusedOption, .Select-option.is-focused {
+    background-color: #3a3f44 !important;
+    color: #fff !important;
+}
+
+/* Активна опція */
+.Select-option.is-selected {
+    background-color: #198754 !important;  /* зелений Bootstrap */
+    color: #fff !important;
+}
+/* Для кастомних Tabs */
+.custom-tabs .dash-tabs {
+    background: #181818 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.custom-tabs .tab {
+    background: #23272b !important;
+    color: #bdbdbd !important;
+    border: none !important;
+    padding: 12px 22px !important;
+    border-radius: 10px 10px 0 0 !important;
+    margin-right: 2px !important;
+    font-weight: bold;
+    font-size: 17px;
+    transition: background 0.3s, color 0.3s;
+}
+.custom-tabs .tab--selected {
+    background: #2d8cff !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 18px;
+    box-shadow: 0 4px 12px #0018;
+    outline: none;
+}
+.custom-tabs .tab:hover {
+    background: #314369 !important;
+    color: #fff !important;
+}
+
+.custom-tabs {
+    width: 100% !important;
+}
+
+/* Змінює контейнер вкладок на flex для рівного розтягування */
+.custom-tabs .dash-tabs-container {
+    display: flex !important;
+    width: 100% !important;
+}
+
+/* Контейнери самих Tab */
+.custom-tabs .tab {
+    flex: 1 1 0 !important;   /* ← дає рівномірний розподіл */
+    text-align: center !important;
+    min-width: 120px;         /* мінімальна ширина для адаптивності */
+    margin-right: 2px !important;
+}
+
+body, .dash-graph, .js-plotly-plot, .dash-loading, .dash-spinner {
+    background-color: #181818 !important;
+}
+
+.dash-loading {
+    background-color: #181818 !important;
+    opacity: 1 !important;
+}

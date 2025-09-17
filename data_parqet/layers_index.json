@@ -1,0 +1,3767 @@
+[
+  {
+    "category": "aspect",
+    "name": "alos_dem_aspect",
+    "path": "data/COG/aspect/alos_dem_aspect_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "aster_dem_aspect",
+    "path": "data/COG/aspect/aster_dem_aspect_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "copernicus_dem_aspect",
+    "path": "data/COG/aspect/copernicus_dem_aspect_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "fab_dem_aspect",
+    "path": "data/COG/aspect/fab_dem_aspect_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "nasa_dem_aspect",
+    "path": "data/COG/aspect/nasa_dem_aspect_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "srtm_dem_aspect",
+    "path": "data/COG/aspect/srtm_dem_aspect_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "aspect",
+    "name": "tan_dem_aspect",
+    "path": "data/COG/aspect/tan_dem_aspect_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "aspect"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "alos_dem_breached",
+    "path": "data/COG/breached/alos_dem_breached_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "aster_dem_breached",
+    "path": "data/COG/breached/aster_dem_breached_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "copernicus_dem_breached",
+    "path": "data/COG/breached/copernicus_dem_breached_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "fab_dem_breached",
+    "path": "data/COG/breached/fab_dem_breached_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "nasa_dem_breached",
+    "path": "data/COG/breached/nasa_dem_breached_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "srtm_dem_breached",
+    "path": "data/COG/breached/srtm_dem_breached_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "breached",
+    "name": "tan_dem_breached",
+    "path": "data/COG/breached/tan_dem_breached_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "breached"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "alos_dem_curvature",
+    "path": "data/COG/curvature/alos_dem_curvature_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "aster_dem_curvature",
+    "path": "data/COG/curvature/aster_dem_curvature_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "copernicus_dem_curvature",
+    "path": "data/COG/curvature/copernicus_dem_curvature_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "fab_dem_curvature",
+    "path": "data/COG/curvature/fab_dem_curvature_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "nasa_dem_curvature",
+    "path": "data/COG/curvature/nasa_dem_curvature_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "srtm_dem_curvature",
+    "path": "data/COG/curvature/srtm_dem_curvature_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "curvature",
+    "name": "tan_dem_curvature",
+    "path": "data/COG/curvature/tan_dem_curvature_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "curvature"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "alos_dem_d8_accum",
+    "path": "data/COG/d8_accum/alos_dem_d8_accum_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "aster_dem_d8_accum",
+    "path": "data/COG/d8_accum/aster_dem_d8_accum_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "copernicus_dem_d8_accum",
+    "path": "data/COG/d8_accum/copernicus_dem_d8_accum_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "fab_dem_d8_accum",
+    "path": "data/COG/d8_accum/fab_dem_d8_accum_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "nasa_dem_d8_accum",
+    "path": "data/COG/d8_accum/nasa_dem_d8_accum_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "srtm_dem_d8_accum",
+    "path": "data/COG/d8_accum/srtm_dem_d8_accum_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_accum",
+    "name": "tan_dem_d8_accum",
+    "path": "data/COG/d8_accum/tan_dem_d8_accum_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "d8",
+      "accum"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "alos_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/alos_dem_d8_pointer_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "aster_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/aster_dem_d8_pointer_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "copernicus_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/copernicus_dem_d8_pointer_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "fab_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/fab_dem_d8_pointer_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "nasa_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/nasa_dem_d8_pointer_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "srtm_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/srtm_dem_d8_pointer_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "d8_pointer",
+    "name": "tan_dem_d8_pointer",
+    "path": "data/COG/d8_pointer/tan_dem_d8_pointer_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "d8",
+      "pointer"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "alos_dem",
+    "path": "data/COG/dem/alos_dem_cog.tif",
+    "tags": [
+      "alos",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "aster_dem",
+    "path": "data/COG/dem/aster_dem_cog.tif",
+    "tags": [
+      "aster",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "copernicus_dem",
+    "path": "data/COG/dem/copernicus_dem_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "fab_dem",
+    "path": "data/COG/dem/fab_dem_cog.tif",
+    "tags": [
+      "fab",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "nasa_dem",
+    "path": "data/COG/dem/nasa_dem_cog.tif",
+    "tags": [
+      "nasa",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "srtm_dem",
+    "path": "data/COG/dem/srtm_dem_cog.tif",
+    "tags": [
+      "srtm",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "dem",
+    "name": "tan_dem",
+    "path": "data/COG/dem/tan_dem_cog.tif",
+    "tags": [
+      "tan",
+      "dem"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "alos_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/alos_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "aster_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/aster_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "copernicus_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/copernicus_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "fab_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/fab_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "nasa_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/nasa_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "srtm_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/srtm_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "distance_to_stream",
+    "name": "tan_dem_distance_to_stream",
+    "path": "data/COG/distance_to_stream/tan_dem_distance_to_stream_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "distance",
+      "to",
+      "stream"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "alos_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/alos_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "aster_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/aster_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "copernicus_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/copernicus_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "fab_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/fab_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "nasa_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/nasa_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "srtm_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/srtm_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_10m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_10m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "10m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "10m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_1m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_1m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "1m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "1m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_2m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_2m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "2m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "2m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_3m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_3m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "3m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "3m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_4m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_4m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "4m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "4m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_5m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_5m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "5m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "5m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_6m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_6m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "6m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "6m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_7m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_7m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "7m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "7m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_8m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_8m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "8m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "8m"
+  },
+  {
+    "category": "flood_scenarios",
+    "name": "tan_dem_hand_2000_flood_9m",
+    "path": "data/COG/flood_scenarios/tan_dem_hand_2000_flood_9m_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000",
+      "flood",
+      "9m"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": "9m"
+  },
+  {
+    "category": "geomorphons",
+    "name": "alos_dem_geomorphons",
+    "path": "data/COG/geomorphons/alos_dem_geomorphons_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "aster_dem_geomorphons",
+    "path": "data/COG/geomorphons/aster_dem_geomorphons_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "copernicus_dem_geomorphons",
+    "path": "data/COG/geomorphons/copernicus_dem_geomorphons_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "fab_dem_geomorphons",
+    "path": "data/COG/geomorphons/fab_dem_geomorphons_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "nasa_dem_geomorphons",
+    "path": "data/COG/geomorphons/nasa_dem_geomorphons_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "srtm_dem_geomorphons",
+    "path": "data/COG/geomorphons/srtm_dem_geomorphons_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "geomorphons",
+    "name": "tan_dem_geomorphons",
+    "path": "data/COG/geomorphons/tan_dem_geomorphons_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "geomorphons"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "alos_dem_hand",
+    "path": "data/COG/hand/alos_dem_hand_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "aster_dem_hand",
+    "path": "data/COG/hand/aster_dem_hand_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "copernicus_dem_hand",
+    "path": "data/COG/hand/copernicus_dem_hand_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "fab_dem_hand",
+    "path": "data/COG/hand/fab_dem_hand_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "nasa_dem_hand",
+    "path": "data/COG/hand/nasa_dem_hand_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "srtm_dem_hand",
+    "path": "data/COG/hand/srtm_dem_hand_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand",
+    "name": "tan_dem_hand",
+    "path": "data/COG/hand/tan_dem_hand_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "alos_dem_hand_1000",
+    "path": "data/COG/hand_1000/alos_dem_hand_1000_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "aster_dem_hand_1000",
+    "path": "data/COG/hand_1000/aster_dem_hand_1000_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "copernicus_dem_hand_1000",
+    "path": "data/COG/hand_1000/copernicus_dem_hand_1000_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "fab_dem_hand_1000",
+    "path": "data/COG/hand_1000/fab_dem_hand_1000_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "nasa_dem_hand_1000",
+    "path": "data/COG/hand_1000/nasa_dem_hand_1000_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "srtm_dem_hand_1000",
+    "path": "data/COG/hand_1000/srtm_dem_hand_1000_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1000",
+    "name": "tan_dem_hand_1000",
+    "path": "data/COG/hand_1000/tan_dem_hand_1000_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_1000",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "alos_dem_hand_1500",
+    "path": "data/COG/hand_1500/alos_dem_hand_1500_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "aster_dem_hand_1500",
+    "path": "data/COG/hand_1500/aster_dem_hand_1500_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "copernicus_dem_hand_1500",
+    "path": "data/COG/hand_1500/copernicus_dem_hand_1500_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "fab_dem_hand_1500",
+    "path": "data/COG/hand_1500/fab_dem_hand_1500_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "nasa_dem_hand_1500",
+    "path": "data/COG/hand_1500/nasa_dem_hand_1500_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "srtm_dem_hand_1500",
+    "path": "data/COG/hand_1500/srtm_dem_hand_1500_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_1500",
+    "name": "tan_dem_hand_1500",
+    "path": "data/COG/hand_1500/tan_dem_hand_1500_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_1500",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "alos_dem_hand_2000",
+    "path": "data/COG/hand_2000/alos_dem_hand_2000_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "aster_dem_hand_2000",
+    "path": "data/COG/hand_2000/aster_dem_hand_2000_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "copernicus_dem_hand_2000",
+    "path": "data/COG/hand_2000/copernicus_dem_hand_2000_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "fab_dem_hand_2000",
+    "path": "data/COG/hand_2000/fab_dem_hand_2000_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "nasa_dem_hand_2000",
+    "path": "data/COG/hand_2000/nasa_dem_hand_2000_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "srtm_dem_hand_2000",
+    "path": "data/COG/hand_2000/srtm_dem_hand_2000_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_2000",
+    "name": "tan_dem_hand_2000",
+    "path": "data/COG/hand_2000/tan_dem_hand_2000_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_2000",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "alos_dem_hand_500",
+    "path": "data/COG/hand_500/alos_dem_hand_500_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "aster_dem_hand_500",
+    "path": "data/COG/hand_500/aster_dem_hand_500_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "copernicus_dem_hand_500",
+    "path": "data/COG/hand_500/copernicus_dem_hand_500_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "fab_dem_hand_500",
+    "path": "data/COG/hand_500/fab_dem_hand_500_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "nasa_dem_hand_500",
+    "path": "data/COG/hand_500/nasa_dem_hand_500_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "srtm_dem_hand_500",
+    "path": "data/COG/hand_500/srtm_dem_hand_500_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "hand_500",
+    "name": "tan_dem_hand_500",
+    "path": "data/COG/hand_500/tan_dem_hand_500_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "hand",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": "hand_500",
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2018",
+    "path": "data/COG/lulc/lulc_2018_cog.tif",
+    "tags": [
+      "lulc",
+      "2018"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2018",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2019",
+    "path": "data/COG/lulc/lulc_2019_cog.tif",
+    "tags": [
+      "lulc",
+      "2019"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2019",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2020",
+    "path": "data/COG/lulc/lulc_2020_cog.tif",
+    "tags": [
+      "lulc",
+      "2020"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2020",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2021",
+    "path": "data/COG/lulc/lulc_2021_cog.tif",
+    "tags": [
+      "lulc",
+      "2021"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2021",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2022",
+    "path": "data/COG/lulc/lulc_2022_cog.tif",
+    "tags": [
+      "lulc",
+      "2022"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2022",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2023",
+    "path": "data/COG/lulc/lulc_2023_cog.tif",
+    "tags": [
+      "lulc",
+      "2023"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2023",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2024",
+    "path": "data/COG/lulc/lulc_2024_cog.tif",
+    "tags": [
+      "lulc",
+      "2024"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2024",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "lulc",
+    "name": "lulc_2025",
+    "path": "data/COG/lulc/lulc_2025_cog.tif",
+    "tags": [
+      "lulc",
+      "2025"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "lulc_2025",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "alos_dem_roughness",
+    "path": "data/COG/roughness/alos_dem_roughness_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "aster_dem_roughness",
+    "path": "data/COG/roughness/aster_dem_roughness_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "copernicus_dem_roughness",
+    "path": "data/COG/roughness/copernicus_dem_roughness_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "fab_dem_roughness",
+    "path": "data/COG/roughness/fab_dem_roughness_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "nasa_dem_roughness",
+    "path": "data/COG/roughness/nasa_dem_roughness_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "srtm_dem_roughness",
+    "path": "data/COG/roughness/srtm_dem_roughness_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "roughness",
+    "name": "tan_dem_roughness",
+    "path": "data/COG/roughness/tan_dem_roughness_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "roughness"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "alos_dem_slope_horn",
+    "path": "data/COG/slope_horn/alos_dem_slope_horn_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "aster_dem_slope_horn",
+    "path": "data/COG/slope_horn/aster_dem_slope_horn_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "copernicus_dem_slope_horn",
+    "path": "data/COG/slope_horn/copernicus_dem_slope_horn_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "fab_dem_slope_horn",
+    "path": "data/COG/slope_horn/fab_dem_slope_horn_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "nasa_dem_slope_horn",
+    "path": "data/COG/slope_horn/nasa_dem_slope_horn_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "srtm_dem_slope_horn",
+    "path": "data/COG/slope_horn/srtm_dem_slope_horn_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_horn",
+    "name": "tan_dem_slope_horn",
+    "path": "data/COG/slope_horn/tan_dem_slope_horn_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "slope",
+      "horn"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "alos_dem_slope",
+    "path": "data/COG/slope_whitebox/alos_dem_slope_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "aster_dem_slope",
+    "path": "data/COG/slope_whitebox/aster_dem_slope_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "copernicus_dem_slope",
+    "path": "data/COG/slope_whitebox/copernicus_dem_slope_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "fab_dem_slope",
+    "path": "data/COG/slope_whitebox/fab_dem_slope_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "nasa_dem_slope",
+    "path": "data/COG/slope_whitebox/nasa_dem_slope_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "srtm_dem_slope",
+    "path": "data/COG/slope_whitebox/srtm_dem_slope_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "slope_whitebox",
+    "name": "tan_dem_slope",
+    "path": "data/COG/slope_whitebox/tan_dem_slope_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "slope"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "alos_dem_stream_raster",
+    "path": "data/COG/stream_raster/alos_dem_stream_raster_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "aster_dem_stream_raster",
+    "path": "data/COG/stream_raster/aster_dem_stream_raster_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "copernicus_dem_stream_raster",
+    "path": "data/COG/stream_raster/copernicus_dem_stream_raster_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "fab_dem_stream_raster",
+    "path": "data/COG/stream_raster/fab_dem_stream_raster_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "nasa_dem_stream_raster",
+    "path": "data/COG/stream_raster/nasa_dem_stream_raster_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "srtm_dem_stream_raster",
+    "path": "data/COG/stream_raster/srtm_dem_stream_raster_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster",
+    "name": "tan_dem_stream_raster",
+    "path": "data/COG/stream_raster/tan_dem_stream_raster_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "stream",
+      "raster"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "alos_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/alos_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "aster_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/aster_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "copernicus_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/copernicus_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "fab_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/fab_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "nasa_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/nasa_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "srtm_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/srtm_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1000",
+    "name": "tan_dem_stream_raster_1000",
+    "path": "data/COG/stream_raster_1000/tan_dem_stream_raster_1000_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "stream",
+      "raster",
+      "1000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "alos_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/alos_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "aster_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/aster_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "copernicus_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/copernicus_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "fab_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/fab_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "nasa_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/nasa_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "srtm_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/srtm_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_1500",
+    "name": "tan_dem_stream_raster_1500",
+    "path": "data/COG/stream_raster_1500/tan_dem_stream_raster_1500_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "stream",
+      "raster",
+      "1500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "alos_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/alos_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "aster_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/aster_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "copernicus_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/copernicus_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "fab_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/fab_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "nasa_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/nasa_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "srtm_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/srtm_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_2000",
+    "name": "tan_dem_stream_raster_2000",
+    "path": "data/COG/stream_raster_2000/tan_dem_stream_raster_2000_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "stream",
+      "raster",
+      "2000"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "alos_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/alos_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "aster_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/aster_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "copernicus_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/copernicus_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "fab_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/fab_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "nasa_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/nasa_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "srtm_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/srtm_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "stream_raster_500",
+    "name": "tan_dem_stream_raster_500",
+    "path": "data/COG/stream_raster_500/tan_dem_stream_raster_500_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "stream",
+      "raster",
+      "500"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "alos_dem_tpi",
+    "path": "data/COG/tpi/alos_dem_tpi_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "aster_dem_tpi",
+    "path": "data/COG/tpi/aster_dem_tpi_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "copernicus_dem_tpi",
+    "path": "data/COG/tpi/copernicus_dem_tpi_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "fab_dem_tpi",
+    "path": "data/COG/tpi/fab_dem_tpi_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "nasa_dem_tpi",
+    "path": "data/COG/tpi/nasa_dem_tpi_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "srtm_dem_tpi",
+    "path": "data/COG/tpi/srtm_dem_tpi_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tpi",
+    "name": "tan_dem_tpi",
+    "path": "data/COG/tpi/tan_dem_tpi_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "tpi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "alos_dem_tri",
+    "path": "data/COG/tri/alos_dem_tri_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "aster_dem_tri",
+    "path": "data/COG/tri/aster_dem_tri_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "copernicus_dem_tri",
+    "path": "data/COG/tri/copernicus_dem_tri_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "fab_dem_tri",
+    "path": "data/COG/tri/fab_dem_tri_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "nasa_dem_tri",
+    "path": "data/COG/tri/nasa_dem_tri_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "srtm_dem_tri",
+    "path": "data/COG/tri/srtm_dem_tri_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "tri",
+    "name": "tan_dem_tri",
+    "path": "data/COG/tri/tan_dem_tri_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "tri"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "alos_dem_twi",
+    "path": "data/COG/twi/alos_dem_twi_cog.tif",
+    "tags": [
+      "alos",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "alos_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "aster_dem_twi",
+    "path": "data/COG/twi/aster_dem_twi_cog.tif",
+    "tags": [
+      "aster",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "aster_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "copernicus_dem_twi",
+    "path": "data/COG/twi/copernicus_dem_twi_cog.tif",
+    "tags": [
+      "copernicus",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "copernicus_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "fab_dem_twi",
+    "path": "data/COG/twi/fab_dem_twi_cog.tif",
+    "tags": [
+      "fab",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "fab_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "nasa_dem_twi",
+    "path": "data/COG/twi/nasa_dem_twi_cog.tif",
+    "tags": [
+      "nasa",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "nasa_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "srtm_dem_twi",
+    "path": "data/COG/twi/srtm_dem_twi_cog.tif",
+    "tags": [
+      "srtm",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "srtm_dem",
+    "hand": null,
+    "flood": null
+  },
+  {
+    "category": "twi",
+    "name": "tan_dem_twi",
+    "path": "data/COG/twi/tan_dem_twi_cog.tif",
+    "tags": [
+      "tan",
+      "dem",
+      "twi"
+    ],
+    "projection": "EPSG:3857",
+    "dem": "tan_dem",
+    "hand": null,
+    "flood": null
+  }
+]
