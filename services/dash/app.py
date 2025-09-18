@@ -1,6 +1,7 @@
 # app.py
 import dash
 from dash import html, dcc
+import traceback
 
 external_stylesheets = [
     "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -16,6 +17,13 @@ app = dash.Dash(
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
 
+# ВАЖЛИВО: реєструємо всі колбеки; якщо впаде — покажемо трейс і все одно стартуємо
+try:
+    import callbacks.main_callbacks  # noqa: F401
+except Exception as e:
+    print("FATAL: failed to import callbacks.main_callbacks:", e)
+    traceback.print_exc()
+
 navbar = html.Div(
     [
         dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginRight": "24px"}),
@@ -29,9 +37,6 @@ navbar = html.Div(
 )
 
 app.layout = html.Div([navbar, dash.page_container])
-
-# ВАЖЛИВО: просто імпортуємо модуль з колбеками — вони зареєструються.
-import callbacks.main_callbacks  # noqa: F401
 
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", port=8050, debug=True)
