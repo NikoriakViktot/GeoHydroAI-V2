@@ -11,11 +11,11 @@ from layout.main_tab import render_main_tab
 from layout.tracks_profile_tab import profile_tab_layout
 from layout.tracks_map_tab import tracks_map_layout
 
-from services.dash.settings import (
+from settings import (
     NMAD_PARQUET, CDF_PARQUET, INITIAL_SAMPLE_PARQUET,
     INITIAL_STATS_PARQUET, STATS_ALL_PARQUET
 )
-from services.dash.loaders import get_db_nmad, read_parquet
+from loaders import get_db_nmad, read_parquet
 
 db = get_db_nmad(str(NMAD_PARQUET))
 
