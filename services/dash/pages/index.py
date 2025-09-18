@@ -11,13 +11,11 @@ layout = html.Div(
         html.Button("☰", id="burger", n_clicks=0, className="hamburger"),
         html.Div(id="sidebar-wrap", children=[
             html.Button("⮜", id="collapse", n_clicks=0, className="collapse-btn"),
-            sidebar,  # без position:fixed всередині (див. utils/style.py)
+            sidebar,  # sidebar без position:fixed (див. utils/style.py)
         ]),
         html.Div(
             id="content",
             children=[
-                # Stores, які можуть знадобитися колбекам
-                dcc.Store(id="cdf-store", storage_type="session"),
                 dcc.Tabs(
                     id="idx-tabs",
                     value="tab-1",
@@ -30,21 +28,24 @@ layout = html.Div(
                         dcc.Tab(label="CDF Accumulation", value="tab-5", className="tab", selected_className="tab--selected"),
                     ],
                 ),
+                # один-єдиний контейнер; контент вкладок віддає main_callbacks
                 html.Div(id="idx-tab-content", style={"padding": "10px 12px"}),
+                # store для CDF (використовуємо у main_callbacks)
+                dcc.Store(id="cdf-store", storage_type="session"),
             ],
         ),
-        html.Div(id="sidebar-backdrop", n_clicks=0),
-    ],
+        html.Div(id="sidebar-backdrop", n_clicks=0)
+    ]
 )
 
-# ЄДИНИЙ локальний колбек – керування класами сайдбару (open/collapsed)
+# тільки тогл/колапс сайдбару
 @callback(
     Output("sidebar-wrap", "className"),
     Input("burger", "n_clicks"),
     Input("collapse", "n_clicks"),
     Input("sidebar-backdrop", "n_clicks"),
     State("sidebar-wrap", "className"),
-    prevent_initial_call=True,
+    prevent_initial_call=True
 )
 def toggle_sidebar(burger, collapse, backdrop, cls):
     cls = cls or ""
