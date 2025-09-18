@@ -1,26 +1,19 @@
 #utils/style.py
 import plotly.graph_objs as go
 
-
 sidebar_style = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "280px",
     "padding": "20px",
     "backgroundColor": "#1c1c1c",
     "color": "#EEEEEE",
     "overflowY": "auto",
     "borderRight": "1px solid #333",
-    "zIndex": 1000
 }
 
 label_style = {
     "marginTop": "12px",
     "marginBottom": "4px",
     "fontWeight": "bold",
-    "fontSize": "14px"
+    "fontSize": "14px",
 }
 
 dropdown_style = {
@@ -28,7 +21,7 @@ dropdown_style = {
     "color": "#EEEEEE",
     "borderRadius": "6px",
     "border": "1px solid #444",
-    "marginBottom": "10px"
+    "marginBottom": "10px",
 }
 
 button_style = {
@@ -39,8 +32,9 @@ button_style = {
     "borderRadius": "6px",
     "fontWeight": "bold",
     "cursor": "pointer",
-    "marginTop": "14px"
+    "marginTop": "14px",
 }
+
 dark_table_style = dict(
     style_table={
         "backgroundColor": "#181818",

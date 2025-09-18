@@ -1,21 +1,19 @@
-# pages/index.py
 import dash
 from dash import html, dcc, callback, Output, Input, State
 import plotly.graph_objects as go
 from layout.sidebar import sidebar
-# якщо маєш PageShell — можна використати, але тут зробимо без нього
-from main_tab import render_main_tab  # функція очікує кілька фігур/даних :contentReference[oaicite:1]{index=1}
+from layout.main_tab import render_main_tab  # твоя функція рендера табу
 
 dash.register_page(__name__, path="/", name="Dashboard", title="GeoHydroAI | Dashboard", order=0)
 
 layout = html.Div(
     id="layout",
     children=[
-        # Кнопки керування сайдбаром (CSS у тебе вже готове)
+        # кнопки керування сайдбаром (CSS уже є в assets)
         html.Button("☰", id="burger", n_clicks=0, className="hamburger"),
         html.Div(id="sidebar-wrap", children=[
             html.Button("⮜", id="collapse", n_clicks=0, className="collapse-btn"),
-            sidebar
+            sidebar,  # ВАЖЛИВО: без position:fixed всередині (див. utils/style.py)
         ]),
         html.Div(
             id="content",
@@ -39,11 +37,10 @@ layout = html.Div(
     ]
 )
 
-# 1) Вставляємо контейнер під активну вкладку (для табу-1 це `dashboard-main`)
+# 1) Вставляємо контейнер під активну вкладку (для tab-1 це dashboard-main)
 @callback(Output("idx-tab-content", "children"), Input("idx-tabs", "value"))
 def render_tab_body(tab):
     if tab == "tab-1":
-        # Контейнер, у який малюватиме наступний колбек
         return html.Div([html.H1("DEM Comparison"), html.Div(id="dashboard-main")])
     if tab == "tab-2":
         return html.Div([html.H3("Track Profile (WIP)")])
@@ -55,26 +52,31 @@ def render_tab_body(tab):
         return html.Div([html.H3("CDF Accumulation (WIP)"), html.Div(id="cdf-content")])
     return html.Div()
 
-# 2) Мінімальний контент для DEM Comparison, щоб щось було видно одразу
+# 2) Малюємо вміст табу-1 (плейсхолдери), аби одразу було видно контент
+#   ВАЖЛИВО: тригеримося на появу idx-tab-content.children — це запускається
+#   після того, як попередній колбек вставив dashboard-main у DOM.
 @callback(
     Output("dashboard-main", "children"),
-    Input("idx-tabs", "value"),          # перемкнувся на таб → покажи щось
-    Input("apply_filters_btn", "n_clicks")  # натиснув фільтри → онови
+    Input("idx-tab-content", "children"),
+    Input("apply_filters_btn", "n_clicks"),
+    State("idx-tabs", "value"),
+    prevent_initial_call=True
 )
-def fill_dem_comparison(tab, n_clicks):
+def fill_dem_comparison(_children, n_clicks, tab):
     if tab != "tab-1":
-        return dash.no_update
+        raise dash.exceptions.PreventUpdate
 
-    # Плейсхолдери — просто щоб перевірити рендер
+    # Плейсхолдери — щоб перевірити рендер
     hist_fig = go.Figure(go.Histogram(x=[1,2,2,3,3,3,4,4,5]))
     box_fig  = go.Figure(go.Box(y=[1,2,3,2,5,3,2,4,3]))
     bar_fig  = go.Figure(go.Bar(x=["ALOS","FAB","SRTM"], y=[0.9, 0.7, 0.5]))
+
     table_rows = [
         {"DEM":"ALOS", "NMAD":0.85, "RMSE":1.20},
         {"DEM":"FAB",  "NMAD":0.65, "RMSE":0.95},
         {"DEM":"SRTM", "NMAD":1.10, "RMSE":1.60},
     ]
-    columns = [{"name":c, "id":c} for c in ["DEM","NMAD","RMSE"]]
+    columns = [{"name": c, "id": c} for c in ["DEM","NMAD","RMSE"]]
     filters_summary = "Demo-state: slope 0–60°, HAND off"
     dem = "fab_dem"
     title = "Metrics by DEM (sample)"
@@ -84,3 +86,23 @@ def fill_dem_comparison(tab, n_clicks):
         table_rows, columns, title,
         dem, filters_summary
     )
+
+# 3) Тогл/колапс сайдбару (десктоп і мобайл)
+@callback(
+    Output("sidebar-wrap", "className"),
+    Input("burger", "n_clicks"),
+    Input("collapse", "n_clicks"),
+    Input("sidebar-backdrop", "n_clicks"),
+    State("sidebar-wrap", "className"),
+    prevent_initial_call=True
+)
+def toggle_sidebar(burger, collapse, backdrop, cls):
+    cls = cls or ""
+    changed = dash.ctx.triggered_id
+    if changed == "burger":            # мобайл: відкрити
+        return (cls + " open").strip() if "open" not in cls else cls
+    if changed == "sidebar-backdrop":  # мобайл: закрити
+        return cls.replace("open", "").strip()
+    if changed == "collapse":          # десктоп: звузити/розгорнути
+        return (cls + " collapsed").strip() if "collapsed" not in cls else cls.replace("collapsed", "").strip()
+    return cls
