@@ -1,3 +1,4 @@
+# app.py
 import dash
 from dash import html, dcc
 
@@ -28,6 +29,9 @@ navbar = html.Div(
 )
 
 app.layout = html.Div([navbar, dash.page_container])
+
+# ВАЖЛИВО: просто імпортуємо модуль з колбеками — вони зареєструються.
+import callbacks.main_callbacks  # noqa: F401
 
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", port=8050, debug=True)
