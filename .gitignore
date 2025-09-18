@@ -22,7 +22,7 @@ certbot/
 *.ckpt
 *.onnx
 *.h5
-
+*.gpkg
 # === Runtime / build ===
 __pycache__/
 *.pyc
@@ -43,52 +43,4 @@ build/
 .idea/
 
 
-EOF
-
-# прибираємо з ІНДЕКСУ (на диску файли лишаються)
-git rm -r --cached data/ db/data/ tiles/ cache/ media/ uploads/ models/ checkpoints/ 2>/dev/null || true
-git rm --cached *.tif *.tiff *.parquet *.zip *.7z *.tar *.tar.gz *.pt *.pth *.ckpt *.onnx *.h5 2>/dev/null || true
-
-git add .gitignore
-git commit -m "chore: ignore large data & artifacts; stop tracking them"
-
-# === Large data & artifacts ===
-data/
-db/data/
-tiles/
-cache/
-media/
-uploads/
-models/
-checkpoints/
-*.tif
-*.tiff
-*.parquet
-*.zip
-*.7z
-*.tar
-*.tar.gz
-*.pt
-*.pth
-*.ckpt
-*.onnx
-*.h5
-
-# === Runtime / build ===
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-node_modules/
-dist/
-build/
-*.log
-
-# === Env & secrets ===
-.env
-.env.*
-*.pem
-*.key
-
-# === IDE ===
-.vscode/
-.idea/
+backup_rescue.bundle
