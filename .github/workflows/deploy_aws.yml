@@ -1,0 +1,25 @@
+name: Deploy (self-hosted)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - name: Deploy from /home/ubuntu/geoai
+        run: |
+          set -e
+          cd /home/ubuntu/geoai
+          # оновити код з GitHub
+          git fetch --all
+          git reset --hard origin/main
+          # перевірка що compose-файл є тут
+          ls -la docker-compose.yml
+          # деплой
+          docker compose -f docker-compose.yml pull || true
+          docker compose -f docker-compose.yml up -d --build
+          docker image prune -f || true
+
