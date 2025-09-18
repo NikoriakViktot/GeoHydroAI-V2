@@ -4,9 +4,8 @@ import duckdb
 from dash import html, dcc, Output, Input, State, callback
 from utils.db import DuckDBData
 from utils.plots import build_best_dem_barplot, build_grouped_nmad_barplot
-import registry as R
-
-db = R.db("nmad")
+from registry import get_db
+db = get_db("nmad")
 
 # db = DuckDBData("data/NMAD_dem.parquet")
 
