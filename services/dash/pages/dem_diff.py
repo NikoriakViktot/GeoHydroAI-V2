@@ -16,7 +16,7 @@ import os
 import numpy as np
 import geopandas as gpd
 from collections import defaultdict
-from services.dash.registry import get_df  # ✅ беремо дані з реєстру
+from registry import get_df  # ✅ беремо дані з реєстру
 
 from utils.dem_tools import (
     compute_dem_difference,
