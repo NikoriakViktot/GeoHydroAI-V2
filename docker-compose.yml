@@ -31,6 +31,7 @@ services:
     volumes:
       - ./data/cogs:/app/data/cogs:ro
       - tcdb:/app/tc_db
+      - tc_tmp:/tmp
     expose:
       - "5000"
     healthcheck:
@@ -70,7 +71,7 @@ services:
        API_URL: http://api:8000
        MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
        TERRACOTTA_PUBLIC_URL: https://www.geohydroai.org/tc
-       LOG_LEVEL: DEBUG
+       LOG_LEVEL: INFO
      depends_on:
        api:
          condition: service_started
@@ -80,6 +81,8 @@ services:
      networks: [web]
      volumes:
          - ./data_parqet:/app/data:ro
+         - ./data/cogs:/app/data/cogs:ro
+         - tc_tmp:/tmp
 
   nginx:
     image: nginx:stable
@@ -118,6 +121,7 @@ volumes:
   pgdata:
   certs:
   tcdb:
+  tc_tmp:
 
 networks:
   web: {}
