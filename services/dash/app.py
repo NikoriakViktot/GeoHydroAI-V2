@@ -1,3 +1,4 @@
+# app.py
 import dash
 from dash import html, dcc
 
@@ -12,15 +13,16 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     update_title=None,
 )
-
 app.title = "GeoHydroAI | DEM OLAP"
-server = app.server  # важливо для gunicorn: app:server
+server = app.server
 
 navbar = html.Div(
     [
         dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("DEM Diff Analysis", href="/dem-diff", style={"color": "#00bfff", "marginRight": "24px"}),
-        dcc.Link("TestMap", href="/test", style={"color": "#00bfff", "marginRight": "24px"}),
+        dcc.Link("ICESat-2 Map", href="/icesat-map", style={"color": "#00bfff", "marginRight": "24px"}),
+        dcc.Link("Best DEM", href="/best-dem", style={"color": "#00bfff", "marginRight": "24px"}),
+        dcc.Link("CDF Accumulation", href="/cdf", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("Flood Scenarios Test", href="/flood-test", style={"color": "#00bfff", "marginRight": "24px"}),
     ],
     style={"padding": "20px 0"},
@@ -29,5 +31,5 @@ navbar = html.Div(
 app.layout = html.Div([navbar, dash.page_container])
 
 if __name__ == "__main__":
-    # локальний запуск без gunicorn
     app.run_server(host="0.0.0.0", port=8050, debug=True)
+
