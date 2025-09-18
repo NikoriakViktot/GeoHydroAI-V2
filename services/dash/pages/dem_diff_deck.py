@@ -17,7 +17,7 @@ from registry import get_df
 # базовий URL до Terracotta (через nginx /tc)
 TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
 
-dash.register_page(__name__, path="/dem-diff-deck", name="DEM Diff (deck.gl)", order=3)
+dash.register_page(__name__, path="/dem-diff", name="DEM Diff (deck.gl)", order=2)
 
 # ---- межа басейну
 try:
