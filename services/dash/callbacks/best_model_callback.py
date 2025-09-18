@@ -4,8 +4,10 @@ import duckdb
 from dash import html, dcc, Output, Input, State, callback
 from utils.db import DuckDBData
 from utils.plots import build_best_dem_barplot, build_grouped_nmad_barplot
-import config as cfg
-db = cfg.db_NMAD
+import registry as R
+
+db = R.db("nmad")
+
 # db = DuckDBData("data/NMAD_dem.parquet")
 
 # Це можна винести у файл constants.py
