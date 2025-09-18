@@ -5,18 +5,25 @@ import numpy as np
 
 
 class DuckDBData:
-    def __init__(self, parquet_file):
+    def __init__(self, parquet_file, persistent=False):
         self.parquet_file = parquet_file
+        self.persistent = persistent
+        self.con = duckdb.connect() if persistent else None
 
     def query(self, sql):
         try:
-            con = duckdb.connect()
-            df = con.execute(sql).fetchdf()
-            con.close()
-            return df
+            if self.persistent:
+                return self.con.execute(sql).fetchdf()
+            else:
+                with duckdb.connect() as con:
+                    return con.execute(sql).fetchdf()
         except Exception as e:
             print(f"DuckDB query error: {e}")
             return pd.DataFrame()
+
+    def close(self):
+        if self.persistent and self.con:
+            self.con.close()
 
     # --- 1. Стартові ключі профілю ---
     def get_default_profile_keys(self, dem="alos_dem"):

@@ -8,11 +8,11 @@ from sqlalchemy.orm import sessionmaker, Session
 
 # Adapters (ти вже маєш їхні реалізації або додай з попереднього меседжа)
 from infrastructure.postgis.repositories import PostgisDemRepository
-from infrastructure.terracotta.client import TerracottaSampler
+from infrastructure.terr_inf.client import TerracottaSampler
 from infrastructure.duckdb.repository import DuckDBDeltaRepository
 from core.usecases.compare_dem import CompareDemUseCase
 
-POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://postgres:postgres@postgis:5432/geohydro")
+POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg://postgres:postgres@postgis:5432/geohydro")
 _engine = create_engine(POSTGRES_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False, future=True)
 

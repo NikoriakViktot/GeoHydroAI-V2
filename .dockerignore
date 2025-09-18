@@ -1,0 +1,13 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.env
+*.ipynb_checkpoints
+data/
+data_parquet/
+certbot/
+backups/

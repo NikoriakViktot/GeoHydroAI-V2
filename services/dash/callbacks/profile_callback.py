@@ -8,7 +8,7 @@ import duckdb
 from utils.db import DuckDBData
 from utils.plot_track import build_profile_figure_with_hand
 from utils.style import empty_dark_figure
-
+from config import db_NMAD
 
 from src.interpolation_track import (
         kalman_smooth,
@@ -16,7 +16,8 @@ from src.interpolation_track import (
     )
 
 # db = DuckDBData("data/tracks_3857_1.parquet")
-db = DuckDBData("data/NMAD_dem.parquet")
+# db = DuckDBData("data/NMAD_dem.parquet")
+db = db_NMAD
 
 
 DEM_LIST = [

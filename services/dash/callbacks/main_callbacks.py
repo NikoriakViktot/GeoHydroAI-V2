@@ -13,13 +13,14 @@ from callbacks.cdf_callback import get_cdf_tab
 from layout.main_tab import render_main_tab
 from layout.tracks_profile_tab import profile_tab_layout
 from layout.tracks_map_tab import tracks_map_layout
+from config import db_NMAD, cdf_df, dff_plot, filtered_stats_all_dems, stats_all
 
 dem_list = [
     "alos_dem", "aster_dem", "copernicus_dem", "fab_dem",
     "nasa_dem", "srtm_dem", "tan_dem"
 ]
 # db = DuckDBData("data/tracks_3857_1.parquet")
-db = DuckDBData("data/NMAD_dem.parquet")
+db = db_NMAD
 
 
 @callback(
@@ -39,7 +40,7 @@ def load_cdf_data(tab):
     if tab != "tab-5":
         raise dash.exceptions.PreventUpdate
 
-    cdf_df = pd.read_parquet("data/cdf_precomputed.parquet")
+    # cdf_df = pd.read_parquet("data/cdf_precomputed.parquet")
     return cdf_df.to_json(date_format='iso', orient='split')
 
 
@@ -66,9 +67,9 @@ def update_dashboard(n_clicks, tab, cdf_data, dem, lulc, landform, slope,
     if tab == "tab-1" and (n_clicks is None or n_clicks == 0):
 
         # Завантаження з кешу (Крок 2)
-        dff_plot = pd.read_parquet("data/initial_sample.parquet")
-        filtered_stats_all_dems = pd.read_parquet("data/initial_stats.parquet").to_dict("records")
-        stats_all = pd.read_parquet("data/stats_all_cached.parquet").to_dict("records")
+        # dff_plot = pd.read_parquet("data/initial_sample.parquet")
+        # filtered_stats_all_dems = pd.read_parquet("data/initial_stats.parquet").to_dict("records")
+        # stats_all = pd.read_parquet("data/stats_all_cached.parquet").to_dict("records")
         dem_stats_columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
 
         # Графіки

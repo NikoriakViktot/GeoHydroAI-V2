@@ -4,9 +4,11 @@ import duckdb
 from dash import html, dcc, Output, Input, State, callback
 from utils.db import DuckDBData
 from utils.plots import build_best_dem_barplot, build_grouped_nmad_barplot
+from config import db_NMAD
 
-db = DuckDBData("data/NMAD_dem.parquet")
+# db = DuckDBData("data/NMAD_dem.parquet")
 
+db = db_NMAD
 # Це можна винести у файл constants.py
 landform_names = {
     1: "Flat", 2: "Peak", 3: "Ridge", 4: "Shoulder", 5: "Spur",

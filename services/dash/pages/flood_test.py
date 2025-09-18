@@ -3,6 +3,8 @@ from dash import html, dcc, callback, Output, Input
 import dash_leaflet as dl
 import json
 import geopandas as gpd
+from config import gdf_basin
+
 
 print("Loaded flood test page")
 
@@ -10,7 +12,8 @@ dash.register_page(__name__, path="/flood-test", name="Flood Scenarios Test", or
 
 # Завантаження шару басейну
 try:
-    basin = gpd.read_file("data/basin_bil_cher_4326.gpkg")
+    # basin = gpd.read_file("data/basin_bil_cher_4326.gpkg")
+    basin = gdf_basin
     print("Basin loaded! CRS:", basin.crs)
     basin = basin.to_crs("EPSG:4326")
     basin_json = json.loads(basin.to_json())
