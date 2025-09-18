@@ -8,8 +8,7 @@ import duckdb
 from utils.db import DuckDBData
 from utils.plot_track import build_profile_figure_with_hand
 from utils.style import empty_dark_figure
-import registry as R
-
+from registry import get_db
 from src.interpolation_track import (
         kalman_smooth,
     interpolate_linear,
@@ -17,7 +16,7 @@ from src.interpolation_track import (
 
 # db = DuckDBData("data/tracks_3857_1.parquet")
 # db = DuckDBData("data/NMAD_dem.parquet")
-db = R.db("nmad")
+db = get_db("nmad")
 
 
 DEM_LIST = [
