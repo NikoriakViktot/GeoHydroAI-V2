@@ -92,3 +92,95 @@ body, .dash-graph, .js-plotly-plot, .dash-loading, .dash-spinner {
     background-color: #181818 !important;
     opacity: 1 !important;
 }
+
+:root{
+  --sidebar-w: 280px;
+  --sidebar-w-collapsed: 72px;  /* вузький стан (іконки) */
+  --bg: #181818;
+  --bg-pane: #23272b;
+}
+
+/* ===== Desktop (>=769px): лівий стіккий сайдбар ===== */
+@media (min-width: 769px) {
+  #layout { display: flex; min-height: 100vh; background: var(--bg); }
+  #sidebar-wrap {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    position: sticky; top: 0; height: 100vh;
+    background: var(--bg-pane);
+    border-right: 1px solid #2d2d2d;
+    overflow: hidden;  /* ховаємо вміст при collapse */
+    transition: width .2s ease;
+  }
+  #sidebar-wrap.collapsed { width: var(--sidebar-w-collapsed); flex-basis: var(--sidebar-w-collapsed); }
+  #sidebar-wrap > div { height: calc(100vh - 44px); overflow-y: auto; } /* сам sidebar всередині */
+  #content { flex: 1 1 auto; min-width: 0; }
+
+  .hamburger, #sidebar-backdrop { display: none; }
+  .collapse-btn {
+    display: block; width: 100%; height: 44px; border: 0;
+    background: #202327; color: #d5d5d5; cursor: pointer;
+  }
+}
+
+/* У стані collapsed — зменшуємо відступи/шрифти у сайдбарі */
+@media (min-width: 769px) {
+  #sidebar-wrap.collapsed .Select-control,
+  #sidebar-wrap.collapsed .Select-placeholder,
+  #sidebar-wrap.collapsed label,
+  #sidebar-wrap.collapsed h4 { font-size: 0; line-height: 0; }
+  #sidebar-wrap.collapsed .dash-rc-slider { transform: scaleX(.8); margin-left: 6px; }
+  #sidebar-wrap.collapsed .collapse-btn { content: "⮞"; } /* візуально стрілка вліво/вправо */
+}
+
+/* ===== Mobile (<=768px): drawer ===== */
+@media (max-width: 768px) {
+  .hamburger {
+    position: fixed; top: 10px; left: 12px; z-index: 1100;
+    font-size: 22px; padding: 8px 12px; border-radius: 10px;
+    border: none; background: #2d8cff; color: #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+
+  #sidebar-wrap {
+    position: fixed; inset: 0 auto 0 0; z-index: 1000;
+    height: 100vh; width: 92vw; max-width: 420px;
+    transform: translateX(-105%); transition: transform .25s ease;
+    background: var(--bg-pane); border-right: 1px solid #2d2d2d;
+  }
+  #sidebar-wrap.open { transform: translateX(0); }
+  #sidebar-wrap > div { height: calc(100vh - 44px); overflow-y: auto; }
+  .collapse-btn { display: none; }
+
+  #sidebar-backdrop { display: none; }
+  #sidebar-wrap.open ~ #sidebar-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,.45);
+  }
+
+  #content { padding-top: 56px; } /* щоб не накривало кнопкою */
+}
+
+/* ===== Трохи поліру для графіків і вкладок ===== */
+.custom-tabs { width: 100% !important; }
+.dash-graph, .js-plotly-plot { background-color: var(--bg) !important; }
+
+/* Робимо основні картки/панелі на темному фоні більш контрастними */
+.card, .panel, .dbc-card {
+  background: #1b1f24; border: 1px solid #2a2f36; border-radius: 12px;
+}
+
+
+/* Адаптивна сітка для трьох графіків */
+.kpi-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;           /* мобільний: 1 колонка */
+}
+@media (min-width: 900px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; } /* планшет: 2 */
+}
+@media (min-width: 1280px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr 1fr; } /* десктоп: 3 */
+}
+.kpi-card { background: #1b1f24; border: 1px solid #2a2f36; border-radius: 12px; }

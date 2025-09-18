@@ -17,7 +17,16 @@ dash.register_page(
 )
 
 
-layout = html.Div([
-  sidebar,
-  content
-])
+
+layout = html.Div(
+    id="layout",
+    children=[
+        html.Button("☰", id="burger", n_clicks=0, className="hamburger"),
+        html.Div(id="sidebar-wrap", children=[
+            html.Button("⮜", id="collapse", n_clicks=0, className="collapse-btn"),
+            sidebar
+        ]),
+        html.Div(id="content", children=[content]),
+        html.Div(id="sidebar-backdrop", n_clicks=0)
+    ]
+)
