@@ -16,6 +16,7 @@ import os
 import numpy as np
 import geopandas as gpd
 from collections import defaultdict
+from services.dash.registry import get_df  # ✅ беремо дані з реєстру
 
 from utils.dem_tools import (
     compute_dem_difference,
@@ -28,8 +29,14 @@ from utils.dem_tools import (
 dash.register_page(__name__, path="/dem-diff", name="DEM Diff (Tiles)", order=1)
 
 # --- Завантаження меж басейну (geojson) ---
-basin_gdf = gpd.read_file("data/basin_bil_cher_4326.gpkg").to_crs("EPSG:4326")
-basin = json.loads(basin_gdf.to_json())
+try:
+    basin: gpd.GeoDataFrame = get_df("basin")
+    print("Basin loaded! CRS:", basin.crs)
+    basin = basin.to_crs("EPSG:4326")
+    basin_json = json.loads(basin.to_json())
+except Exception as e:
+    print("❌ Error loading basin:", e)
+    basin_json = None
 
 # --- Завантаження індексу всіх шарів ---
 LAYERS_INDEX_PATH = "data/layers_index.json"
