@@ -30,7 +30,7 @@ except Exception as e:
     basin_json = None
 
 # ---- layers_index.json
-with open("data_parqet/layers_index.json", "r") as f:
+with open("data/layers_index.json", "r") as f:
     layers_index = json.load(f)
 
 by_dem = defaultdict(list)
