@@ -141,12 +141,11 @@ def run_diff(n, dem1, dem2, cat):
     if not dem1 or not dem2 or dem1 == dem2:
         return no_update, no_update, "Оберіть різні DEM!"
 
-    # шляхи файлiв під категорію
     def pick_path(name, category):
         arr = by_dem.get(name, [])
         if category:
             for it in arr:
-                if it.get("category")==category:
+                if it.get("category") == category:
                     return it.get("path")
         return arr[0]["path"] if arr else None
 
@@ -159,7 +158,6 @@ def run_diff(n, dem1, dem2, cat):
     except Exception as e:
         return no_update, no_update, f"Помилка при обчисленні: {e}"
 
-    # авто-діапазон
     try:
         q1, q99 = np.nanpercentile(diff, [1, 99])
         vmin, vmax = float(q1), float(q99)
@@ -168,7 +166,6 @@ def run_diff(n, dem1, dem2, cat):
     except Exception:
         vmin, vmax = -10.0, 10.0
 
-    # зберігаємо temp COG, формуємо URL тайлів
     try:
         cog_path = save_temp_diff_as_cog(diff, ref, prefix="demdiff_")
         basename = os.path.basename(cog_path)
@@ -176,23 +173,26 @@ def run_diff(n, dem1, dem2, cat):
     except Exception as e:
         return no_update, no_update, f"Помилка збереження COG/URL: {e}"
 
-    # колорбар
     legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r")
     legend_html = f"<img src='{legend_uri}' style='height:160px'/>"
 
-    # deck.gl spec: DEM фон + DIFF зверху
     spec = build_spec(build_dem_url("terrain"), diff_url, basin_json)
-
-    # гістограма + статистика
     hist = plot_histogram(diff, clip_range=(vmin, vmax))
     stats = calculate_error_statistics(diff)
-    rows = [html.Tr([html.Th(k), html.Td(f\"{v:.3f}\" if isinstance(v,float) and np.isfinite(v) else v)]) for k,v in stats.items()]
-    stats_tbl = html.Table(rows, style={"background":"#181818","color":"#eee","padding":"6px"})
 
-    # вставимо легенду в description.top-right (оновимо spec.json рядком)
+    rows = [
+        html.Tr([html.Th(k), html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)])
+        for k, v in stats.items()
+    ]
+    stats_tbl = html.Table(
+        rows,
+        style={"background": "#181818", "color": "#eee", "padding": "6px"}
+    )
+
     spec_obj = json.loads(spec)
     spec_obj.setdefault("description", {})["top-right"] = legend_html
     return json.dumps(spec_obj), hist, stats_tbl
+
 
 # (опційно) події
 @callback(Output("deck-events","children"), Input("deck-main","lastEvent"))
