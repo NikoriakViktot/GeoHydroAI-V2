@@ -35,6 +35,7 @@ build/
 # === Env & secrets (не клади в git взагалі) ===
 .env
 .env.*
+.env.example
 *.pem
 *.key
 
