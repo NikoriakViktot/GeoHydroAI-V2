@@ -1,5 +1,7 @@
+# callbacks/navigate.py
 import dash
-from dash import no_update
+from dash import Output, Input, no_update
+
 app = dash.get_app()
 
 @app.callback(
@@ -11,11 +13,11 @@ app = dash.get_app()
     Input("nav-best-dem", "n_clicks"),
     Input("nav-cdf", "n_clicks"),
     Input("nav-flood", "n_clicks"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def navigate(*_):
     trig = dash.ctx.triggered_id
-    if trig is None:
+    if not trig:
         return no_update
     mapping = {
         "nav-home": "/",

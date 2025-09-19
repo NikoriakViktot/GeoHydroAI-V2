@@ -35,18 +35,18 @@ app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
 
 # ВАЖЛИВО: реєструємо всі колбеки; якщо впаде — покажемо трейс і все одно стартуємо
-try:
-    import callbacks.main_callbacks  # noqa: F401
-    # import callbacks.dem_diff_callbacks
-    import callbacks.sidebar_drawer
-    import callbacks.cdf_callback
-    import callbacks.best_model_callback
-    import callbacks.map_profile_callback
-    import callbacks.navigate
-
-except Exception as e:
-    print("FATAL: failed to import callbacks.main_callbacks:", e)
-    traceback.print_exc()
+for mod in (
+    "callbacks.main_callbacks",
+    "callbacks.sidebar_drawer",
+    "callbacks.cdf_callback",
+    "callbacks.best_model_callback",
+    "callbacks.map_profile_callback",
+    "callbacks.navigate",   # ← додай
+):
+    try:
+        __import__(mod)
+    except Exception:
+        logging.exception("FATAL: failed to import %s", mod)
 
 def _log_callbacks_once():
     logging.getLogger(__name__).info("=== Registered callbacks ===")
