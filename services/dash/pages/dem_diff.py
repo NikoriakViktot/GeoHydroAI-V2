@@ -38,11 +38,11 @@ dash.register_page(__name__, path="/dem-diff", name="DEM Diff (deck.gl)", order=
 try:
     basin: gpd.GeoDataFrame = get_df("basin")
     basin = basin.to_crs("EPSG:4326")
-    BASIN_JSON = json.loads(basin.to_json())
+    basin_json = json.loads(basin.to_json())
     logger.info("Basin loaded, CRS=%s, rows=%d", basin.crs, len(basin))
 except Exception as e:
     logger.exception("Failed to load basin: %s", e)
-    BASIN_JSON = None
+    basin_json = None
 
 # layers_index.json
 ASSETS_INDEX_PATH = "assets/layers_index.json"
@@ -117,24 +117,16 @@ def basin_layer(geojson: dict) -> dict:
 def build_dem_url(colormap="viridis"):
     return f"{TC_BASE}/singleband/dem/fab_dem/{{z}}/{{x}}/{{y}}.png?colormap={colormap}&stretch_range=[250,2200]"
 
-def build_spec(
-    dem_url: str | None,
-    diff_bitmap: dict | None,
-    basin: dict | None,
-    init_view=None,
-    map_style: str | None = None
-) -> dict:
-    layers: list[dict] = []
+def build_spec(dem_url, diff_bitmap, basin, init_view=None, map_style="mapbox://styles/mapbox/light-v11"):
+    layers = []
     if dem_url:     layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
     if diff_bitmap: layers.append(diff_bitmap)
     if basin:       layers.append(basin_layer(basin))
-    return {
+    return {  # ← ПОВЕРТАЄМО СЛОВНИК
         "mapStyle": map_style,
         "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":8,"pitch":0,"bearing":0},
-        # HUD тимчасово вимкнено, щоб відновити базовий рендер
         "layers": layers
     }
-
 # ---- UI
 layout = html.Div([
     html.H3("DEM Difference Analysis (deck.gl + Terracotta)"),
@@ -155,7 +147,7 @@ layout = html.Div([
         html.Div([
             dash_deckgl.DashDeckgl(
                 id="deck-main",
-                spec=build_spec(build_dem_url("viridis"), None, BASIN_JSON, map_style=safe_map_style()),
+                spec=build_spec(build_dem_url("viridis"), None, basin_json),
                 height=MAIN_MAP_HEIGHT,
                 cursor_position="bottom-right",
                 events=["hover", "click"],   # події лишили, але без мутацій spec
