@@ -98,7 +98,7 @@ def plot_histogram(diff_array, bins=60, clip_range=(-50, 50)):
     valid = diff_array[~np.isnan(diff_array)]
     valid = valid[(valid > clip_range[0]) & (valid < clip_range[1])]
 
-    fig, ax = plt.subplots(figsize=(8, 3.6))
+    fig, ax = plt.subplots(figsize=(8, 4.5))
     # чорна тема
     fig.patch.set_facecolor("#0e0e0e")
     ax.set_facecolor("#0e0e0e")

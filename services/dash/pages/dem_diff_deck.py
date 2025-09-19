@@ -15,6 +15,7 @@ from utils.dem_tools import (
 from registry import get_df
 MAIN_MAP_HEIGHT = 450
 RIGHT_PANEL_WIDTH = 500
+COMPARE_MAP_HEIGHT = 360
 # ---- Логи (детальні)
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -68,8 +69,7 @@ DEM_LIST = sorted([d for d in by_dem.keys() if d])
 CATEGORY_LIST = sorted(categories)
 
 # ===== UI налаштування висот
-MAIN_MAP_HEIGHT = 520
-COMPARE_MAP_HEIGHT = 360
+
 
 # ---- deck.gl helper-и
 def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
@@ -116,7 +116,7 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
     if basin:       layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":8,"pitch":0,"bearing":0},
+        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":20,"pitch":0,"bearing":0},
         "layers": layers
     }
     return json.dumps(spec)
