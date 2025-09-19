@@ -71,7 +71,7 @@ services:
        API_URL: http://api:8000
        MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
        TERRACOTTA_PUBLIC_URL: https://www.geohydroai.org/tc
-       LOG_LEVEL: INFO
+       LOG_LEVEL: DEBUG
        DATA_DIR: /app/data/parquet
      depends_on:
        api:

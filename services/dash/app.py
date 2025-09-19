@@ -31,7 +31,7 @@ except Exception as e:
 
 navbar = html.Div(
     [
-        dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginRight": "24px"}),
+        dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginLeft": "34px", "marginRight": "24px"}),
         dcc.Link("DEM Diff Analysis", href="/dem-diff", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("DEM Diff Analysis-1", href="/dem-diff-1", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("ICESat-2 Map", href="/icesat-map", style={"color": "#00bfff", "marginRight": "24px"}),
