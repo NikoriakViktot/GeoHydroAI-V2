@@ -134,22 +134,19 @@ def calculate_error_statistics(diff_array: np.ndarray):
 
 
 # ---------- overlay як data-URI + bounds для deck.gl ----------
+# utils/dem_tools.py
+import io, base64, matplotlib.pyplot as plt
+import rasterio
+
 def diff_to_base64_png(diff_array, ref_dem, vmin=-10, vmax=10, figsize=(8, 8)):
-    """
-    Рендер прозорого PNG overlay з географічним extent референсного DEM.
-    Повертає data:image/png;base64,...
-    """
+    """Рендер PNG (прозорий) для накладання як BitmapLayer. Повертає data:image/png;base64,..."""
     with rasterio.open(ref_dem.filename) as src:
         b = src.bounds
     extent = [b.left, b.right, b.bottom, b.top]
     fig, ax = plt.subplots(figsize=figsize)
-    ax.imshow(
-        diff_array,
-        cmap="RdBu_r",
-        vmin=vmin,
-        vmax=vmax,
-        extent=extent,
-        origin="upper",
+    im = ax.imshow(
+        diff_array, cmap="RdBu_r", vmin=vmin, vmax=vmax,
+        extent=extent, origin="upper"
     )
     ax.axis("off")
     buf = io.BytesIO()
@@ -157,11 +154,8 @@ def diff_to_base64_png(diff_array, ref_dem, vmin=-10, vmax=10, figsize=(8, 8)):
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
-
 def raster_bounds_ll(ref_dem):
-    """
-    [[south, west], [north, east]] — зручно для подальшого перетворення під deck.gl bounds.
-    """
+    """[[south, west], [north, east]] для географічних bounds BitmapLayer/Leaflet."""
     with rasterio.open(ref_dem.filename) as src:
         b = src.bounds
         return [[b.bottom, b.left], [b.top, b.right]]
