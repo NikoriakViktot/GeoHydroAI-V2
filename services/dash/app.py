@@ -42,6 +42,8 @@ try:
     import callbacks.cdf_callback
     import callbacks.best_model_callback
     import callbacks.map_profile_callback
+    import callbacks.navigate
+
 except Exception as e:
     print("FATAL: failed to import callbacks.main_callbacks:", e)
     traceback.print_exc()

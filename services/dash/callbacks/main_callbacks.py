@@ -4,6 +4,7 @@ import io, logging, os
 from typing import Any, Iterable, Optional, Tuple
 import dash, duckdb, pandas as pd
 from dash import Input, Output, State, callback, dcc, html
+import dash
 
 from callbacks.cdf_callback import get_cdf_tab
 from layout.main_tab import render_main_tab

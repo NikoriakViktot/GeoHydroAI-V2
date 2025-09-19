@@ -13,6 +13,8 @@ from src.interpolation_track import (
         kalman_smooth,
     interpolate_linear,
     )
+import dash
+
 app = dash.get_app()
 
 # db = DuckDBData("data/tracks_3857_1.parquet")

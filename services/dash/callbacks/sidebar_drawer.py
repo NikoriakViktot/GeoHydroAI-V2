@@ -1,5 +1,7 @@
 # callbacks/sidebar_drawer.py
 from dash import callback, Input, Output, State, no_update, ctx
+import dash
+
 app = dash.get_app()
 
 @app.callback(

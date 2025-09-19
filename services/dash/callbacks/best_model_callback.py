@@ -1,4 +1,5 @@
 #callbacks/best_model_callback.py
+import dash
 
 import duckdb
 from dash import html, dcc, Output, Input, State, callback

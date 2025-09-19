@@ -5,8 +5,10 @@ import dash_leaflet as dl
 import json
 import geopandas as gpd
 from registry import get_df
+import dash
 
 dash.register_page(__name__, path="/test", name="Dashboard", order=1)
+app = dash.get_app()
 
 def _load_basin_geojson() -> dict | None:
     try:
@@ -40,7 +42,7 @@ def layout():
         ], style={'width': '100%', 'height': '700px'}, center=[47.8, 25.03], zoom=10),
     ])
 
-@callback(
+@app.callback(
     Output("dem-tile-test", "url"),
     Input("colormap-dropdown-test", "value"),
 )
