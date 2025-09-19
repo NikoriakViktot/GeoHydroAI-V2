@@ -28,6 +28,7 @@ navbar = html.Div(
     [
         dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("DEM Diff Analysis", href="/dem-diff", style={"color": "#00bfff", "marginRight": "24px"}),
+        dcc.Link("DEM Diff Analysis-1", href="/dem-diff-1", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("ICESat-2 Map", href="/icesat-map", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("Best DEM", href="/best-dem", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("CDF Accumulation", href="/cdf", style={"color": "#00bfff", "marginRight": "24px"}),
