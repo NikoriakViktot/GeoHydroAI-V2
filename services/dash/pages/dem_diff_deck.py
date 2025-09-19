@@ -67,18 +67,22 @@ def _fix_path(p: str) -> str:
     if not p:
         return p
     p = p.replace("\\", "/")
-    # якщо вже абсолютний шлях (/app/...), нічого не робимо
+    # якщо вже абсолютний шлях — залишаємо як є
     if p.startswith("/"):
-        return p
-    # нормалізуємо legacy-випадки
-    p = p.replace("data/COG/", "/app/data/cogs/").replace("data/cogs/", "/app/data/cogs/")
+        return os.path.normpath(p)
+    # legacy-випадки
+    if p.startswith("data/COG/"):
+        return "/app/data/cogs/" + p.split("data/COG/")[1]
+    if p.startswith("data/cogs/"):
+        return "/app/data/cogs/" + p.split("data/cogs/")[1]
     if p.startswith("data/"):
-        p = "/app/" + p
-    return p
+        return "/app/" + p
+    return os.path.normpath(p)
 
 try:
     with open(ASSETS_INDEX_PATH, "r") as f:
         raw_index = json.load(f)
+
     layers_index = []
     for rec in raw_index:
         r = dict(rec)
@@ -86,6 +90,8 @@ try:
             r["path"] = _fix_path(r["path"])
         layers_index.append(r)
     logger.info("Layers index loaded: %d entries", len(layers_index))
+    for r in layers_index[:5]:
+        logger.info("Sample path after fix: %s", r.get("path"))
 except Exception as e:
     logger.exception("Failed to load layers_index.json: %s", e)
     layers_index = []
@@ -324,6 +330,8 @@ def run_diff(n, dem1, dem2, cat):
 
     # 1) compute diff
     try:
+        logger.info("Final paths: %s | %s", p1, p2)
+        logger.info("Exists? p1=%s, p2=%s", os.path.exists(p1), os.path.exists(p2))
         diff, ref = compute_dem_difference(p1, p2)
         logger.info("Diff computed: shape=%s, nan%%=%.2f",
                     diff.shape, float(np.isnan(diff).mean() * 100.0))
