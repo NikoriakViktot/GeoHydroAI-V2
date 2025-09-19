@@ -13,8 +13,8 @@ from utils.dem_tools import (
     diff_to_base64_png, raster_bounds_ll,   # <-- додано
 )
 from registry import get_df
-MAIN_MAP_HEIGHT = 500
-RIGHT_PANEL_WIDTH = 500
+MAIN_MAP_HEIGHT = 550
+RIGHT_PANEL_WIDTH = 400
 COMPARE_MAP_HEIGHT = 360
 # ---- Логи (детальні)
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
     if basin:       layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":9,"pitch":0,"bearing":0},
+        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":8,"pitch":0,"bearing":0},
         "layers": layers
     }
     return json.dumps(spec)
