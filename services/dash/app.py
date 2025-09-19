@@ -20,6 +20,11 @@ server = app.server
 # ВАЖЛИВО: реєструємо всі колбеки; якщо впаде — покажемо трейс і все одно стартуємо
 try:
     import callbacks.main_callbacks  # noqa: F401
+    # import callbacks.dem_diff_callbacks
+    import callbacks.sidebar_drawer
+    import callbacks.cdf_callback
+    import callbacks.best_model_callback
+    import callbacks.map_profile_callback
 except Exception as e:
     print("FATAL: failed to import callbacks.main_callbacks:", e)
     traceback.print_exc()
@@ -34,7 +39,7 @@ navbar = html.Div(
         dcc.Link("CDF Accumulation", href="/cdf", style={"color": "#00bfff", "marginRight": "24px"}),
         dcc.Link("Flood Scenarios Test", href="/flood-test", style={"color": "#00bfff", "marginRight": "24px"}),
     ],
-    style={"padding": "20px 0"},
+    style={"padding": "20px 0", "position": "sticky", "top": "0", "zIndex": 1100},
 )
 
 app.layout = html.Div([navbar, dash.page_container])

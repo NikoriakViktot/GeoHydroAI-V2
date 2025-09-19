@@ -16,6 +16,7 @@ layout = html.Div(
         html.Div(
             id="content",
             children=[
+                dcc.Store(id="cdf-store"),
                 dcc.Tabs(
                     id="idx-tabs",
                     value="tab-1",
@@ -35,21 +36,21 @@ layout = html.Div(
     ]
 )
 
-@callback(
-    Output("sidebar-wrap", "className"),
-    Input("burger", "n_clicks"),
-    Input("collapse", "n_clicks"),
-    Input("sidebar-backdrop", "n_clicks"),
-    State("sidebar-wrap", "className"),
-    prevent_initial_call=True
-)
-def toggle_sidebar(burger, collapse, backdrop, cls):
-    cls = (cls or "").strip()
-    changed = dash.ctx.triggered_id
-    if changed == "burger":
-        return f"{cls} open".strip() if "open" not in cls else cls
-    if changed == "sidebar-backdrop":
-        return cls.replace("open", "").strip()
-    if changed == "collapse":
-        return f"{cls} collapsed".strip() if "collapsed" not in cls else cls.replace("collapsed", "").strip()
-    return cls
+# @callback(
+#     Output("sidebar-wrap", "className"),
+#     Input("burger", "n_clicks"),
+#     Input("collapse", "n_clicks"),
+#     Input("sidebar-backdrop", "n_clicks"),
+#     State("sidebar-wrap", "className"),
+#     prevent_initial_call=True
+# )
+# def toggle_sidebar(burger, collapse, backdrop, cls):
+#     cls = (cls or "").strip()
+#     changed = dash.ctx.triggered_id
+#     if changed == "burger":
+#         return f"{cls} open".strip() if "open" not in cls else cls
+#     if changed == "sidebar-backdrop":
+#         return cls.replace("open", "").strip()
+#     if changed == "collapse":
+#         return f"{cls} collapsed".strip() if "collapsed" not in cls else cls.replace("collapsed", "").strip()
+#     return cls
