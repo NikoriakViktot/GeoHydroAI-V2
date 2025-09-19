@@ -23,54 +23,42 @@ if gunicorn_error.handlers:
 external_stylesheets = [
     "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
 ]
-
 app = dash.Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=external_stylesheets,
+    external_stylesheets=[
+        "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
+    ],
     suppress_callback_exceptions=True,
     update_title=None,
 )
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
 
-# ВАЖЛИВО: реєструємо всі колбеки; якщо впаде — покажемо трейс і все одно стартуємо
+# ІМПОРТИ КОЛБЕКІВ — без navigate
 for mod in (
     "callbacks.main_callbacks",
     "callbacks.sidebar_drawer",
     "callbacks.cdf_callback",
     "callbacks.best_model_callback",
     "callbacks.map_profile_callback",
-    "callbacks.navigate",   # ← додай
 ):
     try:
         __import__(mod)
     except Exception:
         logging.exception("FATAL: failed to import %s", mod)
 
-def _log_callbacks_once():
-    logging.getLogger(__name__).info("=== Registered callbacks ===")
-    for k in app.callback_map.keys():
-        logging.getLogger(__name__).info(" - %s", k)
-    logging.getLogger(__name__).info("=== End callbacks ===")
-
-_log_callbacks_once()
-
 navbar = html.Div([
-    html.Button("Dashboard", id="nav-home", className="btn btn-primary", style={"marginRight": "8px"}),
-    html.Button("DEM Diff Analysis", id="nav-dem-diff", className="btn btn-secondary", style={"marginRight": "8px"}),
-    html.Button("DEM Diff Analysis-1", id="nav-dem-diff-1", className="btn btn-secondary", style={"marginRight": "8px"}),
-    html.Button("ICESat-2 Map", id="nav-icesat", className="btn btn-secondary", style={"marginRight": "8px"}),
-    html.Button("Best DEM", id="nav-best-dem", className="btn btn-secondary", style={"marginRight": "8px"}),
-    html.Button("CDF Accumulation", id="nav-cdf", className="btn btn-secondary", style={"marginRight": "8px"}),
-    html.Button("Flood Scenarios Test", id="nav-flood", className="btn btn-secondary"),
-], style={"padding": "20px 0", "position": "sticky", "top": "0", "zIndex": 1100})
+    dcc.Link("Dashboard", href="/",            className="btn btn-primary",   style={"marginRight": "28px"}),
+    dcc.Link("DEM Diff Analysis",  href="/dem-diff",  className="btn btn-secondary", style={"marginRight": "28px"}),
+    dcc.Link("DEM Diff Analysis-1",href="/dem-diff-1",className="btn btn-secondary", style={"marginRight": "28px"}),
+    # dcc.Link("ICESat-2 Map",       href="/icesat-map",className="btn btn-secondary", style={"marginRight": "8px"}),
+    # dcc.Link("Best DEM",           href="/best-dem",  className="btn btn-secondary", style={"marginRight": "8px"}),
+    # dcc.Link("CDF Accumulation",   href="/cdf",       className="btn btn-secondary", style={"marginRight": "8px"}),
+    dcc.Link("Flood Scenarios Test", href="/flood-test", className="btn btn-secondary"),
+], style={"padding":"20px 0","position":"sticky","top":"0","zIndex":1100})
 
+app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])
 
-app.layout = html.Div([
-    dcc.Location(id="url", refresh=False),
-    navbar,
-    dash.page_container
-])
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", port=8050, debug=True)
