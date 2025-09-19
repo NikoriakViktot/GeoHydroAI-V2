@@ -26,6 +26,8 @@ if not logger.handlers:
     logger.addHandler(_h)
 logger.setLevel(LOG_LEVEL)
 
+app = dash.get_app()
+
 # ---- registry/db  (не падаємо на імпорті) ----
 try:
     db = R.db("nmad")
@@ -63,7 +65,7 @@ def _len_df(df: Optional[pd.DataFrame]) -> int:
     return 0 if (df is None) else len(df)
 
 # ---------- dropdowns ----------
-@callback(
+@app.callback(
     Output("lulc_select", "options"),
     Output("landform_select", "options"),
     Input("dem_select", "value"),
@@ -80,7 +82,7 @@ def update_dropdowns(dem: str):
         return [], []
 
 # ---------- CDF lazy-load ----------
-@callback(
+@app.callback(
     Output("cdf-store", "data"),
     Input("idx-tabs", "value"),
     prevent_initial_call=False,
@@ -96,7 +98,7 @@ def load_cdf_data(tab: str):
         return pd.DataFrame().to_json(date_format="iso", orient="split")
 
 # ---------- головний контролер вкладок ----------
-@callback(
+@app.callback(
     Output("idx-tab-content", "children"),
     Input("apply_filters_btn", "n_clicks"),
     Input("idx-tabs", "value"),

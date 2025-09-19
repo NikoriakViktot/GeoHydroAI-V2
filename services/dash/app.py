@@ -54,20 +54,21 @@ def _log_callbacks_once():
 
 _log_callbacks_once()
 
-navbar = html.Div(
-    [
-        dcc.Link("Dashboard", href="/", style={"color": "#00bfff", "marginLeft": "34px", "marginRight": "24px"}),
-        dcc.Link("DEM Diff Analysis", href="/dem-diff", style={"color": "#00bfff", "marginRight": "24px"}),
-        dcc.Link("DEM Diff Analysis-1", href="/dem-diff-1", style={"color": "#00bfff", "marginRight": "24px"}),
-        # dcc.Link("ICESat-2 Map", href="/icesat-map", style={"color": "#00bfff", "marginRight": "24px"}),
-        # dcc.Link("Best DEM", href="/best-dem", style={"color": "#00bfff", "marginRight": "24px"}),
-        # dcc.Link("CDF Accumulation", href="/cdf", style={"color": "#00bfff", "marginRight": "24px"}),
-        dcc.Link("Flood Scenarios Test", href="/flood-test", style={"color": "#00bfff", "marginRight": "24px"}),
-    ],
-    style={"padding": "20px 0", "position": "sticky", "top": "0", "zIndex": 1100},
-)
+navbar = html.Div([
+    html.Button("Dashboard", id="nav-home", className="btn btn-primary", style={"marginRight": "8px"}),
+    html.Button("DEM Diff Analysis", id="nav-dem-diff", className="btn btn-secondary", style={"marginRight": "8px"}),
+    html.Button("DEM Diff Analysis-1", id="nav-dem-diff-1", className="btn btn-secondary", style={"marginRight": "8px"}),
+    html.Button("ICESat-2 Map", id="nav-icesat", className="btn btn-secondary", style={"marginRight": "8px"}),
+    html.Button("Best DEM", id="nav-best-dem", className="btn btn-secondary", style={"marginRight": "8px"}),
+    html.Button("CDF Accumulation", id="nav-cdf", className="btn btn-secondary", style={"marginRight": "8px"}),
+    html.Button("Flood Scenarios Test", id="nav-flood", className="btn btn-secondary"),
+], style={"padding": "20px 0", "position": "sticky", "top": "0", "zIndex": 1100})
 
-app.layout = html.Div([navbar, dash.page_container])
 
+app.layout = html.Div([
+    dcc.Location(id="url", refresh=False),
+    navbar,
+    dash.page_container
+])
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", port=8050, debug=True)

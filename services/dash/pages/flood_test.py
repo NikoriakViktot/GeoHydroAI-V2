@@ -8,6 +8,7 @@ from registry import get_df
 print("Loaded flood test page")
 
 dash.register_page(__name__, path="/flood-test", name="Flood Scenarios Test", order=99)
+app = dash.get_app()
 
 # Завантаження шару басейну
 try:
@@ -130,7 +131,7 @@ layout = html.Div([
     ], style={'width': '100%', 'height': '700px'}, center=[47.8, 25.03], zoom=10),
     html.Div(id="log"),  # <-- Окремо від Map!
 ])
-@callback(
+@app.callback(
     Output("dem-tile-flood", "url"),
     Output("flood-tile-flood", "url"),
     Input("colormap-dropdown-flood", "value"),
@@ -161,7 +162,7 @@ def update_tile_urls(dem_colormap, flood_name, flood_colormap, flood_stretch):
     return dem_url, flood_url
 
 # Callback for logging current selection
-@callback(
+@app.callback(
     Output("log", "children"),
     Input("lc", "baseLayer"),
     Input("lc", "overlays"),

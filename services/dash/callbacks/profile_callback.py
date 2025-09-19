@@ -13,6 +13,7 @@ from src.interpolation_track import (
         kalman_smooth,
     interpolate_linear,
     )
+app = dash.get_app()
 
 # db = DuckDBData("data/tracks_3857_1.parquet")
 # db = DuckDBData("data/NMAD_dem.parquet")
@@ -28,7 +29,7 @@ hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
 
 
 # --- Track/RGT/Spot Dropdown
-@callback(
+@app.callback(
     Output("track_rgt_spot_dropdown", "options"),
     Output("track_rgt_spot_dropdown", "value"),
     Input("year_dropdown", "value"),
@@ -41,7 +42,7 @@ def update_tracks_dropdown(year, selected_profile):
         value = selected_profile["track"]
     return options, value
 
-@callback(
+@app.callback(
     Output("date_dropdown", "options"),
     Output("date_dropdown", "value"),
     Input("track_rgt_spot_dropdown", "value"),
@@ -59,7 +60,7 @@ def update_dates_dropdown(track_rgt_spot, selected_profile):
 
 
 # --- STORE: єдиний callback для синхронізації state/history
-@callback(
+@app.callback(
     Output("selected_profile", "data"),
     Output("profile_history", "data"),
     Input("year_dropdown", "value"),
@@ -97,7 +98,7 @@ def add_distance_m(df, lon_col="x", lat_col="y"):
     return df
 
 
-@callback(
+@app.callback(
     Output("track_profile_graph", "figure"),
     Output("dem_stats", "children"),
     Input("track_rgt_spot_dropdown", "value"),
@@ -203,7 +204,7 @@ def update_profile(track_rgt_spot,
 
 
 
-@callback(
+@app.callback(
     Output("point_group", "children"),
     Input("selected_profile", "data"),
     Input("hand_slider", "value"),

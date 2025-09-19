@@ -16,6 +16,7 @@ from utils.dem_tools import (
     diff_to_base64_png,
     raster_bounds_ll,
 )
+app = dash.get_app()
 
 MAIN_MAP_HEIGHT = 550
 RIGHT_PANEL_WIDTH = 400
@@ -178,7 +179,7 @@ def _pick_path(name, category):
 def _rid(): return uuid.uuid4().hex[:8]
 
 # ---- main callback: мінімальний рендер без HUD
-@callback(
+@app.callback(
     Output("deck-main","spec"),
     Output("state-store","data"),
     Output("debug-log","data"),

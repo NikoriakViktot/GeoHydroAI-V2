@@ -1,7 +1,8 @@
 # callbacks/sidebar_drawer.py
 from dash import callback, Input, Output, State, no_update, ctx
+app = dash.get_app()
 
-@callback(
+@app.callback(
     Output("sidebar-wrap", "className"),
     Input("burger", "n_clicks"),           # мобільне меню
     Input("sidebar-backdrop", "n_clicks"), # клік по підкладці = закрити

@@ -6,6 +6,7 @@ from utils.db import DuckDBData
 from utils.plots import build_best_dem_barplot, build_grouped_nmad_barplot
 from registry import get_db
 db = get_db("nmad")
+app = dash.get_app()
 
 # db = DuckDBData("data/NMAD_dem.parquet")
 
@@ -15,7 +16,7 @@ landform_names = {
     6: "Slope", 7: "Hollow", 8: "Footslope", 9: "Valley", 10: "Pit"
 }
 
-@callback(
+@app.callback(
     Output("tab4-best-dem", "figure"),
     Output("tab4-all-dem", "figure"),
     Input("apply_filters_btn", "n_clicks"),

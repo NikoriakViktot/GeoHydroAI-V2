@@ -7,8 +7,9 @@ import dash
 
 
 from dash import callback, Output, Input, State
+app = dash.get_app()
 
-@callback(
+@app.callback(
     Output("tabs", "value"),
     Input("go_to_profile_btn", "n_clicks"),
     State("tabs", "value"),

@@ -27,6 +27,7 @@ TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rs
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 
 dash.register_page(__name__, path="/dem-diff-1", name="DEM Diff (deck.gl)", order=2)
+app = dash.get_app()
 
 # ---- Basin
 try:
@@ -198,7 +199,7 @@ def _pick_path(name, category):
     return arr[0].get("path")
 
 # ---- Колбек
-@callback(
+@app.callback(
     Output("deck-main","spec"),
     Output("hist","src"),
     Output("stats","children"),
@@ -271,7 +272,7 @@ def run_diff(n, dem1, dem2, cat):
     return json.dumps(spec_obj), hist_png, stats_tbl
 
 
-@callback(Output("deck-events","children"), Input("deck-main","lastEvent"))
+@app.callback(Output("deck-events","children"), Input("deck-main","lastEvent"))
 def show_evt(evt):
     if not evt: return ""
     return f"{evt.get('eventType')} @ {evt.get('coordinate')}"
