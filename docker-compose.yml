@@ -81,9 +81,9 @@ services:
      restart: unless-stopped
      networks: [web]
      volumes:
-         - ./data_parqet:/app/data
-         - ./data:/app/data:ro
-         - tc_tmp:/tmp
+       - ./data/parquet:/app/data/parquet:ro   # <-- тут твій layers_index.json
+       - ./data/cogs:/app/data/cogs:ro         # <-- щоб Dash читав GeoTIFF
+       - tc_tmp:/tmp
 
   nginx:
     image: nginx:stable
