@@ -13,8 +13,8 @@ from utils.dem_tools import (
     diff_to_base64_png, raster_bounds_ll,   # <-- додано
 )
 from registry import get_df
-MAIN_MAP_HEIGHT = 520
-RIGHT_PANEL_WIDTH = 420
+MAIN_MAP_HEIGHT = 450
+RIGHT_PANEL_WIDTH = 400
 # ---- Логи (детальні)
 logger = logging.getLogger(__name__)
 if not logger.handlers:
