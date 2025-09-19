@@ -64,13 +64,16 @@ if not os.path.exists(ASSETS_INDEX_PATH):
     logger.warning("assets/layers_index.json not found at %s", ASSETS_INDEX_PATH)
 
 def _fix_path(p: str) -> str:
-    """Normalize legacy paths to container paths (/app/data/cogs/...)."""
     if not p:
         return p
     p = p.replace("\\", "/")
+    # якщо вже абсолютний шлях (/app/...), нічого не робимо
+    if p.startswith("/"):
+        return p
+    # нормалізуємо legacy-випадки
     p = p.replace("data/COG/", "/app/data/cogs/").replace("data/cogs/", "/app/data/cogs/")
     if p.startswith("data/"):
-        p = "/app/" + p  # final safety net for any 'data/...'
+        p = "/app/" + p
     return p
 
 try:
@@ -157,7 +160,7 @@ def build_spec(
     diff_url: str | None,
     basin: dict | None,
     init_view=None,
-    map_style: str = "mapbox://styles/mapbox/dark-v11",
+    map_style: str = "mapbox://styles/mapbox/light-v11",
 ) -> str:
     layers = []
     if dem_url:
