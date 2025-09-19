@@ -72,16 +72,17 @@ services:
        MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
        TERRACOTTA_PUBLIC_URL: https://www.geohydroai.org/tc
        LOG_LEVEL: INFO
+       DATA_DIR: /app/data/parquet
      depends_on:
        api:
          condition: service_started
-     expose:
-       - "${DASH_PORT}:8050"
+     ports:
+       - "${DASH_PORT:-8050}:8050"
      restart: unless-stopped
      networks: [web]
      volumes:
-         - ./data_parqet:/app/data:ro
-         - ./data/cogs:/app/data/cogs:ro
+         - ./data_parqet:/app/data
+         - ./data:/app/data:ro
          - tc_tmp:/tmp
 
   nginx:
