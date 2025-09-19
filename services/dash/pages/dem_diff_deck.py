@@ -76,7 +76,7 @@ def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
         "@@type": "TileLayer",
         "id": layer_id,
         "data": url,
-        "minZoom": 0, "maxZoom": 19, "tileSize": 256, "opacity": opacity,
+        "minZoom": 0, "maxZoom": 19, "tileSize": 220, "opacity": opacity,
         "renderSubLayers": {
             "@@function": ["tile", {
                 "type":"BitmapLayer",
@@ -184,10 +184,12 @@ def run_diff(n, dem1, dem2, cat):
         logger.warning("Invalid DEM selection")
         return no_update, no_update, "Оберіть різні DEM!"
 
+    # шляхи
     p1, p2 = _pick_path(dem1, cat), _pick_path(dem2, cat)
     p1, p2 = _fix_path(p1), _fix_path(p2)
     logger.info("Using paths: %s | %s", p1, p2)
 
+    # обчислення різниці
     try:
         diff, ref = compute_dem_difference(p1, p2)
         nan_pct = float(np.isnan(diff).mean() * 100.0)
@@ -196,39 +198,50 @@ def run_diff(n, dem1, dem2, cat):
         logger.exception("Error computing diff: %s", e)
         return no_update, no_update, f"Помилка при обчисленні: {e}"
 
+    # динамічний/фіксований діапазон відображення
     try:
-        q1, q99 = np.nanpercentile(diff, [1, 99])
-        vmin, vmax = float(q1), float(q99)
-        if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
-            vmin, vmax = -10.0, 10.0
+        if (cat or "").lower() == "dem":
+            vmin, vmax = -25.0, 25.0
+            logger.info("Using fixed DEM stretch: [%.3f, %.3f]", vmin, vmax)
+        else:
+            q1, q99 = np.nanpercentile(diff, [1, 99])
+            vmin, vmax = float(q1), float(q99)
+            if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
+                vmin, vmax = -10.0, 10.0
+            logger.info("Percentile stretch: [%.3f, %.3f]", vmin, vmax)
     except Exception:
         vmin, vmax = -10.0, 10.0
-    logger.info("Stretch: [%.3f, %.3f]", vmin, vmax)
+        logger.info("Fallback stretch: [%.3f, %.3f]", vmin, vmax)
 
-    # === Рендер diff -> data-URI + bounds ===
-    img_uri = diff_to_base64_png(diff, ref, vmin=vmin, vmax=vmax, figsize=(8, 8))
-    bounds = raster_bounds_ll(ref)
-    logger.info("Overlay data-uri length=%d bytes (base64), bounds=%s", len(img_uri), bounds)
+    # рендер diff -> data-URI + коректні bounds у WGS84
+    try:
+        img_uri = diff_to_base64_png(diff, ref, vmin=vmin, vmax=vmax, figsize=(8, 8))
+        bounds = raster_bounds_ll(ref)  # [[S,W],[N,E]] у EPSG:4326
+        logger.info("Overlay data-uri length=%d chars, bounds=%s", len(img_uri), bounds)
+        diff_bitmap = bitmap_layer("diff-bitmap", img_uri, bounds)
+    except Exception as e:
+        logger.exception("Error building Bitmap overlay: %s", e)
+        return no_update, no_update, f"Помилка рендерінгу накладання: {e}"
 
-    diff_bitmap = bitmap_layer("diff-bitmap", img_uri, bounds)
-
-    # Легенда/гістограма/статистика
+    # легенда / гістограма / статистика
     legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r")
-    legend_html = f"<img src='{legend_uri}' style='height':160px'/>"
+    legend_html = f"<img src='{legend_uri}' style='height:160px'/>"  # ✅ виправлено
 
-    # чорна гістограма — просто наше PNG на чорному фоні контейнера
     hist_png = plot_histogram(diff, clip_range=(vmin, vmax))
-
     stats = calculate_error_statistics(diff)
-    rows = [html.Tr([html.Th(k), html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)])
-            for k, v in stats.items()]
-    stats_tbl = html.Table(rows, style={"background":"#181818","color":"#eee","padding":"6px"})
+    rows = [
+        html.Tr([html.Th(k), html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)])
+        for k, v in stats.items()
+    ]
+    stats_tbl = html.Table(rows, style={"background": "#181818", "color": "#eee", "padding": "6px"})
 
+    # збірка deck.gl spec
     spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
     spec_obj = json.loads(spec)
     spec_obj.setdefault("description", {})["top-right"] = legend_html
 
     return json.dumps(spec_obj), hist_png, stats_tbl
+
 
 @callback(Output("deck-events","children"), Input("deck-main","lastEvent"))
 def show_evt(evt):

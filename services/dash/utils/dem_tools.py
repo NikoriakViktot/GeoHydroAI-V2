@@ -7,34 +7,57 @@ from rasterio.warp import reproject, Resampling
 from scipy.stats import skew, kurtosis
 from xdem import DEM
 
-
 def compute_dem_difference(path1, path2):
     """
     diff = DEM2 - DEM1, DEM2 автоматично ресемплиться/репроєктується під grid DEM1.
-    Повертає (diff_array[np.float32], reference_dem(DEM))
+    Повертає (diff[np.float32], DEM1_as_reference)
     """
     dem1 = DEM(path1)  # має data, transform, profile (crs, nodata, ...)
+    nodata1 = dem1.profile.get("nodata", None)
+
     with rasterio.open(path2) as src2:
-        dem2 = src2.read(1, masked=False)
-        resampled = np.empty_like(dem1.data, dtype=np.float32)
+        dem2_data = src2.read(1, masked=False)
+        nodata2 = src2.nodata
+
+        # 1) Ресемплінг DEM2 у грід DEM1 з явним опрацюванням nodata
+        resampled = np.full_like(dem1.data, fill_value=np.nan, dtype=np.float32)
         reproject(
-            source=dem2,
+            source=dem2_data,
             destination=resampled,
             src_transform=src2.transform,
             src_crs=src2.crs,
             dst_transform=dem1.transform,
             dst_crs=dem1.profile["crs"],
+            src_nodata=nodata2,
+            dst_nodata=np.nan,               # важливо: пишемо NaN у місця без даних
             resampling=Resampling.bilinear,
         )
 
-    nodata = dem1.profile.get("nodata", -9999)
+    # 2) Різниця
     diff = resampled.astype(np.float32) - dem1.data.astype(np.float32)
-    diff = np.where(
-        (dem1.data == nodata) | np.isclose(dem1.data, nodata) | (diff < -9000) | (diff > 9000),
-        np.nan,
-        diff,
-    ).astype(np.float32)
+
+    # 3) Комбінована маска: обидва nodata + нечислові + «абсурдні» висоти/різниці
+    mask = np.zeros(diff.shape, dtype=bool)
+
+    # nodata/NaN з DEM1
+    if nodata1 is not None:
+        mask |= (dem1.data == nodata1) | np.isclose(dem1.data, nodata1)
+    mask |= ~np.isfinite(dem1.data)
+
+    # nodata/NaN з DEM2 (після ресемплу ми вже маємо NaN)
+    if nodata2 is not None:
+        mask |= (resampled == nodata2) | np.isclose(resampled, nodata2)
+    mask |= ~np.isfinite(resampled)
+
+    # «Абсурдні» значення висот/різниці (страхувальна огорожа)
+    # (типові деми в межах ±9000 м; також відкинемо екстремальний diff)
+    mask |= (dem1.data < -9000) | (dem1.data > 9000)
+    mask |= (resampled < -9000) | (resampled > 9000)
+    mask |= (diff < -9000) | (diff > 9000)
+
+    diff = np.where(mask, np.nan, diff).astype(np.float32)
     return diff, dem1
+
 
 
 def save_temp_diff_as_cog(diff_array, reference_dem, prefix="demdiff_"):
@@ -154,8 +177,20 @@ def diff_to_base64_png(diff_array, ref_dem, vmin=-10, vmax=10, figsize=(8, 8)):
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
+from rasterio.warp import transform as rio_transform
+
 def raster_bounds_ll(ref_dem):
-    """[[south, west], [north, east]] для географічних bounds BitmapLayer/Leaflet."""
+    """
+    [[south, west], [north, east]] у WGS84 — для BitmapLayer/Leaflet.
+    """
     with rasterio.open(ref_dem.filename) as src:
         b = src.bounds
-        return [[b.bottom, b.left], [b.top, b.right]]
+        crs = src.crs
+        # 4 кути в CRS растра -> WGS84
+        xs = [b.left,  b.right, b.right, b.left]
+        ys = [b.bottom, b.bottom, b.top,   b.top]
+        lon, lat = rio_transform(crs, "EPSG:4326", xs, ys)
+        # обернемо в bbox
+        west, east = min(lon), max(lon)
+        south, north = min(lat), max(lat)
+        return [[south, west], [north, east]]
