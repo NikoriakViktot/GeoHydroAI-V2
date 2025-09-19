@@ -1,9 +1,10 @@
 # pages/index.py
 import dash
-from dash import html, dcc, Output, Input, State, callback
+from dash import html, dcc
 from layout.sidebar import sidebar
 
-dash.register_page(__name__, path="/", name="Dashboard", title="GeoHydroAI | Dashboard", order=0)
+dash.register_page(__name__, path="/", name="Dashboard",
+                   title="GeoHydroAI | Dashboard", order=0)
 
 layout = html.Div(
     id="layout",
@@ -18,18 +19,23 @@ layout = html.Div(
             children=[
                 dcc.Store(id="cdf-store"),
                 dcc.Tabs(
-                    id="idx-tabs",
+                    id="tabs",              # ← було idx-tabs
                     value="tab-1",
                     className="custom-tabs",
                     children=[
-                        dcc.Tab(label="DEM Comparison", value="tab-1", className="tab", selected_className="tab--selected"),
-                        dcc.Tab(label="Track Profile", value="tab-2", className="tab", selected_className="tab--selected"),
-                        dcc.Tab(label="ICESat-2 Map", value="tab-3", className="tab", selected_className="tab--selected"),
-                        dcc.Tab(label="Best DEM", value="tab-4", className="tab", selected_className="tab--selected"),
-                        dcc.Tab(label="CDF Accumulation", value="tab-5", className="tab", selected_className="tab--selected"),
+                        dcc.Tab(label="DEM Comparison", value="tab-1",
+                                className="tab", selected_className="tab--selected"),
+                        dcc.Tab(label="Track Profile", value="tab-2",
+                                className="tab", selected_className="tab--selected"),
+                        dcc.Tab(label="ICESat-2 Map", value="tab-3",
+                                className="tab", selected_className="tab--selected"),
+                        dcc.Tab(label="Best DEM", value="tab-4",
+                                className="tab", selected_className="tab--selected"),
+                        dcc.Tab(label="CDF Accumulation", value="tab-5",
+                                className="tab", selected_className="tab--selected"),
                     ],
                 ),
-                html.Div(id="idx-tab-content", style={"padding": "10px 12px"}),
+                html.Div(id="tab-content", style={"padding": "10px 12px"})  # ← було idx-tab-content
             ],
         ),
         html.Div(id="sidebar-backdrop", n_clicks=0),
