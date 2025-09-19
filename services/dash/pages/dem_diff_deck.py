@@ -13,7 +13,8 @@ from utils.dem_tools import (
     diff_to_base64_png, raster_bounds_ll,   # <-- додано
 )
 from registry import get_df
-
+MAIN_MAP_HEIGHT = 520
+RIGHT_PANEL_WIDTH = 420
 # ---- Логи (детальні)
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -119,44 +120,71 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
         "layers": layers
     }
     return json.dumps(spec)
-
-# ---- Layout
 layout = html.Div([
     html.H3("DEM Difference Analysis (deck.gl + Terracotta)"),
-    html.Div([
-        html.Div([
-            html.Label("DEM 1"), dcc.Dropdown(id="dem1", options=[{"label":d,"value":d} for d in DEM_LIST]),
-            html.Label("DEM 2"), dcc.Dropdown(id="dem2", options=[{"label":d,"value":d} for d in DEM_LIST]),
-            html.Label("Категорія"), dcc.Dropdown(id="cat", options=[{"label":c,"value":c} for c in CATEGORY_LIST]),
-            html.Br(), html.Button("Порахувати різницю", id="run"),
-        ], style={"width":"340px","marginRight":"16px","display":"inline-block","verticalAlign":"top"}),
-        html.Div([
-            dash_deckgl.DashDeckgl(
-                id="deck-main",
-                spec=build_spec(build_dem_url("viridis"), None, basin_json),
-                description={"top-right": "<div id='legend'>Legend</div>"},
-                height=MAIN_MAP_HEIGHT, cursor_position="bottom-right",
-                events=["hover"], mapbox_key=MAPBOX_ACCESS_TOKEN
-            ),
-            html.Div(id="deck-events", style={"fontFamily":"monospace","marginTop":"6px"})
-        ], style={"width":"calc(100% - 360px)","display":"inline-block","verticalAlign":"top"})
-    ]),
-    html.Div([
-        html.Div([html.H4("Гістограма"), html.Img(id="hist", style={"height":"220px","background":"#000"})],
-                 style={"display":"inline-block","marginRight":"24px"}),  # <-- чорний фон контейнера
-        html.Div(id="stats", style={"display":"inline-block","verticalAlign":"top","fontFamily":"monospace"})
-    ], style={"marginTop":"14px"}),
 
-    html.Hr(),
-    html.H4("Режим порівняння (дві панелі)"),
+    # Головна сітка: ліворуч вузька колонка з контролями, праворуч — карта+права панель
     html.Div([
-        dash_deckgl.DashDeckgl(id="deck-left",
-            spec=build_spec(build_dem_url("terrain"), None, basin_json),
-            height=COMPARE_MAP_HEIGHT, cursor_position="none", mapbox_key=MAPBOX_ACCESS_TOKEN),
-        dash_deckgl.DashDeckgl(id="deck-right",
-            spec=build_spec(build_dem_url("viridis"), None, basin_json),
-            height=COMPARE_MAP_HEIGHT, cursor_position="none", mapbox_key=MAPBOX_ACCESS_TOKEN),
-    ], style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"8px"})
+        # ---- Ліва панель керування ----
+        html.Div([
+            html.Label("DEM 1"),
+            dcc.Dropdown(id="dem1", options=[{"label": d, "value": d} for d in DEM_LIST]),
+            html.Label("DEM 2"),
+            dcc.Dropdown(id="dem2", options=[{"label": d, "value": d} for d in DEM_LIST]),
+            html.Label("Категорія"),
+            dcc.Dropdown(id="cat", options=[{"label": c, "value": c} for c in CATEGORY_LIST]),
+            html.Br(),
+            html.Button("Порахувати різницю", id="run"),
+        ], style={
+            "width": "300px",
+            "minWidth": "280px",
+            "paddingRight": "16px"
+        }),
+
+        # ---- Права зона: карта + панель справа ----
+        html.Div([
+            # внутрішня сітка: карта (розтягується) + права панель фіксованої ширини
+            html.Div([
+                # Карта
+                dash_deckgl.DashDeckgl(
+                    id="deck-main",
+                    spec=build_spec(build_dem_url("viridis"), None, basin_json),
+                    description={"top-right": "<div id='legend'>Legend</div>"},
+                    height=MAIN_MAP_HEIGHT,
+                    cursor_position="bottom-right",
+                    events=["hover"],
+                    mapbox_key=MAPBOX_ACCESS_TOKEN,
+                ),
+
+                # Права панель: гістограма + статистика
+                html.Div([
+                    html.H4("Гістограма", style={"marginTop": 0}),
+                    html.Img(id="hist", style={"width": "100%", "borderRadius": "8px"}),
+                    html.Hr(),
+                    html.Div(id="stats", style={"fontFamily": "monospace"})
+                ], style={
+                    "width": f"{RIGHT_PANEL_WIDTH}px",
+                    "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
+                    "paddingLeft": "12px",
+                    "overflowY": "auto"
+                }),
+            ], style={
+                "display": "grid",
+                "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
+                "gap": "12px",
+                "alignItems": "start"
+            }),
+
+            # Події під картою (за бажанням)
+            html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"})
+        ], style={"width": "100%"})
+
+    ], style={
+        "display": "grid",
+        "gridTemplateColumns": "300px 1fr",
+        "gap": "8px",
+        "alignItems": "start"
+    })
 ])
 
 # ---- Службові
