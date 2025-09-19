@@ -2,6 +2,23 @@
 import dash
 from dash import html, dcc
 import traceback
+import os, sys, logging
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True,  # критично: перезаписати конфіг, який міг виставити gunicorn
+)
+
+# Додатково: вирівняти Flask/Dash під gunicorn, якщо gunicorn вже має свої хендлери
+gunicorn_error = logging.getLogger("gunicorn.error")
+if gunicorn_error.handlers:
+    root = logging.getLogger()
+    root.handlers = gunicorn_error.handlers
+    root.setLevel(gunicorn_error.level)
 
 external_stylesheets = [
     "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -28,6 +45,16 @@ try:
 except Exception as e:
     print("FATAL: failed to import callbacks.main_callbacks:", e)
     traceback.print_exc()
+
+@app.server.before_first_request
+def _log_callbacks():
+    try:
+        logging.getLogger(__name__).info("=== Registered callbacks ===")
+        for k, v in app.callback_map.items():
+            logging.getLogger(__name__).info(" - %s", k)
+        logging.getLogger(__name__).info("=== End callbacks ===")
+    except Exception as e:
+        logging.getLogger(__name__).exception("Could not print callback_map: %s", e)
 
 navbar = html.Div(
     [
