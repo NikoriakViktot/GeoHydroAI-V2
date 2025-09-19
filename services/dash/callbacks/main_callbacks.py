@@ -85,7 +85,7 @@ def update_dropdowns(dem: str):
 # ---------- CDF lazy-load ----------
 @app.callback(
     Output("cdf-store", "data"),
-    Input("idx-tabs", "value"),
+    Input("tabs", "value"),
     prevent_initial_call=False,
 )
 def load_cdf_data(tab: str):
@@ -100,9 +100,9 @@ def load_cdf_data(tab: str):
 
 # ---------- головний контролер вкладок ----------
 @app.callback(
-    Output("idx-tab-content", "children"),
+    Output("tab-content", "children"),
     Input("apply_filters_btn", "n_clicks"),
-    Input("idx-tabs", "value"),
+    Input("tabs", "value"),
     Input("cdf-store", "data"),
     State("dem_select", "value"),
     State("lulc_select", "value"),

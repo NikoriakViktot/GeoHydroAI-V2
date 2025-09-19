@@ -119,14 +119,21 @@ def build_dem_url(colormap="viridis"):
 
 def build_spec(dem_url, diff_bitmap, basin, init_view=None, map_style="mapbox://styles/mapbox/light-v11"):
     layers = []
-    if dem_url:     layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
-    if diff_bitmap: layers.append(diff_bitmap)
-    if basin:       layers.append(basin_layer(basin))
-    return {  # ← ПОВЕРТАЄМО СЛОВНИК
-        "mapStyle": map_style,
-        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":8,"pitch":0,"bearing":0},
+    if dem_url:
+        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
+    if diff_bitmap:
+        layers.append(diff_bitmap)
+    if basin:
+        layers.append(basin_layer(basin))
+
+    spec = {
+        "initialViewState": init_view or {"longitude": 25.03, "latitude": 47.8, "zoom": 8, "pitch": 0, "bearing": 0},
         "layers": layers
     }
+    if map_style:  # ← додай тільки якщо є
+        spec["mapStyle"] = map_style
+    return spec
+
 # ---- UI
 layout = html.Div([
     html.H3("DEM Difference Analysis (deck.gl + Terracotta)"),
@@ -230,7 +237,7 @@ def run_diff(n, dem1, dem2, cat, dbg):
         return no_update, no_update, dbg
 
     # мінімальний spec без HUD
-    spec_obj = build_spec(build_dem_url("terrain"), diff_bitmap, BASIN_JSON, map_style=safe_map_style())
+    spec_obj = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json, map_style=safe_map_style())
 
     state = {"vmin": vmin, "vmax": vmax, "cmap": "RdBu_r", "dem1": dem1, "dem2": dem2, "cat": cat}
     push(f"done {(time.perf_counter()-t0)*1000:.1f} ms")
