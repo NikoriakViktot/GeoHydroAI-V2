@@ -46,15 +46,13 @@ except Exception as e:
     print("FATAL: failed to import callbacks.main_callbacks:", e)
     traceback.print_exc()
 
-@app.server.before_first_request
-def _log_callbacks():
-    try:
-        logging.getLogger(__name__).info("=== Registered callbacks ===")
-        for k, v in app.callback_map.items():
-            logging.getLogger(__name__).info(" - %s", k)
-        logging.getLogger(__name__).info("=== End callbacks ===")
-    except Exception as e:
-        logging.getLogger(__name__).exception("Could not print callback_map: %s", e)
+def _log_callbacks_once():
+    logging.getLogger(__name__).info("=== Registered callbacks ===")
+    for k in app.callback_map.keys():
+        logging.getLogger(__name__).info(" - %s", k)
+    logging.getLogger(__name__).info("=== End callbacks ===")
+
+_log_callbacks_once()
 
 navbar = html.Div(
     [
