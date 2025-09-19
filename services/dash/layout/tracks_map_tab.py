@@ -8,14 +8,20 @@ import geopandas as gpd
 
 from dash import html, dcc
 from utils.style import dark_card_style, dropdown_style
+from registry import get_df
 
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
+try:
+    basin: gpd.GeoDataFrame = get_df("basin")
+    print("Basin loaded! CRS:", basin.crs)
+    basin = basin.to_crs("EPSG:4326")
+    basin_json = json.loads(basin.to_json())
+except Exception as e:
+    print("❌ Error loading basin:", e)
+    basin_json = None
 
-# Читання шару басейну (GeoJSON)
-basin = gpd.read_file("data/basin_bil_cher_4326.gpkg")
-basin = basin.to_crs("EPSG:4326")
-basin = json.loads(basin.to_json())
+
 
 tracks_map_layout = html.Div([
     html.H4("Карта ICESat-2 треків", style={"color": "#EEEEEE"}),
