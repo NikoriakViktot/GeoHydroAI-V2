@@ -20,7 +20,6 @@ from utils.dem_tools import (
 )
 from registry import get_df
 
-
 # ----------------------------
 # Logging
 # ----------------------------
