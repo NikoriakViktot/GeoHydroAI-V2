@@ -116,7 +116,7 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
     if basin:       layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":20,"pitch":0,"bearing":0},
+        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":10,"pitch":0,"bearing":0},
         "layers": layers
     }
     return json.dumps(spec)
