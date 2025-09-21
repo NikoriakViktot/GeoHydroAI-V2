@@ -51,7 +51,7 @@ for mod in (
 navbar = html.Div([
     dcc.Link("Dashboard", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
     # dcc.Link("DEM Diff Analysis",  href="/dem-diff",  className="btn btn-secondary", style={"marginRight": "28px"}),
-    dcc.Link("DEM Diff Analysis-1",href="/dem-diff-1",className="btn btn-secondary", style={"marginRight": "28px"}),
+    dcc.Link("DEM Diff",href="/dem-diff",className="btn btn-secondary", style={"marginRight": "28px"}),
     # dcc.Link("ICESat-2 Map",       href="/icesat-map",className="btn btn-secondary", style={"marginRight": "8px"}),
     # dcc.Link("Best DEM",           href="/best-dem",  className="btn btn-secondary", style={"marginRight": "8px"}),
     # dcc.Link("CDF Accumulation",   href="/cdf",       className="btn btn-secondary", style={"marginRight": "8px"}),

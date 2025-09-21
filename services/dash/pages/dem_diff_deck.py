@@ -26,7 +26,7 @@ logger.info("=== dem_diff_deck page init ===")
 TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 
-dash.register_page(__name__, path="/dem-diff-1", name="DEM Diff (deck.gl)", order=2)
+dash.register_page(__name__, path="/dem-diff", name="DEM Diff", order=2)
 app = dash.get_app()
 
 # ---- Basin
