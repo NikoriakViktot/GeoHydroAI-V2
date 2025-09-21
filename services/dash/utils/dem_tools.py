@@ -1,8 +1,11 @@
 # utils/dem_tools.py
 import os, uuid, io, base64
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import rasterio
+from rasterio.warp import transform as rio_transform
 from rasterio.warp import reproject, Resampling
 from scipy.stats import skew, kurtosis
 from xdem import DEM
@@ -64,7 +67,6 @@ def save_temp_diff_as_cog(diff_array, reference_dem, prefix="demdiff_"):
     """
     Пише COG у /tmp (driver=COG). Використовується лише якщо потрібні тайли з сервера.
     """
-    import rasterio
     filename = f"{prefix}{uuid.uuid4().hex}.tif"
     out_path = os.path.join("/tmp", filename)
     profile = reference_dem.profile.copy()
@@ -75,13 +77,12 @@ def save_temp_diff_as_cog(diff_array, reference_dem, prefix="demdiff_"):
 
 
 def make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)"):
-    import matplotlib as mpl
     fig, ax = plt.subplots(figsize=(2, 5))
     # темний фон під легенду
     fig.patch.set_alpha(0.0)
     ax.set_facecolor("none")
-    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
+    norm = plt.colors.Normalize(vmin=vmin, vmax=vmax)
+    cb = plt.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
     cb.set_label(label, fontsize=12, color="#eee")
     cb.ax.tick_params(colors="#eee")
     buf = io.BytesIO()
@@ -157,9 +158,7 @@ def calculate_error_statistics(diff_array: np.ndarray):
 
 
 # ---------- overlay як data-URI + bounds для deck.gl ----------
-# utils/dem_tools.py
-import io, base64, matplotlib.pyplot as plt
-import rasterio
+
 
 def diff_to_base64_png(diff_array, ref_dem, vmin=-10, vmax=10, figsize=(8, 8)):
     """Рендер PNG (прозорий) для накладання як BitmapLayer. Повертає data:image/png;base64,..."""
@@ -177,7 +176,7 @@ def diff_to_base64_png(diff_array, ref_dem, vmin=-10, vmax=10, figsize=(8, 8)):
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
-from rasterio.warp import transform as rio_transform
+
 
 def raster_bounds_ll(ref_dem):
     """

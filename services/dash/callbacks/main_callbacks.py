@@ -19,6 +19,10 @@ from utils.style import apply_dark_theme
 _LEVELS = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10, "NOTSET":0}
 level_name = (os.getenv("LOG_LEVEL", "INFO") or "INFO").upper()
 LOG_LEVEL = _LEVELS.get(level_name, 20)  # fallback INFO
+dem_list = [
+    "alos_dem", "aster_dem", "copernicus_dem", "fab_dem",
+    "nasa_dem", "srtm_dem", "tan_dem"
+]
 
 logger = logging.getLogger("geoai.callbacks.main")
 if not logger.handlers:
@@ -113,91 +117,91 @@ def load_cdf_data(tab: str):
 )
 def update_dashboard(n_clicks, tab, cdf_data,
                      dem, lulc, landform, slope, hand_toggle, hand_range):
+    if n_clicks is None and tab != "tab-5":
+        raise dash.exceptions.PreventUpdate
+    # hand_range_ = hand_range if "on" in hand_toggle else None
+
     hand_range_ = _hand_range_effective(hand_toggle, hand_range)
 
-    # TAB 1: initial
+
+    # === Початкове завантаження для tab-1 ===
     if tab == "tab-1" and (n_clicks is None or n_clicks == 0):
-        try:
-            initial_df = R.df("initial_sample")
-            initial_stats_records = R.df("initial_stats").to_dict("records")
+        # Завантаження з кешу (Крок 2)
+        dff_plot = R.df("initial_sample")
+        filtered_stats_all_dems = R.df("initial_stats").to_dict("records")
+        stats_all = R.df("stats_all_cached.parquet").to_dict("records")
+        dem_stats_columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
 
-            hist_fig = build_error_hist(initial_df, dem, width=260, height=270)
-            box_fig  = build_error_box(initial_df, dem, width=260, height=270)
-            filtered_bar = build_dem_stats_bar(initial_stats_records, width=420, height=270)
-            for f in (hist_fig, box_fig, filtered_bar):
-                apply_dark_theme(f)
+        # Графіки
+        hist_fig = build_error_hist(dff_plot, dem, width=260, height=270)
+        box_fig = build_error_box(dff_plot, dem, width=260, height=270)
+        filtered_bar = build_dem_stats_bar(filtered_stats_all_dems, width=420, height=270)
 
-            filtered_table_title = get_filtered_table_title(lulc, landform, slope, hand_range_)
-            filters_summary = format_selected_filters(lulc, landform, slope, hand_range_)
-            logger.info("render tab-1 initial | dem=%s", dem)
+        # Заголовок таблиці
+        hand_range_ = hand_range if "enable" in hand_toggle else None
+        filtered_table_title = get_filtered_table_title(lulc, landform, slope, hand_range_)
+        filters_summary = format_selected_filters(lulc, landform, slope, hand_range_)
 
-            body = render_main_tab(hist_fig, box_fig, filtered_bar,
-                                   initial_stats_records, DEM_STATS_COLUMNS,
-                                   filtered_table_title, dem, filters_summary)
-            return html.Div([html.H1("DEM Comparison"), body])
-        except Exception as e:
-            logger.exception("tab-1 initial load failed: %s", e)
-            return html.Div("Помилка початкового завантаження.")
+        return render_main_tab(
+            hist_fig, box_fig, filtered_bar,
+            filtered_stats_all_dems, dem_stats_columns,
+            filtered_table_title, dem, filters_summary
+        )
 
-    # TAB 1: filtered
     if tab == "tab-1":
-        _log_filters(dem, lulc, landform, slope, hand_range_)
-        if db is None:
-            # без БД — плейсхолдери
-            import plotly.graph_objects as go
-            hist_fig = go.Figure(); box_fig = go.Figure()
-            filtered_bar = build_dem_stats_bar([], width=420, height=270)
-            for f in (hist_fig, box_fig, filtered_bar):
-                apply_dark_theme(f)
-            body = render_main_tab(hist_fig, box_fig, filtered_bar, [],
-                                   DEM_STATS_COLUMNS,
-                                   get_filtered_table_title(lulc, landform, slope, hand_range_),
-                                   dem, format_selected_filters(lulc, landform, slope, hand_range_))
-            return html.Div([html.H1("DEM Comparison"), body])
+        with duckdb.connect() as con:
+            # Sample для hist/box (по активному DEM, по floodplain)
+            dff_plot = db.get_filtered_sample(
+                con, dem,
+                slope_range=slope, hand_range=hand_range_,
+                lulc=lulc, landform=landform, sample_n=20_000
+            )
+            # Floodplain (HAND) table
+            stats_hand = []
+            for d in dem_list:
+                s = db.get_dem_stats_sql(con, d, hand_range=hand_range_)
+                if s:
+                    s['DEM'] = d
+                    stats_hand.append(s)
+            # All territory table
+            stats_all = []
+            for d in dem_list:
+                s = db.get_dem_stats_sql(con, d, hand_range=None)
+                if s:
+                    s['DEM'] = d
+                    stats_all.append(s)
+            columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
 
-        try:
-            with duckdb.connect() as con:
-                sample_df = db.get_filtered_sample(
-                    con, dem, slope_range=slope, hand_range=hand_range_,
-                    lulc=lulc, landform=landform, sample_n=20_000,
+            # --- Barplot для всіх DEM по поточних фільтрах ---
+            filtered_stats_all_dems = []
+            for d in dem_list:
+                s = db.get_filtered_stats(
+                    con, d,
+                    slope_range=slope,
+                    hand_range=hand_range_,
+                    lulc=lulc,
+                    landform=landform
                 )
-
-                filtered_stats_all_dems: list[dict] = []
-                for d in DEM_LIST:
-                    raw = db.get_filtered_stats(
-                        con, d, slope_range=slope, hand_range=hand_range_,
-                        lulc=lulc, landform=landform,
-                    )
-                    stat_row = _to_stats_dict(raw, d)
-                    if stat_row is not None:
-                        filtered_stats_all_dems.append(stat_row)
-
-            # безпечні фігури навіть якщо sample_df порожній
-            import plotly.graph_objects as go
-            if sample_df is None or (hasattr(sample_df, "empty") and sample_df.empty):
-                hist_fig = go.Figure(); box_fig = go.Figure()
-                filtered_bar = build_dem_stats_bar(filtered_stats_all_dems, width=420, height=270)
-            else:
-                hist_fig = build_error_hist(sample_df, dem, width=260, height=270)
-                box_fig  = build_error_box(sample_df, dem, width=260, height=270)
-                filtered_bar = build_dem_stats_bar(filtered_stats_all_dems, width=420, height=270)
-
-            for f in (hist_fig, box_fig, filtered_bar):
-                apply_dark_theme(f)
-
+                if s:
+                    s['DEM'] = d
+                    filtered_stats_all_dems.append(s)
+            for d in filtered_stats_all_dems:
+                if "DEM" in d:
+                    d["DEM"] = d["DEM"].replace("_", " ").upper()
+            filtered_bar = build_dem_stats_bar(
+                filtered_stats_all_dems,
+                width=420, height=270
+            )
+            # Графіки для активного DEM
+            hist_fig = build_error_hist(dff_plot, dem, width=260, height=270)
+            box_fig = build_error_box(dff_plot, dem, width=260, height=270)
             filtered_table_title = get_filtered_table_title(lulc, landform, slope, hand_range_)
             filters_summary = format_selected_filters(lulc, landform, slope, hand_range_)
 
-            logger.info("render tab-1 filtered | dem=%s stats=%d sample_n=%d",
-                        dem, len(filtered_stats_all_dems), _len_df(sample_df))
-
-            body = render_main_tab(hist_fig, box_fig, filtered_bar,
-                                   filtered_stats_all_dems, DEM_STATS_COLUMNS,
-                                   filtered_table_title, dem, filters_summary)
-            return html.Div([html.H1("DEM Comparison"), body])
-        except Exception as e:
-            logger.exception("tab-1 filtered load failed: %s", e)
-            return html.Div("Не вдалося застосувати фільтри.")
+        return render_main_tab(
+            hist_fig, box_fig, filtered_bar,
+            filtered_stats_all_dems, columns,
+            filtered_table_title, dem, filters_summary)
 
     # TAB 2,3,4,5 — як було
     if tab == "tab-2":

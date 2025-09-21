@@ -20,9 +20,9 @@ if gunicorn_error.handlers:
     root.handlers = gunicorn_error.handlers
     root.setLevel(gunicorn_error.level)
 
-external_stylesheets = [
-    "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
-]
+# external_stylesheets = [
+#     "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
+# ]
 app = dash.Dash(
     __name__,
     use_pages=True,
@@ -49,8 +49,8 @@ for mod in (
         logging.exception("FATAL: failed to import %s", mod)
 
 navbar = html.Div([
-    dcc.Link("Dashboard", href="/",            className="btn btn-primary",   style={"marginRight": "28px"}),
-    dcc.Link("DEM Diff Analysis",  href="/dem-diff",  className="btn btn-secondary", style={"marginRight": "28px"}),
+    dcc.Link("Dashboard", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
+    # dcc.Link("DEM Diff Analysis",  href="/dem-diff",  className="btn btn-secondary", style={"marginRight": "28px"}),
     dcc.Link("DEM Diff Analysis-1",href="/dem-diff-1",className="btn btn-secondary", style={"marginRight": "28px"}),
     # dcc.Link("ICESat-2 Map",       href="/icesat-map",className="btn btn-secondary", style={"marginRight": "8px"}),
     # dcc.Link("Best DEM",           href="/best-dem",  className="btn btn-secondary", style={"marginRight": "8px"}),
