@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import rasterio
 from rasterio.warp import transform as rio_transform
 from rasterio.warp import reproject, Resampling
@@ -81,8 +82,8 @@ def make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)"):
     # темний фон під легенду
     fig.patch.set_alpha(0.0)
     ax.set_facecolor("none")
-    norm = plt.colors.Normalize(vmin=vmin, vmax=vmax)
-    cb = plt.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
     cb.set_label(label, fontsize=12, color="#eee")
     cb.ax.tick_params(colors="#eee")
     buf = io.BytesIO()
