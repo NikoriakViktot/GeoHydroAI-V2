@@ -87,6 +87,7 @@ class DuckDBData:
             "count": len(delta)
         }
 
+
     # --- 6. Time Series для треку (по днях) ---
     def get_time_series(self, track, rgt, spot, dem):
         sql = (
@@ -142,6 +143,7 @@ class DuckDBData:
         df = self.query(sql)
         return [{"label": x, "value": x} for x in df["lulc_name"].dropna().tolist()]
 
+
     def get_unique_landform(self, dem):
         landform_col = f"{dem}_landform"
         sql = f"""
@@ -153,6 +155,7 @@ class DuckDBData:
         """
         df = self.query(sql)
         return [{"label": x, "value": x} for x in df[landform_col].dropna().tolist()]
+
 
     # --- 9. Dropdowns ---
     def get_track_dropdown_options(self, year):
@@ -222,29 +225,7 @@ class DuckDBData:
         sql = f"SELECT {col_str} FROM '{self.parquet_file}' WHERE {where}"
         return con.execute(sql).fetchdf()
 
-    def get_unique_lulc_names(self, dem):
-        # ПРАВИЛЬНО: це метод класу, має self, і використовує self.query()
-        sql = f"""
-            SELECT DISTINCT lulc_name
-            FROM '{self.parquet_file}'
-            WHERE delta_{dem} IS NOT NULL AND lulc_name IS NOT NULL
-            AND atl03_cnf = 4 AND atl08_class = 1
-            ORDER BY lulc_name
-        """
-        df = self.query(sql)
-        return [{"label": x, "value": x} for x in df["lulc_name"].dropna().tolist()]
 
-    def get_unique_landform(self, dem):
-        landform_col = f"{dem}_landform"
-        sql = f"""
-            SELECT DISTINCT {landform_col}
-            FROM '{self.parquet_file}'
-            WHERE {landform_col} IS NOT NULL
-            AND atl03_cnf = 4 AND atl08_class = 1
-            ORDER BY {landform_col}
-        """
-        df = self.query(sql)
-        return [{"label": x, "value": x} for x in df[landform_col].dropna().tolist()]
 
     def get_filtered_stats(self, con, dem, slope_range=None, hand_range=None, lulc=None, landform=None):
         filters = [
@@ -323,8 +304,6 @@ class DuckDBData:
         return self.query(query)
 
     def get_cdf_from_duckdb(self, thresholds=np.arange(0, 41, 1)):
-        import duckdb
-        import pandas as pd
 
         con = duckdb.connect()
         dem_list = ["alos", "aster", "cop", "fab", "nasa", "srtm", "tan"]
@@ -543,4 +522,118 @@ class DuckDBData:
             df["best_dem"] = df[nmad_columns].idxmin(axis=1)
             df["best_nmad"] = df[nmad_columns].min(axis=1)
         return df
+
+#
+#
+# class DuckDBData:
+#     def __init__(self, parquet_file, persistent=False):
+#         """
+#         Initializes the data access object for a given Parquet file.
+#         :param parquet_file: Path to the Parquet file.
+#         :param persistent: If True, keeps the database connection open.
+#         """
+#         self.parquet_file = parquet_file
+#         self.persistent = persistent
+#         self.con = duckdb.connect() if persistent else None
+
+
+
+    def get_track_options_for_year(self, year: int) -> list[dict]:
+        """
+        Gets unique tracks for a given year to populate a dropdown.
+        """
+        sql = f"""
+            SELECT DISTINCT track, rgt, spot
+            FROM '{self.parquet_file}'
+            WHERE year = {year}
+              AND atl03_cnf = 4 AND atl08_class = 1
+            ORDER BY track, rgt, spot
+        """
+        df = self.query(sql)
+        if df.empty:
+            return []
+        return [
+            {"label": f"Track {row.track} / RGT {row.rgt} / Spot {row.spot}",
+             "value": f"{row.track}_{row.rgt}_{row.spot}"}
+            for _, row in df.iterrows()
+        ]
+
+    def get_date_options_for_track(self, track: float, rgt: float, spot: float) -> list[dict]:
+        """
+        Gets unique dates for a specific track to populate a dropdown.
+        """
+        sql = f"""
+            SELECT DISTINCT DATE(time) as date_only
+            FROM '{self.parquet_file}'
+            WHERE track={track} AND rgt={rgt} AND spot={spot}
+              AND atl03_cnf = 4 AND atl08_class = 1
+            ORDER BY date_only
+        """
+        df = self.query(sql)
+        if df.empty:
+            return []
+        return [{
+            "label": pd.to_datetime(row.date_only).strftime("%Y-%m-%d"),
+            "value": pd.to_datetime(row.date_only).strftime("%Y-%m-%d")
+        } for _, row in df.iterrows()]
+
+    def get_track_profile(self, track: float, rgt: float, spot: float, dem: str, date: str,
+                          hand_range: list | None = None) -> pd.DataFrame:
+        """
+        Fetches the full profile data for a specific track, date, and DEM.
+        """
+        hand_col = f"{dem}_2000"  # Assuming this column naming convention
+        sql = f"""
+            SELECT *
+            FROM '{self.parquet_file}'
+            WHERE track={track} AND rgt={rgt} AND spot={spot}
+              AND DATE(time) = '{date}'
+              AND delta_{dem} IS NOT NULL AND h_{dem} IS NOT NULL
+              AND atl03_cnf = 4 AND atl08_class = 1
+        """
+        if hand_range and len(hand_range) == 2 and all(x is not None for x in hand_range):
+            sql += f" AND {hand_col} IS NOT NULL AND {hand_col} BETWEEN {hand_range[0]} AND {hand_range[1]}"
+        sql += " ORDER BY x"
+        return self.query(sql)
+
+
+
+    def get_track_geojson(self, track: float, rgt: float, spot: float, dem: str, date: str, step: int = 10) -> dict:
+        """
+        Fetches track data and formats it as a GeoJSON-compliant dictionary.
+        This avoids serialization errors in Dash callbacks.
+        """
+        # We only need a few columns for the GeoJSON representation
+        sql = f"""
+            SELECT x, y, delta_{dem}
+            FROM '{self.parquet_file}'
+            WHERE track={track} AND rgt={rgt} AND spot={spot}
+              AND DATE(time) = '{date}'
+              AND delta_{dem} IS NOT NULL
+              AND atl03_cnf = 4 AND atl08_class = 1
+            ORDER BY x
+        """
+        df = self.query(sql)
+        if df.empty:
+            return {"type": "FeatureCollection", "features": []}
+
+        # Subsample the data to avoid overloading the browser
+        df_sampled = df.iloc[::step]
+
+        features = []
+        for _, row in df_sampled.iterrows():
+            delta_val = row.get(f"delta_{dem}")
+            feature = {
+                "type": "Feature",
+                "properties": {
+                    "delta": float(delta_val) if pd.notna(delta_val) else None,
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [float(row.x), float(row.y)]
+                }
+            }
+            features.append(feature)
+
+        return {"type": "FeatureCollection", "features": features}
 

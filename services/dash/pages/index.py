@@ -20,10 +20,13 @@ dash.register_page(
 )
 
 
-layout = html.Div([
-  sidebar,
-  content
-])
+layout = html.Div(
+    id="layout",
+    children=[
+        sidebar,
+        content
+    ]
+)
 
 # import dash
 # from dash import html, dcc

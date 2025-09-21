@@ -122,7 +122,7 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
     }
     return json.dumps(spec)
 layout = html.Div([
-    html.H3("DEM Difference Analysis (deck.gl + Terracotta)"),
+    html.H3("DEM Difference Analysis"),
 
     # Головна сітка: ліворуч вузька колонка з контролями, праворуч — карта+права панель
     html.Div([

@@ -31,6 +31,7 @@ registry = DataRegistry(
     },
     dbs={
         "nmad":           lambda: get_db_nmad(str(S.NMAD_PARQUET)),
+        "tracks":         lambda: get_db_nmad(str(S.TRACKS_PARQUET)),
     },
 )
 
