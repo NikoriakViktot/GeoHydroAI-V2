@@ -42,6 +42,7 @@ for mod in (
     "callbacks.cdf_callback",
     "callbacks.best_model_callback",
     "callbacks.map_profile_callback",
+    "callbacks.profile_callback",
 ):
     try:
         __import__(mod)

@@ -1,30 +1,35 @@
 from dash import html, dcc
 from utils.style import dark_card_style, dropdown_style, empty_dark_figure
 
+# Available years for ICESat-2 track selection
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
 profile_tab_layout = html.Div([
-    html.H4("Профіль ICESat-2 треку", style={"color": "#EEEEEE"}),
+    html.H4("ICESat-2 Track Profiles", style={"color": "#EEEEEE"}),
 
-    # ВСІ ДРОПДАУНИ В ОДНОМУ РЯДКУ
+    # --- Control panel: all dropdown menus in a single row ---
     html.Div([
+        # Year selection
         dcc.Dropdown(
             id="year_dropdown",
             options=[{"label": str(y), "value": y} for y in YEARS],
-            value=YEARS[-1], clearable=False,
+            value=YEARS[-1],
+            clearable=False,
             style={**dropdown_style, "width": "90px"}
         ),
+        # Track / RGT / Spot selection
         dcc.Dropdown(
             id="track_rgt_spot_dropdown",
             options=[],
             style={**dropdown_style, "width": "240px", "marginLeft": "8px"}
         ),
+        # Date selection
         dcc.Dropdown(
             id="date_dropdown",
             options=[],
             style={**dropdown_style, "width": "140px", "marginLeft": "8px"}
         ),
-
+        # Interpolation method selection
         dcc.Dropdown(
             id="interp_method",
             options=[
@@ -38,12 +43,13 @@ profile_tab_layout = html.Div([
         ),
     ], style={"display": "flex", "gap": "10px", "marginBottom": "10px"}),
 
-    # --- Kalman parameters with explanation ---
+    # --- Kalman filter parameters with explanatory notes ---
     html.Div([
         html.Label([
             "Kalman Q (Process noise)",
             html.Span(
-                " — Lower values = more smoothing. Higher = more sensitive to changes.",
+                " — Lower values produce stronger smoothing; "
+                "higher values increase sensitivity to changes.",
                 style={"fontSize": "12px", "marginLeft": "8px", "color": "#AAA"}
             )
         ], style={"color": "#EEE"}),
@@ -60,7 +66,7 @@ profile_tab_layout = html.Div([
         html.Label([
             "Kalman R (Observation noise)",
             html.Span(
-                " — Higher values = less sensitive to outliers.",
+                " — Higher values reduce sensitivity to outliers.",
                 style={"fontSize": "12px", "marginLeft": "8px", "color": "#AAA"}
             )
         ], style={"color": "#EEE"}),
@@ -73,7 +79,7 @@ profile_tab_layout = html.Div([
         ),
     ], style={"marginBottom": "16px", "marginLeft": "8px"}),
 
-    # ГРАФІК та СТАТИСТИКА як були
+    # --- Track profile graph with loading indicator ---
     dcc.Loading(
         id="track_profile_loading",
         type="circle",
@@ -92,6 +98,8 @@ profile_tab_layout = html.Div([
             )
         ]
     ),
+
+    # --- DEM statistics card ---
     html.Div([
         html.Div(
             id="dem_stats",
