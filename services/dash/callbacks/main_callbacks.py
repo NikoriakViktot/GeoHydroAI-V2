@@ -129,7 +129,7 @@ def update_dashboard(n_clicks, tab, cdf_data,
         # Завантаження з кешу (Крок 2)
         dff_plot = R.df("initial_sample")
         filtered_stats_all_dems = R.df("initial_stats").to_dict("records")
-        stats_all = R.df("stats_all_cached.parquet").to_dict("records")
+        stats_all = R.df("stats_all_cached").to_dict("records")
         dem_stats_columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
 
         # Графіки

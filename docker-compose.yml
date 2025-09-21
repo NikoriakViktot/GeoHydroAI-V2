@@ -60,7 +60,9 @@ services:
       - "${API_PORT}:8000"
     networks: [web]
     volumes:
-       - ./data_parqet:/data:ro
+      - ./data/parquet:/app/data/parquet:ro   # <-- тут твій layers_index.json
+      - ./data/cogs:/app/data/cogs:ro         # <-- щоб Dash читав GeoTIFF
+      - tc_tmp:/tmp
 
 
   dash:
