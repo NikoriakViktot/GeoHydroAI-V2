@@ -147,23 +147,23 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
     }
 
 # --- 4) у layout передаємо реєстр функцій у сам компонент ---
-deck = dash_deckgl.DashDeckgl(
-    id="deck-flood",
-    spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
-    custom_libraries=[
-        {
-            "libraryName": "BitmapTileLibrary",
-            "libraryUrl": "", # Not needed for inline functions
-            "functions": {
-                "bitmapTile": BITMAP_FN
-            }
-        }
-    ],
-    height=700,
-    mapbox_key=MAPBOX_ACCESS_TOKEN,
-    cursor_position="bottom-right",
-    events=[],
-)
+# deck = dash_deckgl.DashDeckgl(
+#     id="deck-flood",
+#     spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
+#     custom_libraries=[
+#         {
+#             "libraryName": "BitmapTileLibrary",
+#             "libraryUrl": "", # Not needed for inline functions
+#             "functions": {
+#                 "bitmapTile": BITMAP_FN
+#             }
+#         }
+#     ],
+#     height=700,
+#     mapbox_key=MAPBOX_ACCESS_TOKEN,
+#     cursor_position="bottom-right",
+#     events=[],
+# )
 
 layers_index: List[dict] = []
 try:
