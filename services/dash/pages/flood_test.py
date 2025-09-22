@@ -95,7 +95,7 @@ def basin_layer(geojson: dict) -> dict:
     }
 
 def build_spec(dem_url: str | None, flood_url: str | None, basin_geojson: dict | None,
-               map_style: str = "mapbox://styles/mapbox/light-v11") -> str:
+               map_style: str = "mapbox://styles/mapbox/satellite-v9") -> str:
     layers = []
     if dem_url:
         layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
@@ -153,7 +153,7 @@ if layers_index:
 logger.info("DEMs: %s", ", ".join(DEM_LIST))
 
 # ---------- UI ----------
-COLORMAPS = ["viridis", "terrain", "inferno", "magma", "plasma"]
+COLORMAPS = ["viridis", "terrain"]
 
 layout = html.Div([
     html.H3("Flood Scenarios (deck.gl)"),
