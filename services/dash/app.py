@@ -5,7 +5,6 @@ import traceback
 import os, sys, logging
 import dash_deckgl
 import logging
-logging.getLogger().info("Registered component libs: %s", list(PATHS.keys()))
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
