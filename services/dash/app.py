@@ -3,6 +3,9 @@ import dash
 from dash import html, dcc
 import traceback
 import os, sys, logging
+import dash_deckgl
+import logging
+logging.getLogger().info("Registered component libs: %s", list(PATHS.keys()))
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
@@ -12,7 +15,12 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
     force=True,  # критично: перезаписати конфіг, який міг виставити gunicorn
 )
-
+try:
+    from dash._validate import PATHS
+    import logging
+    logging.getLogger().info("Registered component libs on startup: %s", list(PATHS.keys()))
+except Exception:
+    pass
 # Додатково: вирівняти Flask/Dash під gunicorn, якщо gunicorn вже має свої хендлери
 gunicorn_error = logging.getLogger("gunicorn.error")
 if gunicorn_error.handlers:
@@ -34,7 +42,10 @@ app = dash.Dash(
 )
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
-
+try:
+    app.logger.info("Registered component libs: %s", list(app.registered_paths.keys()))
+except Exception:
+    pass
 # ІМПОРТИ КОЛБЕКІВ — без navigate
 for mod in (
     "callbacks.main_callbacks",
