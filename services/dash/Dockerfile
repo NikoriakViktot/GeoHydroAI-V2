@@ -15,13 +15,19 @@ COPY --from=base /opt/conda /opt/conda
 ENV PATH=/opt/conda/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PORT=8050 \
-     GUNICORN_CMD_ARGS="--workers=2 --threads=4 --timeout 120" \
+    GUNICORN_CMD_ARGS="--workers=2 --threads=4 --timeout 120" \
     PYTHONPATH=/app
+
+# ⬇️ встановлюємо pip-пакети тут, гарантовано поверх conda-бази
+COPY requirements.txt /tmp/requirements.txt
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/conda/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \
+    python -c "import dash_deckgl, sys; print('dash_deckgl=',dash_deckgl.__version__); sys.exit(0)"
+
 COPY . /app
 EXPOSE 8050
 CMD ["bash", "-lc", "gunicorn app:server -b 0.0.0.0:${PORT}"]
 
-# (опційно) debug-стейдж, але НЕ фінальний
 FROM ubuntu:22.04 AS debug
 RUN apt-get update && apt-get install -y curl less
 ENTRYPOINT ["/bin/bash"]

@@ -278,6 +278,7 @@ layout = html.Div([
     dash_deckgl.DashDeckgl(
         id="deck-flood",
         spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
+        functions={"bitmapTile": BITMAP_FN},  # <-- повертаємо реєстр
         height=700,
         mapbox_key=MAPBOX_ACCESS_TOKEN,
         cursor_position="bottom-right",
