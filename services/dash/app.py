@@ -41,7 +41,7 @@ for mod in (
     "callbacks.sidebar_drawer",
     "callbacks.cdf_callback",
     "callbacks.best_model_callback",
-    "callbacks.map_profile_callback",
+    # "callbacks.map_profile_callback",
     "callbacks.profile_callback",
 ):
     try:
