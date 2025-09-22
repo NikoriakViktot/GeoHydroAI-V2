@@ -121,9 +121,7 @@ logger.info("DEM_TO_HANDS keys: %s", ", ".join(DEM_TO_HANDS.keys()))
 COLORMAPS = ["viridis", "terrain", "inferno", "magma", "plasma"]
 BASE_KEYS = ["toner", "terrain", "osm"]
 URL_TEMPLATE = {
-    "toner":   "https://{s}.tile.stamen.com/toner/{z}/{x}/{y}.png",
-    "terrain": "https://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png",
-    "osm":     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "osm":     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 }
 ATTRIBUTION = (
     'Map tiles by <a href="http://stamen.com">Stamen Design</a>, '
