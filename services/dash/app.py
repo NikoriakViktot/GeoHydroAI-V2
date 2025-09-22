@@ -31,7 +31,6 @@ app = dash.Dash(
     ],
     suppress_callback_exceptions=True,
     update_title=None,
-
 )
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
