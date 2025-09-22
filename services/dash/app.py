@@ -15,12 +15,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
     force=True,  # критично: перезаписати конфіг, який міг виставити gunicorn
 )
-try:
-    from dash._validate import PATHS
-    import logging
-    logging.getLogger().info("Registered component libs on startup: %s", list(PATHS.keys()))
-except Exception:
-    pass
+
 # Додатково: вирівняти Flask/Dash під gunicorn, якщо gunicorn вже має свої хендлери
 gunicorn_error = logging.getLogger("gunicorn.error")
 if gunicorn_error.handlers:
