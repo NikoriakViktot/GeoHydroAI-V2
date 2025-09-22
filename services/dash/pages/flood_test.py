@@ -64,28 +64,30 @@ def build_flood_url(dem_name: str, hand_name: str, level: str, cmap: str, stretc
            else f"{base}?colormap={cmap}&stretch_range={s}"
 
 # ---- deck.gl builders (no reprojection for tiles) ----
-def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True, z: int = 0) -> dict:
+def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True) -> dict:
+    js_fn = (
+        "(props) => new deck.BitmapLayer({"
+        "  id: `${props.id}-bitmap`,"
+        "  image: props.tile.data,"
+        "  bounds: props.tile.bbox,"
+        "  opacity: props.opacity,"
+        "  visible: props.visible,"
+        "  parameters: { depthTest: false }"
+        "})"
+    )
     return {
         "@@type": "TileLayer",
         "id": layer_id,
         "data": url,
         "visible": visible,
-        "minZoom": 0, "maxZoom": 19, "tileSize": 256, "opacity": opacity,
-        "parameters": {"depthTest": False},  # 2D — малюй зверху без глибинного тесту
-        "zIndex": z,                         # явний порядок
-        "renderSubLayers": {
-            "@@function": ["tile", {
-                "type": "BitmapLayer",
-                "id": f"{layer_id}-bitmap",
-                "image": "@@tile.data",
-                "bounds": "@@tile.bbox",
-                "opacity": opacity,
-                "visible": visible,
-                "parameters": {"depthTest": False},
-                "zIndex": z,
-            }]
-        },
+        "minZoom": 0,
+        "maxZoom": 19,
+        "tileSize": 256,
+        "opacity": opacity,
+        "parameters": {"depthTest": False},
+        "renderSubLayers": {"@@function": js_fn},
     }
+
 
 def basin_layer(geojson: dict, visible: bool = True, z: int = 100) -> dict:
     return {
