@@ -79,16 +79,6 @@ def tile_layer(
     z: int = 0,
     **_
 ) -> dict:
-    js_fn = (
-        "(props) => new deck.BitmapLayer({"
-        "  id: `${props.id}-bitmap`,"
-        "  image: props.tile.data,"
-        "  bounds: props.tile.bbox,"
-        "  opacity: props.opacity,"
-        "  visible: props.visible,"
-        "  parameters: { depthTest: false }"
-        "})"
-    )
     return {
         "@@type": "TileLayer",
         "id": layer_id,
@@ -99,8 +89,10 @@ def tile_layer(
         "tileSize": 256,
         "opacity": opacity,
         "parameters": {"depthTest": False},
+        # deck.gl ігнорує це, порядок задається послідовністю в масиві "layers"
         "zIndex": z,
-        "renderSubLayers": {"@@function": js_fn},
+        # ВАЖЛИВО: не вбудована функція, а посилання на зареєстровану
+        "renderSubLayers": {"@@function": "bitmapTile"},
     }
 
 
@@ -125,11 +117,27 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
     if basin_geojson:
         layers.append(basin_layer(basin_geojson, visible=show_basin, z=30))
 
+    # Реєстрація функцій для JSON-конвертера dash_deckgl
+    functions = {
+        "bitmapTile": (
+            "(props) => new deck.BitmapLayer({"
+            "  id: `${props.id}-bitmap`,"
+            "  image: props.tile.data,"
+            "  bounds: props.tile.bbox,"
+            "  opacity: props.opacity ?? 1,"
+            "  visible: props.visible ?? true,"
+            "  parameters: { depthTest: false }"
+            "})"
+        )
+    }
+
     return json.dumps({
         "mapStyle": map_style if MAPBOX_ACCESS_TOKEN else None,
         "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 10, "pitch": 0, "bearing": 0},
-        "layers": layers
+        "layers": layers,
+        "functions": functions,   # <= ОЦЕ ГОЛОВНЕ
     })
+
 
 
 # ---------- Read & normalize layers_index.json ----------
