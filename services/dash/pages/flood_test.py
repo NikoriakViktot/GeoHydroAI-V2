@@ -299,12 +299,13 @@ html.Div([
     ], style={"marginBottom": 12}),
 
 ])
+])
 
 # ---------- Callbacks ----------
 @callback(
     Output("flood-level", "options"),
     Output("flood-level", "value"),
-    Input("dem-name", "value"),
+    Input("dem-name", "value")
 )
 def _update_levels(dem_name: str):
     levels = DEM_LEVELS.get(dem_name) or []
