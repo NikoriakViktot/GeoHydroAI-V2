@@ -208,6 +208,19 @@ logger.info("DEMs: %s", ", ".join(DEM_LIST))
 
 layout = html.Div([
     html.H3("Flood Scenarios (deck.gl)"),
+html.Div([
+        dash_deckgl.DashDeckgl(
+            id="deck-flood",
+            spec=build_spec(...),
+            custom_libraries=[{ "libraryName":"BitmapTileLib", "libraryUrl":"", "functions":{"bitmapTile": BITMAP_FN} }],
+            height=700,
+            mapbox_key=MAPBOX_ACCESS_TOKEN,
+            cursor_position="bottom-right",
+            events=[],
+            # головне — стилі контейнера
+            style={"position": "relative", "zIndex": 10}
+        ),
+    ], style={"position": "relative", "zIndex": 10}),
     html.Div([
         html.Div([
             html.Label("DEM"),
@@ -275,19 +288,19 @@ layout = html.Div([
         ], style={"display": "inline-block", "marginLeft": 18}),
     ], style={"marginBottom": 12}),
 
-    dash_deckgl.DashDeckgl(
-        id="deck-flood",
-        spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
-        custom_libraries=[{
-            "libraryName": "BitmapTileLib",
-            "libraryUrl": "",
-            "functions": {"bitmapTile": BITMAP_FN}
-        }],
-        height=700,
-        mapbox_key=MAPBOX_ACCESS_TOKEN,
-        cursor_position="bottom-right",
-        events=[],
-    ),
+    # dash_deckgl.DashDeckgl(
+    #     id="deck-flood",
+    #     spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
+    #     custom_libraries=[{
+    #         "libraryName": "BitmapTileLib",
+    #         "libraryUrl": "",
+    #         "functions": {"bitmapTile": BITMAP_FN}
+    #     }],
+    #     height=700,
+    #     mapbox_key=MAPBOX_ACCESS_TOKEN,
+    #     cursor_position="bottom-right",
+    #     events=[],
+    # ),
 
 ])
 

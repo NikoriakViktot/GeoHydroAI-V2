@@ -157,3 +157,10 @@ body, .dash-graph, .js-plotly-plot, .dash-loading, .dash-spinner {
   .kpi-grid { grid-template-columns: 1fr 1fr 1fr; } /* десктоп: 3 */
 }
 .kpi-card { background: #1b1f24; border: 1px solid #2a2f36; border-radius: 12px; }
+
+.navbar, header {
+  position: sticky;   /* або fixed, але з нормальною висотою */
+  top: 0;
+  height: 56px;       /* будь-яка явна висота */
+  z-index: 1000;
+}
