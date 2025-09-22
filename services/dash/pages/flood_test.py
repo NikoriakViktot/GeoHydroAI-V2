@@ -12,6 +12,7 @@ from registry import get_df
 # ---------- Page ----------
 dash.register_page(__name__, path="/flood-map", name="Flood Scenarios", order=98)
 app = dash.get_app()
+app.config.assets_cache_max_age = 0
 
 # ---------- Logging to stdout ----------
 logger = logging.getLogger("pages.flood_map_deck")
@@ -33,6 +34,22 @@ def _strip_www(u: str) -> str:
 TC_BASE = _strip_www(os.getenv("TERRACOTTA_PUBLIC_URL", "https://geohydroai.org/tc"))
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 ASSETS_INDEX_PATH = "assets/layers_index.json"
+# ---------- Read & normalize layers_index.json ----------
+DEM_LABELS = {
+    "tan_dem": "TanDEM-X",
+    "srtm_dem": "SRTM",
+    "fab_dem": "FABDEM",
+    "copernicus_dem": "Copernicus DEM",   # <- правильний ключ
+    "nasa_dem": "NASADEM",
+    "alos_dem": "ALOS",
+    "aster_dem": "ASTER",
+}
+DEM_LIST: List[str] = ["alos_dem", "aster_dem", "copernicus_dem", "fab_dem", "nasa_dem", "srtm_dem", "tan_dem"]
+COLORMAPS = ["viridis", "terrain" ]
+MAP_STYLES = {
+    "Outdoors": "mapbox://styles/mapbox/outdoors-v12",
+    "Satellite Streets": "mapbox://styles/mapbox/satellite-streets-v12",
+}
 
 # ---------- Basin (vector overlay; GeoJSON expects EPSG:4326) ----------
 try:
@@ -71,14 +88,20 @@ def build_flood_url(dem_name: str, hand_name: str, level: str, cmap: str, stretc
            else f"{base}?colormap={cmap}&stretch_range={s}"
 
 # ---- deck.gl builders (no reprojection for tiles) ----
-def tile_layer(
-    layer_id: str,
-    url: str,
-    opacity: float = 1.0,
-    visible: bool = True,
-    z: int = 0,
-    **_
-) -> dict:
+# --- 1) функція-саблейер у реєстрі компонента ---
+BITMAP_FN = """
+(props) => new deck.BitmapLayer({
+  id: `${props.id}-bitmap`,
+  image: props.tile.data,
+  bounds: props.tile.bbox,
+  opacity: props.opacity ?? 1,
+  visible: props.visible ?? true,
+  parameters: { depthTest: false }
+})
+"""
+
+# --- 2) будівельник TileLayer: тільки посилання на ім'я функції ---
+def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True, z: int = 0, **_) -> dict:
     return {
         "@@type": "TileLayer",
         "id": layer_id,
@@ -89,25 +112,11 @@ def tile_layer(
         "tileSize": 256,
         "opacity": opacity,
         "parameters": {"depthTest": False},
-        # deck.gl ігнорує це, порядок задається послідовністю в масиві "layers"
-        "zIndex": z,
-        # ВАЖЛИВО: не вбудована функція, а посилання на зареєстровану
+        "zIndex": z,  # порядок все одно визначає послідовність у "layers"
         "renderSubLayers": {"@@function": "bitmapTile"},
     }
 
-
-def basin_layer(geojson: dict, visible: bool = True, z: int = 100) -> dict:
-    return {
-        "@@type": "GeoJsonLayer",
-        "id": "basin-outline",
-        "data": geojson,
-        "stroked": True, "filled": False,
-        "getLineColor": [0, 102, 255, 200], "getLineWidth": 2, "lineWidthUnits": "pixels",
-        "visible": visible,
-        "parameters": {"depthTest": False},
-        "zIndex": z,
-    }
-
+# --- 3) spec повертаємо як dict, БЕЗ жодних "functions" усередині ---
 def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, basin_geojson):
     layers = []
     if dem_url:
@@ -115,42 +124,24 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
     if flood_url:
         layers.append(tile_layer("flood-tiles", flood_url, opacity=1.0, visible=show_flood, z=20))
     if basin_geojson:
-        layers.append(basin_layer(basin_geojson, visible=show_basin, z=30))
+        layers.append(basin(basin_geojson, visible=show_basin, z=30))
 
-    # Реєстрація функцій для JSON-конвертера dash_deckgl
-    functions = {
-        "bitmapTile": (
-            "(props) => new deck.BitmapLayer({"
-            "  id: `${props.id}-bitmap`,"
-            "  image: props.tile.data,"
-            "  bounds: props.tile.bbox,"
-            "  opacity: props.opacity ?? 1,"
-            "  visible: props.visible ?? true,"
-            "  parameters: { depthTest: false }"
-            "})"
-        )
-    }
-
-    return json.dumps({
+    return {
         "mapStyle": map_style if MAPBOX_ACCESS_TOKEN else None,
         "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 10, "pitch": 0, "bearing": 0},
         "layers": layers,
-        "functions": functions,   # <= ОЦЕ ГОЛОВНЕ
-    })
+    }
 
-
-
-# ---------- Read & normalize layers_index.json ----------
-DEM_LABELS = {
-    "tan_dem": "TanDEM-X",
-    "srtm_dem": "SRTM",
-    "fab_dem": "FABDEM",
-    "copernicus_dem": "Copernicus DEM",   # <- правильний ключ
-    "nasa_dem": "NASADEM",
-    "alos_dem": "ALOS",
-    "aster_dem": "ASTER",
-}
-DEM_LIST: List[str] = ["alos_dem", "aster_dem", "copernicus_dem", "fab_dem", "nasa_dem", "srtm_dem", "tan_dem"]
+# --- 4) у layout передаємо реєстр функцій у сам компонент ---
+deck = dash_deckgl.DashDeckgl(
+    id="deck-flood",
+    spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
+    functions={"bitmapTile": BITMAP_FN},  # <— реєстрація тут
+    height=700,
+    mapbox_key=MAPBOX_ACCESS_TOKEN,
+    cursor_position="bottom-right",
+    events=[],
+)
 
 layers_index: List[dict] = []
 try:
@@ -192,11 +183,6 @@ if layers_index:
 logger.info("DEMs: %s", ", ".join(DEM_LIST))
 
 # ---------- UI ----------
-COLORMAPS = ["viridis", "terrain", "inferno", "magma", "plasma"]
-MAP_STYLES = {
-    "Outdoors": "mapbox://styles/mapbox/outdoors-v12",
-    "Satellite Streets": "mapbox://styles/mapbox/satellite-streets-v12",
-}
 
 layout = html.Div([
     html.H3("Flood Scenarios (deck.gl)"),
