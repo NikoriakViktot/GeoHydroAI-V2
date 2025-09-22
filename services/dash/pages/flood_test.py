@@ -69,8 +69,8 @@ def tile_layer(
     url: str,
     opacity: float = 1.0,
     visible: bool = True,
-    z: int = 0,            # лишаємо для зворотної сумісності (deck.gl не використовує його)
-    **_                    # проковтуємо будь-які інші неочікувані kwargs
+    z: int = 0,
+    **_
 ) -> dict:
     js_fn = (
         "(props) => new deck.BitmapLayer({"
@@ -92,8 +92,8 @@ def tile_layer(
         "tileSize": 256,
         "opacity": opacity,
         "parameters": {"depthTest": False},
-        "zIndex": z,  # інформативно; порядок шарів задається порядком у масиві "layers"
-        "renderSubLayers": {"@@function": js_fn},  # ВАЖЛИВО: функція, а не об’єкт
+        "zIndex": z,
+        "renderSubLayers": {"@@function": js_fn},
     }
 
 
@@ -260,6 +260,7 @@ layout = html.Div([
         cursor_position="bottom-right",
         events=[],
     ),
+
 ])
 
 # ---------- Callbacks ----------
@@ -289,14 +290,17 @@ def _update_levels(dem_name: str):
 def _update_spec(dem_name, dem_cmap, dem_stretch,
                  flood_level, flood_cmap, flood_stretch,
                  map_style, overlays):
-    show_dem = "dem" in (overlays or [])
-    show_flood = "flood" in (overlays or [])
-    show_basin = "basin" in (overlays or [])
+
+    # ---- defaults: True, якщо чекліст ще None
+    if overlays is None:
+        show_dem = show_flood = show_basin = True
+    else:
+        show_dem = "dem" in overlays
+        show_flood = "flood" in overlays
+        show_basin = "basin" in overlays
 
     dem_url = build_dem_url(dem_name, dem_cmap or "terrain", dem_stretch or [250, 2200]) if dem_name else ""
-
-    flood_url = ""
-    chosen_hand = ""
+    flood_url, chosen_hand = "", ""
     if dem_name and flood_level:
         chosen_hand = (DEM_LEVEL_TO_HAND.get(dem_name, {}) or {}).get(flood_level, "")
         if chosen_hand:
@@ -307,7 +311,7 @@ def _update_spec(dem_name, dem_cmap, dem_stretch,
                 pure_blue=(flood_cmap == "custom")
             )
 
-    # ---- Console logs
+    # ---- console logs
     logger.info("[spec.in] dem=%s cmap=%s stretch=%s level=%s flood_cmap=%s flood_stretch=%s",
                 dem_name, dem_cmap, dem_stretch, flood_level, flood_cmap, flood_stretch)
     if dem_name:
@@ -321,5 +325,6 @@ def _update_spec(dem_name, dem_cmap, dem_stretch,
             logger.info("[FLOOD] not shown (%s) dem=%s level=%s", reason, dem_name, flood_level)
     logger.info("[MAP] style=%s basin=%s", map_style, show_basin)
 
-    return build_spec(map_style, dem_url or None, flood_url or None,
+    spec = build_spec(map_style, dem_url or None, flood_url or None,
                       show_dem, show_flood, show_basin, BASIN_JSON)
+    return spec
