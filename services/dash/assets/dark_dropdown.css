@@ -118,21 +118,58 @@ body, .dash-graph, .js-plotly-plot, .dash-loading, .dash-spinner {
 }
 
 /* мобільний drawer */
+/* базова поведінка: сайдбар схований і неклікабельний */
+#sidebar-wrap {
+  position: fixed;
+  inset: 0 auto 0 0;       /* лівий сайдбар */
+  z-index: 1000;
+  height: 100vh;
+  width: 92vw;
+  max-width: 420px;
+  transform: translateX(-110%);
+  pointer-events: none;
+  transition: transform .25s ease;
+}
+
+/* бекдроп за замовчуванням вимкнений */
+#sidebar-backdrop {
+  display: none;
+}
+
+/* коли відкритий (клас .open додаєш у JS/колбеком) */
+#sidebar-wrap.open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+#sidebar-wrap.open ~ #sidebar-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0,0,0,.45);
+}
+
+/* кнопка */
+.hamburger {
+  position: fixed;
+  top: 10px; left: 12px;
+  z-index: 1100;
+  font-size: 22px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #2d8cff;
+  color: #fff;
+}
+
+/* мобільні дрібниці — вже підганяй у @media за потреби */
 @media (max-width: 768px) {
-  .hamburger { position: fixed; top: 10px; left: 12px; z-index: 1100; font-size: 22px;
-               padding: 8px 12px; border-radius: 10px; border: none; background: #2d8cff; color: #fff; }
-  #sidebar-wrap { position: fixed; inset: 0 auto 0 0; z-index: 1000; height: 100vh; width: 92vw; max-width: 420px;
-                  transform: translateX(-105%); transition: transform .25s ease;
-                  background: var(--bg-pane); border-right: 1px solid #2d2d2d; }
-  #sidebar-wrap.open { transform: translateX(0); }
   #sidebar-wrap > div { height: calc(100vh - 44px); overflow-y: auto; }
   .collapse-btn { display: none; }
-  #sidebar-backdrop { display: none; }
-  #sidebar-wrap.open ~ #sidebar-backdrop {
-    display: block; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.45);
-  }
   #content { padding-top: 56px; }
 }
+
 
 /* ===== Трохи поліру для графіків і вкладок ===== */
 .custom-tabs { width: 100% !important; }
