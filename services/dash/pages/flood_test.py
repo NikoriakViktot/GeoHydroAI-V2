@@ -1,28 +1,33 @@
 # pages/flood_map_deck.py
-import os, json, logging
+import os, json, logging, sys
 from typing import Dict, List, Tuple
 
 import geopandas as gpd
 import dash
-from dash import html, dcc, callback, Output, Input, State, no_update
+from dash import html, dcc, callback, Output, Input, no_update
 import dash_deckgl
 
 from registry import get_df
 
-# ---------- Page & logging ----------
-dash.register_page(__name__, path="/flood-map", name="Flood Scenarios (deck.gl)", order=98)
+# ---------- Page ----------
+dash.register_page(__name__, path="/flood-map", name="Flood Scenarios", order=98)
 app = dash.get_app()
 
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(level=os.getenv("PAGE_LOG_LEVEL", "INFO"),
-                        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+# ---------- Logging to stdout ----------
+logger = logging.getLogger("pages.flood_map_deck")
+if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+    h = logging.StreamHandler(sys.stdout)
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    h.setFormatter(fmt)
+    logger.addHandler(h)
+logger.setLevel(getattr(logging, os.getenv("PAGE_LOG_LEVEL", "INFO").upper(), logging.INFO))
+logger.propagate = False
 
 TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 ASSETS_INDEX_PATH = "assets/layers_index.json"
 
-# ---------- Basin (optional) ----------
+# ---------- Basin (vector overlay; GeoJSON expects EPSG:4326) ----------
 try:
     basin: gpd.GeoDataFrame = get_df("basin")
     basin = basin.to_crs("EPSG:4326")
@@ -43,30 +48,31 @@ def _fix_path(p: str) -> str:
     return os.path.normpath(p)
 
 def _parse_level(s: str) -> int:
-    try:
-        return int(str(s).lower().replace("m", "").strip())
-    except Exception:
-        return 0
+    try: return int(str(s).lower().replace("m", "").strip())
+    except Exception: return 0
 
 def build_dem_url(dem_name: str, cmap: str, stretch) -> str:
     s = f"[{stretch[0]},{stretch[1]}]"
     return f"{TC_BASE}/singleband/dem/{dem_name}" + "/{z}/{x}/{y}.png" + f"?colormap={cmap}&stretch_range={s}"
 
 def build_flood_url(dem_name: str, hand_name: str, level: str, cmap: str, stretch, pure_blue: bool) -> str:
+    # Terracotta tile name is in EPSG:3857 XYZ; deck.gl will place it correctly.
     layer = f"{dem_name}_{hand_name}_flood_{level}"
     s = f"[{stretch[0]},{stretch[1]}]"
     base = f"{TC_BASE}/singleband/flood_scenarios/{layer}" + "/{z}/{x}/{y}.png"
     return f"{base}?colormap=custom&colors=0000ff&stretch_range={s}" if pure_blue \
            else f"{base}?colormap={cmap}&stretch_range={s}"
 
-# ---- deck.gl builders
-def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True) -> dict:
+# ---- deck.gl builders (no reprojection for tiles) ----
+def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True, z: int = 0) -> dict:
     return {
         "@@type": "TileLayer",
         "id": layer_id,
         "data": url,
         "visible": visible,
         "minZoom": 0, "maxZoom": 19, "tileSize": 256, "opacity": opacity,
+        "parameters": {"depthTest": False},  # 2D — малюй зверху без глибинного тесту
+        "zIndex": z,                         # явний порядок
         "renderSubLayers": {
             "@@function": ["tile", {
                 "type": "BitmapLayer",
@@ -74,52 +80,51 @@ def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = Tr
                 "image": "@@tile.data",
                 "bounds": "@@tile.bbox",
                 "opacity": opacity,
-                "visible": visible
+                "visible": visible,
+                "parameters": {"depthTest": False},
+                "zIndex": z,
             }]
         },
     }
 
-def basin_layer(geojson: dict, visible: bool = True) -> dict:
+def basin_layer(geojson: dict, visible: bool = True, z: int = 100) -> dict:
     return {
         "@@type": "GeoJsonLayer",
         "id": "basin-outline",
         "data": geojson,
         "stroked": True, "filled": False,
         "getLineColor": [0, 102, 255, 200], "getLineWidth": 2, "lineWidthUnits": "pixels",
-        "visible": visible
+        "visible": visible,
+        "parameters": {"depthTest": False},
+        "zIndex": z,
     }
 
-def build_spec(map_style: str,
-               dem_url: str | None, flood_url: str | None,
-               show_dem: bool, show_flood: bool, show_basin: bool,
-               basin_geojson: dict | None) -> str:
+def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, basin_geojson):
     layers = []
     if dem_url:
-        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75, visible=show_dem))
+        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75, visible=show_dem, z=10))
     if flood_url:
-        layers.append(tile_layer("flood-tiles", flood_url, opacity=1.0, visible=show_flood))
+        layers.append(tile_layer("flood-tiles", flood_url, opacity=1.0, visible=show_flood, z=20))
     if basin_geojson:
-        layers.append(basin_layer(basin_geojson, visible=show_basin))
+        layers.append(basin_layer(basin_geojson, visible=show_basin, z=30))
 
-    spec = {
+    return json.dumps({
         "mapStyle": map_style if MAPBOX_ACCESS_TOKEN else None,
         "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 10, "pitch": 0, "bearing": 0},
         "layers": layers
-    }
-    return json.dumps(spec)
+    })
+
 
 # ---------- Read & normalize layers_index.json ----------
-# DEM labels (UI)
 DEM_LABELS = {
     "tan_dem": "TanDEM-X",
     "srtm_dem": "SRTM",
     "fab_dem": "FABDEM",
-    "copernicus_dem": "Copernicus DEM",  # виправлена назва ключа
+    "copernicus_dem": "Copernicus DEM",   # <- правильний ключ
     "nasa_dem": "NASADEM",
     "alos_dem": "ALOS",
     "aster_dem": "ASTER",
 }
-
 DEM_LIST: List[str] = ["alos_dem", "aster_dem", "copernicus_dem", "fab_dem", "nasa_dem", "srtm_dem", "tan_dem"]
 
 layers_index: List[dict] = []
@@ -137,34 +142,26 @@ except Exception as e:
     logger.warning("Failed to read %s: %s", ASSETS_INDEX_PATH, e)
     layers_index = []
 
-# Build:
-#  - DEM_LEVELS[dem] -> ["1m","2m",...]
-#  - DEM_LEVEL_TO_HAND[dem][level] -> "hand_2000" (або перший доступний)
+# Build: DEM_LEVELS[dem] -> ["1m",...]; DEM_LEVEL_TO_HAND[dem][level] -> "hand_2000" (prefer) or first
 DEM_LEVELS: Dict[str, List[str]] = {}
 DEM_LEVEL_TO_HAND: Dict[str, Dict[str, str]] = {}
-
 if layers_index:
     tmp_levels: Dict[str, set] = {}
     tmp_level2hand: Dict[Tuple[str, str], set] = {}
-
     for r in layers_index:
         if r.get("category") != "flood_scenarios":
             continue
-        dem = r.get("dem"); hand = r.get("hand"); level = r.get("flood")
+        dem, hand, level = r.get("dem"), r.get("hand"), r.get("flood")
         if not (dem and hand and level): continue
         tmp_levels.setdefault(dem, set()).add(level)
         tmp_level2hand.setdefault((dem, level), set()).add(hand)
-
     for dem, levels_set in tmp_levels.items():
         levels_sorted = sorted(levels_set, key=_parse_level)
         DEM_LEVELS[dem] = levels_sorted
         DEM_LEVEL_TO_HAND[dem] = {}
         for lvl in levels_sorted:
             hands = list(tmp_level2hand.get((dem, lvl), []))
-            # пріоритет: hand_2000 → інакше перший
-            chosen = "hand_2000" if "hand_2000" in hands else (hands[0] if hands else "")
-            DEM_LEVEL_TO_HAND[dem][lvl] = chosen
-
+            DEM_LEVEL_TO_HAND[dem][lvl] = "hand_2000" if "hand_2000" in hands else (hands[0] if hands else "")
     DEM_LIST = sorted(DEM_LEVELS.keys())
 
 logger.info("DEMs: %s", ", ".join(DEM_LIST))
@@ -178,7 +175,6 @@ MAP_STYLES = {
 
 layout = html.Div([
     html.H3("Flood Scenarios (deck.gl)"),
-
     html.Div([
         html.Div([
             html.Label("DEM"),
@@ -254,8 +250,6 @@ layout = html.Div([
         cursor_position="bottom-right",
         events=[],
     ),
-
-    html.Div(id="deck-log", style={"fontFamily": "monospace", "marginTop": "6px"}),
 ])
 
 # ---------- Callbacks ----------
@@ -273,7 +267,6 @@ def _update_levels(dem_name: str):
 
 @callback(
     Output("deck-flood", "spec"),
-    Output("deck-log", "children"),
     Input("dem-name", "value"),
     Input("dem-cmap", "value"),
     Input("dem-stretch", "value"),
@@ -286,15 +279,12 @@ def _update_levels(dem_name: str):
 def _update_spec(dem_name, dem_cmap, dem_stretch,
                  flood_level, flood_cmap, flood_stretch,
                  map_style, overlays):
-    # visible flags
     show_dem = "dem" in (overlays or [])
     show_flood = "flood" in (overlays or [])
     show_basin = "basin" in (overlays or [])
 
-    # DEM URL
-    dem_url = build_dem_url(dem_name, dem_cmap or "viridis", dem_stretch or [250, 2200]) if dem_name else ""
+    dem_url = build_dem_url(dem_name, dem_cmap or "terrain", dem_stretch or [250, 2200]) if dem_name else ""
 
-    # FLOOD URL
     flood_url = ""
     chosen_hand = ""
     if dem_name and flood_level:
@@ -307,31 +297,19 @@ def _update_spec(dem_name, dem_cmap, dem_stretch,
                 pure_blue=(flood_cmap == "custom")
             )
 
-    # ---- Logging to container
-    if not dem_name:
-        logger.info("[spec] NO DEM selected")
-    else:
-        logger.info("[spec] DEM=%s url=%s visible=%s", dem_name, dem_url, show_dem)
+    # ---- Console logs
+    logger.info("[spec.in] dem=%s cmap=%s stretch=%s level=%s flood_cmap=%s flood_stretch=%s",
+                dem_name, dem_cmap, dem_stretch, flood_level, flood_cmap, flood_stretch)
+    if dem_name:
+        logger.info("[DEM] visible=%s url=%s", show_dem, dem_url)
+    if flood_level:
+        if flood_url:
+            layer_name = f"{dem_name}_{chosen_hand}_flood_{flood_level}"
+            logger.info("[FLOOD] layer=%s visible=%s url=%s", layer_name, show_flood, flood_url)
+        else:
+            reason = ("no matching hand" if not chosen_hand else "url not built")
+            logger.info("[FLOOD] not shown (%s) dem=%s level=%s", reason, dem_name, flood_level)
+    logger.info("[MAP] style=%s basin=%s", map_style, show_basin)
 
-    if flood_level and chosen_hand and flood_url:
-        layer_name = f"{dem_name}_{chosen_hand}_flood_{flood_level}"
-        logger.info("[spec] FLOOD layer=%s url=%s visible=%s", layer_name, flood_url, show_flood)
-    else:
-        reason = ("no dem" if not dem_name else
-                  "no level" if not flood_level else
-                  "no matching hand" if not chosen_hand else
-                  "no url")
-        logger.info("[spec] NO FLOOD (%s) for dem=%s level=%s", reason, dem_name, flood_level)
-
-    logger.info("[spec] map_style=%s show_dem=%s show_flood=%s show_basin=%s", map_style, show_dem, show_flood, show_basin)
-
-    # ---- Log to UI
-    ui_log = [
-        f"DEM: {dem_name} ({DEM_LABELS.get(dem_name, dem_name)}) visible={show_dem}",
-        f"DEM URL: {dem_url}",
-        f"Flood: level={flood_level}, hand={chosen_hand or '—'}, visible={show_flood}",
-        f"Flood URL: {flood_url or '—'}",
-        f"Map style: {map_style}",
-        f"Basin visible: {show_basin}"
-    ]
-    return build_spec(map_style, dem_url or None, flood_url or None, show_dem, show_flood, show_basin, BASIN_JSON), html.Pre("\n".join(ui_log))
+    return build_spec(map_style, dem_url or None, flood_url or None,
+                      show_dem, show_flood, show_basin, BASIN_JSON)
