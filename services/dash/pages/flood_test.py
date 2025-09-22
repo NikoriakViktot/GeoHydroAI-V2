@@ -1,18 +1,16 @@
-# pages/flood_test.py
-import os
-import json
-import logging
-from typing import Dict, List, Tuple, Set
+# pages/flood_test_deck.py
+import os, json, logging
+from typing import Dict, List, Tuple
 
 import geopandas as gpd
 import dash
 from dash import html, dcc, callback, Output, Input, no_update
-import dash_leaflet as dl
+import dash_deckgl
 
 from registry import get_df
 
 # ---------- Page & logging ----------
-dash.register_page(__name__, path="/flood-test", name="Flood Scenarios Test", order=99)
+dash.register_page(__name__, path="/flood-test-deck", name="Flood Scenarios (deck.gl)", order=98)
 app = dash.get_app()
 
 logger = logging.getLogger(__name__)
@@ -21,14 +19,15 @@ if not logger.handlers:
                         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
+MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 ASSETS_INDEX_PATH = "assets/layers_index.json"
 
-# ---------- Basin (optional overlay) ----------
+# ---------- Basin (optional) ----------
 try:
     basin: gpd.GeoDataFrame = get_df("basin")
     basin = basin.to_crs("EPSG:4326")
     BASIN_JSON = json.loads(basin.to_json())
-    logger.info("Basin loaded: CRS=%s, rows=%d", basin.crs, len(basin))
+    logger.info("Basin OK: CRS=%s, rows=%d", basin.crs, len(basin))
 except Exception as e:
     logger.warning("Basin not available: %s", e)
     BASIN_JSON = None
@@ -49,7 +48,6 @@ def _fix_path(p: str) -> str:
     return os.path.normpath(p)
 
 def _parse_level(s: str) -> int:
-    """'1m' -> 1, '10m' -> 10; fallback 0"""
     try:
         return int(str(s).lower().replace("m", "").strip())
     except Exception:
@@ -60,21 +58,61 @@ def build_dem_url(dem_name: str, cmap: str, stretch) -> str:
     return f"{TC_BASE}/singleband/dem/{dem_name}" + "/{z}/{x}/{y}.png" + f"?colormap={cmap}&stretch_range={s}"
 
 def build_flood_url(dem_name: str, hand_name: str, level: str, cmap: str, stretch, pure_blue: bool) -> str:
-    """
-    Terracotta layer name pattern:
-        {dem_name}_{hand_name}_flood_{level}
-    where hand_name like 'hand_2000', level like '1m'.
-    """
     layer = f"{dem_name}_{hand_name}_flood_{level}"
     s = f"[{stretch[0]},{stretch[1]}]"
     base = f"{TC_BASE}/singleband/flood_scenarios/{layer}" + "/{z}/{x}/{y}.png"
     return f"{base}?colormap=custom&colors=0000ff&stretch_range={s}" if pure_blue \
            else f"{base}?colormap={cmap}&stretch_range={s}"
 
-# ---------- Read & normalize layers_index.json ----------
-# Fallback DEM list if index missing/broken
-DEM_LIST: List[str] = ["alos_dem", "aster_dem", "copernicus_dem", "fab_dem", "nasa_dem", "srtm_dem", "tan_dem"]
+# ---- deck.gl layer builders
+def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
+    return {
+        "@@type": "TileLayer",
+        "id": layer_id,
+        "data": url,
+        "minZoom": 0, "maxZoom": 19, "tileSize": 256, "opacity": opacity,
+        "renderSubLayers": {
+            "@@function": ["tile", {
+                "type": "BitmapLayer",
+                "id": f"{layer_id}-bitmap",
+                "image": "@@tile.data",
+                "bounds": "@@tile.bbox",
+                "opacity": opacity
+            }]
+        },
+    }
 
+def basin_layer(geojson: dict) -> dict:
+    return {
+        "@@type": "GeoJsonLayer",
+        "id": "basin-outline",
+        "data": geojson,
+        "stroked": True,
+        "filled": False,
+        "getLineColor": [0, 102, 255, 200],
+        "getLineWidth": 2,
+        "lineWidthUnits": "pixels",
+    }
+
+def build_spec(dem_url: str | None, flood_url: str | None, basin_geojson: dict | None,
+               map_style: str = "mapbox://styles/mapbox/light-v11") -> str:
+    layers = []
+    if dem_url:
+        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
+    if flood_url:
+        layers.append(tile_layer("flood-tiles", flood_url, opacity=1.0))
+    if basin_geojson:
+        layers.append(basin_layer(basin_geojson))
+
+    spec = {
+        "mapStyle": map_style if MAPBOX_ACCESS_TOKEN else None,  # рендер працює і без базової підкладки
+        "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 10, "pitch": 0, "bearing": 0},
+        "layers": layers
+    }
+    return json.dumps(spec)
+
+# ---------- Read & normalize layers_index.json ----------
+DEM_LIST: List[str] = ["alos_dem", "aster_dem", "copernicus_dem", "fab_dem", "nasa_dem", "srtm_dem", "tan_dem"]
 layers_index: List[dict] = []
 try:
     with open(ASSETS_INDEX_PATH, "r") as f:
@@ -85,14 +123,12 @@ try:
         if r.get("path"):
             r["path"] = _fix_path(r["path"])
         layers_index.append(r)
-    logger.info("Layers index normalized, entries=%d", len(layers_index))
+    logger.info("layers_index normalized: %d entries", len(layers_index))
 except Exception as e:
-    logger.warning("Failed to read layers index '%s': %s", ASSETS_INDEX_PATH, e)
+    logger.warning("Failed to read %s: %s", ASSETS_INDEX_PATH, e)
     layers_index = []
 
-# Build maps from normalized index:
-#   DEM_TO_HANDS[dem] -> ["hand_2000", ...]
-#   DEM_TO_LEVELS[(dem, hand)] -> ["1m","2m",...]
+# Build maps: DEM -> HANDs; (DEM, HAND) -> levels
 DEM_TO_HANDS: Dict[str, List[str]] = {}
 DEM_TO_LEVELS: Dict[Tuple[str, str], List[str]] = {}
 
@@ -101,8 +137,8 @@ if layers_index:
         if r.get("category") != "flood_scenarios":
             continue
         dem = r.get("dem")
-        hand = r.get("hand")      # e.g. 'hand_2000'
-        level = r.get("flood")    # e.g. '1m'
+        hand = r.get("hand")
+        level = r.get("flood")
         if dem and hand and level:
             DEM_TO_HANDS.setdefault(dem, set()).add(hand)
             DEM_TO_LEVELS.setdefault((dem, hand), set()).add(level)
@@ -114,114 +150,73 @@ if layers_index:
             DEM_TO_LEVELS[key] = sorted(levels_set, key=_parse_level)
         DEM_LIST = sorted(DEM_TO_HANDS.keys())
 
-logger.info("DEM list: %s", ", ".join(DEM_LIST))
-logger.info("DEM_TO_HANDS keys: %s", ", ".join(DEM_TO_HANDS.keys()))
+logger.info("DEMs: %s", ", ".join(DEM_LIST))
 
-# ---------- UI constants ----------
-COLORMAPS = ["viridis", "terrain"]
-BASE_KEYS = ["toner", "terrain", "osm"]
-URL_TEMPLATE = {
-       "osm":     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-}
-ATTRIBUTION = (
-    ' <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-)
+# ---------- UI ----------
+COLORMAPS = ["viridis", "terrain", "inferno", "magma", "plasma"]
 
-# ---------- Layout ----------
 layout = html.Div([
-    html.H4("Flood Scenario Test Map"),
+    html.H3("Flood Scenarios (deck.gl)"),
+
     html.Div([
         html.Div([
             html.Label("DEM"),
-            dcc.Dropdown(
-                id="dem-name",
-                options=[{"label": d, "value": d} for d in DEM_LIST],
-                value=DEM_LIST[0],
-                style={"width": 220},
-                clearable=False
-            ),
-        ], style={"display": "inline-block", "marginRight": 16}),
+            dcc.Dropdown(id="dem-name", options=[{"label": d, "value": d} for d in DEM_LIST],
+                         value=DEM_LIST[0], style={"width": 220}, clearable=False),
+        ], style={"display": "inline-block", "marginRight": 12}),
 
         html.Div([
             html.Label("HAND"),
-            dcc.Dropdown(id="hand-name", options=[], placeholder="hand_*", clearable=False),
-        ], style={"display": "inline-block", "width": 160, "marginRight": 16}),
+            dcc.Dropdown(id="hand-name", options=[], placeholder="hand_*", style={"width": 180}, clearable=False),
+        ], style={"display": "inline-block", "marginRight": 12}),
 
         html.Div([
             html.Label("Flood level (m)"),
-            dcc.Dropdown(id="flood-level", options=[], placeholder="1–10 m", clearable=False),
-        ], style={"display": "inline-block", "width": 160, "marginRight": 16}),
+            dcc.Dropdown(id="flood-level", options=[], placeholder="1–10 m", style={"width": 160}, clearable=False),
+        ], style={"display": "inline-block", "marginRight": 12}),
 
         html.Div([
             html.Label("DEM Colormap"),
-            dcc.Dropdown(
-                id="dem-cmap",
-                options=[{"label": c.capitalize(), "value": c} for c in COLORMAPS],
-                value="viridis",
-                style={"width": 160},
-                clearable=False
-            ),
-        ], style={"display": "inline-block", "marginRight": 16}),
+            dcc.Dropdown(id="dem-cmap",
+                         options=[{"label": c.capitalize(), "value": c} for c in COLORMAPS],
+                         value="viridis", style={"width": 150}, clearable=False),
+        ], style={"display": "inline-block", "marginRight": 12}),
 
         html.Div([
             html.Label("DEM Stretch"),
-            dcc.RangeSlider(
-                id="dem-stretch",
-                min=0, max=4000, step=50, value=[250, 2200],
-                marks={0:"0",1000:"1000",2000:"2000",3000:"3000",4000:"4000"},
-                tooltip={"always_visible": False, "placement": "top"},
-            ),
-        ], style={"display": "inline-block", "width": 360, "marginRight": 16}),
+            dcc.RangeSlider(id="dem-stretch", min=0, max=4000, step=50, value=[250, 2200],
+                            marks={0:"0", 1000:"1000", 2000:"2000", 3000:"3000", 4000:"4000"},
+                            tooltip={"always_visible": False, "placement": "top"},
+                            ),
+        ], style={"display": "inline-block", "width": 360, "marginRight": 12}),
 
         html.Div([
             html.Label("Flood Colormap"),
-            dcc.Dropdown(
-                id="flood-cmap",
-                options=[
-                    {"label": "Blues", "value": "blues"},
-                    {"label": "Viridis", "value": "viridis"},
-                    {"label": "Pure Blue", "value": "custom"},
-                ],
-                value="blues",
-                style={"width": 160},
-                clearable=False
-            ),
-        ], style={"display": "inline-block", "marginRight": 16}),
+            dcc.Dropdown(id="flood-cmap",
+                         options=[{"label": "Blues", "value": "blues"},
+                                  {"label": "Viridis", "value": "viridis"},
+                                  {"label": "Pure Blue", "value": "custom"}],
+                         value="blues", style={"width": 150}, clearable=False),
+        ], style={"display": "inline-block", "marginRight": 12}),
 
         html.Div([
             html.Label("Flood Stretch"),
-            dcc.RangeSlider(
-                id="flood-stretch",
-                min=0, max=10, step=1, value=[0, 5],
-                marks={i: str(i) for i in range(0, 11)},
-                tooltip={"always_visible": False, "placement": "top"}
-            ),
+            dcc.RangeSlider(id="flood-stretch", min=0, max=10, step=1, value=[0, 5],
+                            marks={i: str(i) for i in range(11)},
+                            tooltip={"always_visible": False, "placement": "top"}),
         ], style={"display": "inline-block", "width": 260}),
-    ], style={"marginBottom": 14}),
+    ], style={"marginBottom": 12}),
 
-    dl.Map([
-        dl.LayersControl([
-            *[
-                dl.BaseLayer(
-                    dl.TileLayer(url=URL_TEMPLATE[k], attribution=ATTRIBUTION),
-                    name=k.capitalize(), checked=(k == "toner")
-                ) for k in BASE_KEYS
-            ],
-            dl.Overlay(dl.TileLayer(id="dem-tiles",   url="", opacity=0.75), name="DEM",   checked=True),
-            dl.Overlay(dl.TileLayer(id="flood-tiles", url="", opacity=1.0),  name="Flood", checked=True),
-            *([
-                dl.Overlay(
-                    dl.GeoJSON(
-                        data=BASIN_JSON, id="basin-flood",
-                        options={"style": {"color": "blue", "weight": 2, "fill": False}}
-                    ),
-                    name="Basin", checked=True
-                )
-            ] if BASIN_JSON else [])
-        ], id="lc", position="topright"),
-    ], style={"width": "100%", "height": "700px"}, center=[47.8, 25.03], zoom=10),
+    dash_deckgl.DashDeckgl(
+        id="deck-flood",
+        spec=build_spec(None, None, BASIN_JSON),
+        height=700,
+        mapbox_key=MAPBOX_ACCESS_TOKEN,
+        cursor_position="bottom-right",
+        events=[],
+    ),
 
-    html.Div(id="log"),
+    html.Div(id="deck-log", style={"fontFamily": "monospace", "marginTop": "6px"}),
 ])
 
 # ---------- Callbacks ----------
@@ -230,11 +225,11 @@ layout = html.Div([
     Output("hand-name", "value"),
     Input("dem-name", "value"),
 )
-def update_hands_for_dem(dem_name: str):
+def _update_hands(dem_name: str):
     hands = DEM_TO_HANDS.get(dem_name) or []
-    options = [{"label": h, "value": h} for h in hands]
+    opts = [{"label": h, "value": h} for h in hands]
     default = hands[0] if hands else None
-    return options, default
+    return opts, default
 
 @callback(
     Output("flood-level", "options"),
@@ -242,15 +237,14 @@ def update_hands_for_dem(dem_name: str):
     Input("dem-name", "value"),
     Input("hand-name", "value"),
 )
-def update_levels_for_dem_hand(dem_name: str, hand_name: str):
+def _update_levels(dem_name: str, hand_name: str):
     levels = DEM_TO_LEVELS.get((dem_name, hand_name)) or []
-    options = [{"label": f"{_parse_level(l)} m", "value": l} for l in levels]
+    opts = [{"label": f"{_parse_level(l)} m", "value": l} for l in levels]
     default = "5m" if "5m" in levels else (levels[0] if levels else None)
-    return options, default
+    return opts, default
 
 @callback(
-    Output("dem-tiles", "url"),
-    Output("flood-tiles", "url"),
+    Output("deck-flood", "spec"),
     Input("dem-name", "value"),
     Input("dem-cmap", "value"),
     Input("dem-stretch", "value"),
@@ -259,36 +253,27 @@ def update_levels_for_dem_hand(dem_name: str, hand_name: str):
     Input("flood-cmap", "value"),
     Input("flood-stretch", "value"),
 )
-def update_tc_urls(dem_name, dem_cmap, dem_stretch, hand_name, flood_level, flood_cmap, flood_stretch):
+def _update_spec(dem_name, dem_cmap, dem_stretch, hand_name, flood_level, flood_cmap, flood_stretch):
     if not dem_name:
-        return no_update, no_update
+        return no_update
 
     dem_url = build_dem_url(dem_name, dem_cmap or "viridis", dem_stretch or [250, 2200])
 
+    flood_url = ""
     levels = DEM_TO_LEVELS.get((dem_name, hand_name)) or []
-    if not (hand_name and flood_level and flood_level in levels):
-        flood_url = ""
-    else:
-        pure_blue = (flood_cmap == "custom")
+    if hand_name and flood_level and flood_level in levels:
         flood_url = build_flood_url(
-            dem_name, hand_name, flood_level,
+            dem_name,
+            hand_name,
+            flood_level,
             flood_cmap or "blues",
             flood_stretch or [0, 5],
-            pure_blue=pure_blue
+            pure_blue=(flood_cmap == "custom")
         )
 
     logger.debug("DEM URL: %s", dem_url)
     logger.debug("FLOOD URL: %s", flood_url)
-    return dem_url, flood_url
-
-@callback(
-    Output("log", "children"),
-    Input("lc", "baseLayer"),
-    Input("lc", "overlays"),
-    prevent_initial_call=True
-)
-def log_layers(base_layer, overlays):
-    return f"Base layer: {base_layer}, overlays: {json.dumps(overlays)}"
+    return build_spec(dem_url, flood_url or None, BASIN_JSON)
 
 
 
