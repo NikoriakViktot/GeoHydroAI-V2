@@ -114,7 +114,21 @@ def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = Tr
         "zIndex": z,  # порядок все одно визначає послідовність у "layers"
         "renderSubLayers": {"@@function": "bitmapTile"},
     }
-
+def geojson_layer(data: dict, visible: bool = True, z: int = 0) -> dict:
+    """Builds a deck.gl GeoJsonLayer dictionary."""
+    return {
+        "@@type": "GeoJsonLayer",
+        "id": "basin-geojson",
+        "data": data,
+        "visible": visible,
+        "filled": True,
+        "stroked": True,
+        "getFillColor": [30, 144, 255, 60],  # Dodger Blue, semi-transparent
+        "getLineColor": [30, 144, 255, 200], # Dodger Blue, more opaque
+        "getLineWidth": 2,
+        "lineWidthUnits": "pixels",
+        "zIndex": z,
+    }
 # --- 3) spec повертаємо як dict, БЕЗ жодних "functions" усередині ---
 def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, basin_geojson):
     layers = []
@@ -122,8 +136,9 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
         layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75, visible=show_dem, z=10))
     if flood_url:
         layers.append(tile_layer("flood-tiles", flood_url, opacity=1.0, visible=show_flood, z=20))
-    if basin_geojson:
-        layers.append(basin(basin_geojson, visible=show_basin, z=30))
+    if basin_geojson: # Use the argument passed to the function
+        # Call the new helper function to build the layer
+        layers.append(geojson_layer(basin_geojson, visible=show_basin, z=30))
 
     return {
         "mapStyle": map_style if MAPBOX_ACCESS_TOKEN else None,
