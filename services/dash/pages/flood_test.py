@@ -12,7 +12,6 @@ from registry import get_df
 # ---------- Page ----------
 dash.register_page(__name__, path="/flood-map", name="Flood Scenarios", order=98)
 app = dash.get_app()
-app.config.assets_cache_max_age = 0
 
 # ---------- Logging to stdout ----------
 logger = logging.getLogger("pages.flood_map_deck")
