@@ -118,7 +118,7 @@ logger.info("DEM list: %s", ", ".join(DEM_LIST))
 logger.info("DEM_TO_HANDS keys: %s", ", ".join(DEM_TO_HANDS.keys()))
 
 # ---------- UI constants ----------
-COLORMAPS = ["viridis", "terrain", "inferno", "magma", "plasma"]
+COLORMAPS = ["viridis", "terrain"]
 BASE_KEYS = ["toner", "terrain", "osm"]
 URL_TEMPLATE = {
        "osm":     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
