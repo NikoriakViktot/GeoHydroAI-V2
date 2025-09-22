@@ -22,8 +22,15 @@ if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
     logger.addHandler(h)
 logger.setLevel(getattr(logging, os.getenv("PAGE_LOG_LEVEL", "INFO").upper(), logging.INFO))
 logger.propagate = False
+from urllib.parse import urlparse, urlunparse
 
-TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
+def _strip_www(u: str) -> str:
+    p = urlparse(u)
+    host = p.netloc.replace("www.", "")
+    return urlunparse((p.scheme or "https", host, p.path, "", "", "")).rstrip("/")
+
+
+TC_BASE = _strip_www(os.getenv("TERRACOTTA_PUBLIC_URL", "https://geohydroai.org/tc"))
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 ASSETS_INDEX_PATH = "assets/layers_index.json"
 
