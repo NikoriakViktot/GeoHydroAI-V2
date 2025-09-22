@@ -56,7 +56,7 @@ navbar = html.Div([
     # dcc.Link("ICESat-2 Map",       href="/icesat-map",className="btn btn-secondary", style={"marginRight": "8px"}),
     # dcc.Link("Best DEM",           href="/best-dem",  className="btn btn-secondary", style={"marginRight": "8px"}),
     # dcc.Link("CDF Accumulation",   href="/cdf",       className="btn btn-secondary", style={"marginRight": "8px"}),
-    dcc.Link("Flood Scenarios Test", href="/flood-test", className="btn btn-secondary"),
+    dcc.Link("Flood Scenarios Test", href="/flood-map", className="btn btn-secondary"),
 ], style={"padding":"20px 0","position":"sticky","top":"0","zIndex":1100})
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])

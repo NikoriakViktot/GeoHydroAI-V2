@@ -10,7 +10,7 @@ import dash_deckgl
 from registry import get_df
 
 # ---------- Page & logging ----------
-dash.register_page(__name__, path="/flood-test-deck", name="Flood Scenarios (deck.gl)", order=98)
+dash.register_page(__name__, path="/flood-map", name="Flood Scenarios", order=98)
 app = dash.get_app()
 
 logger = logging.getLogger(__name__)
