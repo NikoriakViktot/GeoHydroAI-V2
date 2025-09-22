@@ -64,7 +64,14 @@ def build_flood_url(dem_name: str, hand_name: str, level: str, cmap: str, stretc
            else f"{base}?colormap={cmap}&stretch_range={s}"
 
 # ---- deck.gl builders (no reprojection for tiles) ----
-def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = True) -> dict:
+def tile_layer(
+    layer_id: str,
+    url: str,
+    opacity: float = 1.0,
+    visible: bool = True,
+    z: int = 0,            # лишаємо для зворотної сумісності (deck.gl не використовує його)
+    **_                    # проковтуємо будь-які інші неочікувані kwargs
+) -> dict:
     js_fn = (
         "(props) => new deck.BitmapLayer({"
         "  id: `${props.id}-bitmap`,"
@@ -85,7 +92,8 @@ def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = Tr
         "tileSize": 256,
         "opacity": opacity,
         "parameters": {"depthTest": False},
-        "renderSubLayers": {"@@function": js_fn},
+        "zIndex": z,  # інформативно; порядок шарів задається порядком у масиві "layers"
+        "renderSubLayers": {"@@function": js_fn},  # ВАЖЛИВО: функція, а не об’єкт
     }
 
 
