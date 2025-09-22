@@ -42,10 +42,7 @@ app = dash.Dash(
 )
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
-try:
-    app.logger.info("Registered component libs: %s", list(app.registered_paths.keys()))
-except Exception:
-    pass
+
 # ІМПОРТИ КОЛБЕКІВ — без navigate
 for mod in (
     "callbacks.main_callbacks",
