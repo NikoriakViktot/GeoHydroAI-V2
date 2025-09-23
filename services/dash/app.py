@@ -63,9 +63,9 @@ navbar = html.Div([
     dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
     html.A(
         "Flood Scenarios",
-        href="https://geohydroai.org//flood_scenarios/",
+        href="/flood_scenarios/",  # Простий відносний шлях, Nginx все зрозуміє
         className="btn btn-secondary",
-        target="_self"
+        refresh=True  # <--- КЛЮЧОВЕ ВИРІШЕННЯ!
     ),
 
 ], style={"padding":"20px 0","position":"sticky","top":"0","zIndex":1100})
