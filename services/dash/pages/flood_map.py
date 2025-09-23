@@ -124,9 +124,9 @@ def geojson_layer(data: dict, visible: bool = True, z: int = 0) -> dict:
         "id": "fmap-basin-geojson",
         "data": data,
         "visible": visible,
-        "filled": True,
+        "filled": False,
         "stroked": True,
-        "getFillColor": [30, 144, 255, 60],
+        "getFillColor": [30, 144, 255, 0],
         "getLineColor": [30, 144, 255, 200],
         "getLineWidth": 2,
         "lineWidthUnits": "pixels",
@@ -227,9 +227,13 @@ layout = html.Div([
 
         html.Div([
             html.Label("Flood level (m)"),
-            dcc.Dropdown(id="fmap-flood-level", options=[], placeholder="1–10 m",
-                         style={"width": 160}, clearable=False),
-        ], style={"display": "inline-block", "marginRight": 12}),
+            dcc.Slider(
+                id="fmap-flood-level",
+                min=1, max=10, step=1, value=5,
+                marks={i: str(i) for i in range(1, 11)},
+                tooltip={"always_visible": False, "placement": "top"},
+            ),
+        ], style={"display": "inline-block", "width": 260, "marginRight": 12}),
 
         html.Div([
             html.Label("DEM Colormap"),
@@ -285,16 +289,23 @@ layout = html.Div([
 
 # ---------- Callbacks ----------
 @callback(
-    Output("fmap-flood-level", "options"),
+    Output("fmap-flood-level", "min"),
+    Output("fmap-flood-level", "max"),
+    Output("fmap-flood-level", "marks"),
     Output("fmap-flood-level", "value"),
-    Input("fmap-dem", "value")
+    Input("fmap-dem", "value"),
 )
-def _update_levels(dem_name: str):
+def _sync_flood_slider(dem_name: str):
     levels = DEM_LEVELS.get(dem_name) or []
-    opts = [{"label": f"{_parse_level(l)} m", "value": l} for l in levels]
-    default = "5m" if "5m" in levels else (levels[0] if levels else None)
-    logger.info("[levels] dem=%s -> levels=%s; default=%s", dem_name, levels, default)
-    return opts, default
+    ints = sorted({_parse_level(l) for l in levels})
+    if not ints:
+        # дефолт на всяк випадок
+        return 1, 10, {i: str(i) for i in range(1, 11)}, 5
+    marks = {i: str(i) for i in ints}
+    default = 5 if 5 in ints else ints[0]
+    logger.info("[levels/slider] dem=%s -> range=%s..%s default=%s", dem_name, ints[0], ints[-1], default)
+    return ints[0], ints[-1], marks, default
+
 
 @callback(
     Output("fmap-deck", "spec"),
@@ -317,18 +328,20 @@ def _update_spec(dem_name, dem_cmap, dem_stretch,
         show_dem = "dem" in overlays
         show_flood = "flood" in overlays
         show_basin = "basin" in overlays
-
+    level_str = f"{int(flood_level)}m" if flood_level is not None else None
     dem_url = build_dem_url(dem_name, dem_cmap or "terrain", dem_stretch or [250, 2200]) if dem_name else ""
     flood_url, chosen_hand = "", ""
-    if dem_name and flood_level:
-        chosen_hand = (DEM_LEVEL_TO_HAND.get(dem_name, {}) or {}).get(flood_level, "")
+    if dem_name and level_str:
+        chosen_hand = (DEM_LEVEL_TO_HAND.get(dem_name, {}) or {}).get(level_str, "")
         if chosen_hand:
             flood_url = build_flood_url(
-                dem_name, chosen_hand, flood_level,
+                dem_name, chosen_hand, level_str,
                 flood_cmap or "blues",
                 flood_stretch or [0, 5],
-                pure_blue=(flood_cmap == "custom")
+                pure_blue=(flood_cmap == "custom"),
             )
+
+    logger.info("[spec.in] dem=%s level=%s hand=%s", dem_name, level_str, chosen_hand)
 
     logger.info("[spec.in] dem=%s cmap=%s stretch=%s level=%s flood_cmap=%s flood_stretch=%s",
                 dem_name, dem_cmap, dem_stretch, flood_level, flood_cmap, flood_stretch)
