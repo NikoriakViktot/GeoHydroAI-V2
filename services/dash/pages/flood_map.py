@@ -133,7 +133,9 @@ def geojson_layer(data: dict, visible: bool = True, z: int = 0) -> dict:
         "zIndex": z,
     }
 
-def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, basin_geojson) -> str:
+import json
+
+def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, basin_geojson):
     layers = []
     if dem_url:
         layers.append(tile_layer("fmap-dem-tiles", dem_url, opacity=0.75, visible=show_dem, z=10))
@@ -147,7 +149,8 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
         "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 10, "pitch": 0, "bearing": 0},
         "layers": layers,
     }
-    return json.dumps(spec)  # <-- важливо: рядок, не dict
+    return json.dumps(spec)      # <-- ОБОВ’ЯЗКОВО рядок
+# <-- важливо: рядок, не dict
 
 # ---------- layers_index.json ----------
 layers_index: List[dict] = []
@@ -356,6 +359,6 @@ def _update_spec(dem_name, dem_cmap, dem_stretch,
             logger.info("[FLOOD] not shown (%s) dem=%s level=%s", reason, dem_name, flood_level)
     logger.info("[MAP] style=%s basin=%s", map_style, show_basin)
 
-    spec = build_spec(map_style, dem_url or None, flood_url or None,
-                      show_dem, show_flood, show_basin, BASIN_JSON)
-    return spec  # JSON string
+
+    return build_spec(map_style, dem_url or None, flood_url or None,
+                      show_dem, show_flood, show_basin, BASIN_JSON)# JSON string
