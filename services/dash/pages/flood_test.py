@@ -111,9 +111,18 @@ def tile_layer(layer_id: str, url: str, opacity: float = 1.0, visible: bool = Tr
         "tileSize": 256,
         "opacity": opacity,
         "parameters": {"depthTest": False},
-        "zIndex": z,  # порядок все одно визначає послідовність у "layers"
-        "renderSubLayers": {"@@function": "bitmapTile"},
+        "zIndex": z,
+        "renderSubLayers": {
+            "@@function": ["tile", {
+                "type": "BitmapLayer",
+                "id": f"{layer_id}-bitmap",
+                "image": "@@tile.data",
+                "bounds": "@@tile.bbox",
+                "opacity": opacity
+            }]
+        },
     }
+
 def geojson_layer(data: dict, visible: bool = True, z: int = 0) -> dict:
     """Builds a deck.gl GeoJsonLayer dictionary."""
     return {
