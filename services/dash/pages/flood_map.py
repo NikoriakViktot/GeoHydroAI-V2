@@ -1,4 +1,4 @@
-# pages/flood_map_deck.py
+# pages/map_flood.py
 import os, json, logging, sys
 from typing import Dict, List, Tuple
 
@@ -214,11 +214,11 @@ layout = html.Div([
                 True,  # show_basin
                 BASIN_JSON  # basin_geojson
             ),
-            custom_libraries=[{
-                "libraryName": "BitmapTileLib",
-                "libraryUrl": "",
-                "functions": {"bitmapTile": BITMAP_FN}
-            }],
+            # custom_libraries=[{
+            #     "libraryName": "BitmapTileLib",
+            #     "libraryUrl": "",
+            #     "functions": {"bitmapTile": BITMAP_FN}
+            # }],
             height=700,
             mapbox_key=MAPBOX_ACCESS_TOKEN,
             cursor_position="bottom-right",
