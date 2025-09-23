@@ -59,8 +59,8 @@ for mod in (
 
 
 navbar = html.Div([
-    dcc.Link("Dashboard", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
-    dcc.Link("DEM Diff", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
+    dcc.Link("Dashboard ", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
+    dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
     html.A("Flood Scenarios", href="/flood_scenarios/", className="btn btn-secondary"),  # <- зовнішнє
 ], style={"padding":"20px 0","position":"sticky","top":"0","zIndex":1100})
 
