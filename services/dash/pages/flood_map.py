@@ -1,29 +1,24 @@
-# # pages/map_flood.py
-# import os, json, logging, sys
-# from typing import Dict, List, Tuple
-#
-# import geopandas as gpd
-# import dash
-# from dash import html, dcc, callback, Output, Input, no_update
-# import dash_deckgl
-# from urllib.parse import urlparse, urlunparse
-#
-# from registry import get_df
-#
-# # ---------- Page ----------
-# dash.register_page(__name__, path="/flood-map", name="Flood Scenarios", order=98)
-# app = dash.get_app()
-#
-# # ---------- Logging ----------
-# logger = logging.getLogger(__name__)
-# if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
-#     h = logging.StreamHandler(sys.stdout)
-#     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-#     h.setFormatter(fmt)
-#     logger.addHandler(h)
-# logger.setLevel(getattr(logging, os.getenv("PAGE_LOG_LEVEL", "INFO").upper(), logging.INFO))
-# logger.propagate = False
-#
+# pages/map_flood.py
+
+import dash
+from dash import html, dcc, callback, Output, Input, no_update
+
+dash.register_page(__name__, path="/flood-dem-diif", name="Flood Scenarios", order=98)
+
+def layout():
+    return html.Div([
+        html.H3("Готуємо карту…"),
+        html.P("Зачекайте кілька секунд. Якщо не відкриється — "
+               + html.A("натисніть тут", href="/flood_scenarios/").to_plotly_json()["props"]["children"]),
+        dcc.Location(id="redir", refresh=True),
+        dcc.Interval(id="go-timer", interval=1000, n_intervals=0),  # 1 секунда
+    ], style={"padding":"2rem"})
+
+@callback(Output("redir", "href"), Input("go-timer", "n_intervals"))
+def _go(n):
+    return "/flood_scenarios/" if n > 0 else no_update
+
+
 #
 # def _strip_www(u: str) -> str:
 #     p = urlparse(u)
