@@ -155,24 +155,7 @@ def build_spec(map_style, dem_url, flood_url, show_dem, show_flood, show_basin, 
         "layers": layers,
     }
 
-# --- 4) у layout передаємо реєстр функцій у сам компонент ---
-# deck = dash_deckgl.DashDeckgl(
-#     id="deck-flood",
-#     spec=build_spec(MAP_STYLES["Satellite Streets"], None, None, True, True, True, BASIN_JSON),
-#     custom_libraries=[
-#         {
-#             "libraryName": "BitmapTileLibrary",
-#             "libraryUrl": "", # Not needed for inline functions
-#             "functions": {
-#                 "bitmapTile": BITMAP_FN
-#             }
-#         }
-#     ],
-#     height=700,
-#     mapbox_key=MAPBOX_ACCESS_TOKEN,
-#     cursor_position="bottom-right",
-#     events=[],
-# )
+
 
 layers_index: List[dict] = []
 try:
@@ -221,7 +204,7 @@ layout = html.Div([
     # Карта (обгорнута в Div зі стилем)
     html.Div([
         dash_deckgl.DashDeckgl(
-            id="deck-flood",
+            id="map-flood",
             spec=build_spec(
                 MAP_STYLES["Satellite Streets"],  # map_style
                 None,  # dem_url
@@ -327,7 +310,7 @@ def _update_levels(dem_name: str):
     return opts, default
 
 @callback(
-    Output("deck-flood", "spec"),
+    Output("map-flood", "spec"),
     Input("dem-name", "value"),
     Input("dem-cmap", "value"),
     Input("dem-stretch", "value"),
