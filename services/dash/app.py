@@ -56,14 +56,12 @@ for mod in (
     except Exception:
         logging.exception("FATAL: failed to import %s", mod)
 
+
+
 navbar = html.Div([
     dcc.Link("Dashboard", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
-    # dcc.Link("DEM Diff Analysis",  href="/dem-diff",  className="btn btn-secondary", style={"marginRight": "28px"}),
-    dcc.Link("DEM Diff",href="/dem-diff",className="btn btn-secondary", style={"marginRight": "28px"}),
-    # dcc.Link("ICESat-2 Map",       href="/icesat-map",className="btn btn-secondary", style={"marginRight": "8px"}),
-    # dcc.Link("Best DEM",           href="/best-dem",  className="btn btn-secondary", style={"marginRight": "8px"}),
-    # dcc.Link("CDF Accumulation",   href="/cdf",       className="btn btn-secondary", style={"marginRight": "8px"}),
-    dcc.Link("Flood Scenarios", href="/flood-map", className="btn btn-secondary"),
+    dcc.Link("DEM Diff", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
+    html.A("Flood Scenarios", href="/flood_scenarios/", className="btn btn-secondary"),  # <- зовнішнє
 ], style={"padding":"20px 0","position":"sticky","top":"0","zIndex":1100})
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])
