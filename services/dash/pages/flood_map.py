@@ -1,22 +1,19 @@
 # pages/map_flood.py
 
+# pages/map_flood.py
 import dash
-from dash import html, dcc, callback, Output, Input, no_update
+from dash import html, dcc
 
 dash.register_page(__name__, path="/flood-dem-diif", name="Flood Scenarios", order=98)
 
 def layout():
     return html.Div([
-        html.H3("Готуємо карту…"),
-        html.P("Зачекайте кілька секунд. Якщо не відкриється — "
-               + html.A("натисніть тут", href="/flood_scenarios/").to_plotly_json()["props"]["children"]),
-        dcc.Location(id="redir", refresh=True),
-        dcc.Interval(id="go-timer", interval=1000, n_intervals=0),  # 1 секунда
+        html.H3("Перенаправляємо на Flood Scenarios…"),
+        html.P("Якщо сторінка не відкрилась автоматично, натисніть: "
+               + html.A("відкрити вручну", href="/flood_scenarios/").to_plotly_json()["props"]["children"]),
+        # Автоперехід (повне перезавантаження сторінки)
+        dcc.Location(id="go", href="/flood_scenarios/", refresh=True),
     ], style={"padding":"2rem"})
-
-@callback(Output("redir", "href"), Input("go-timer", "n_intervals"))
-def _go(n):
-    return "/flood_scenarios/" if n > 0 else no_update
 
 
 #
