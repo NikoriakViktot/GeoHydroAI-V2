@@ -57,6 +57,8 @@ services:
         condition: service_healthy
       terracotta:
         condition: service_healthy
+    ports:
+      - "8000:8000"
     expose:
       - "${API_PORT:-8000}}:8000"
     networks: [web]
