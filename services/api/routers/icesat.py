@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from ..di import  build_online_usecase, online_mode
+from di import  build_online_usecase, online_mode
 
 router = APIRouter(prefix="/icesat", tags=["icesat"])
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
-from ..di import build_online_usecase, build_duck_repo, online_mode
+from di import build_online_usecase, build_duck_repo, online_mode
 
 router = APIRouter(prefix="/compare", tags=["compare"])
 

@@ -12,10 +12,10 @@ from fastapi.responses import ORJSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from services.api.di import get_sync_session
-from .routers.icesat import router as icesat_router
-from .routers.compare import router as compare_router
-from .routers.dem import router as dem_router
+from di import get_sync_session
+from routers.icesat import router as icesat_router
+from routers.compare import router as compare_router
+from routers.dem import router as dem_router
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO))
@@ -56,7 +56,8 @@ app.include_router(dem_router)
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 def health():
     return {"status": "ok"}
-# @app.get("/dbhealth", status_code=status.HTTP_200_OK)
-# def dbhealth(db: Session = Depends(get_sync_session)):
-#     db.execute(text("SELECT 1"))
-#     return {"db": "ok"}
+
+@app.get("/dbhealth", status_code=status.HTTP_200_OK)
+def dbhealth(db: Session = Depends(get_sync_session)):
+    db.execute(text("SELECT 1"))
+    return {"db": "ok"}

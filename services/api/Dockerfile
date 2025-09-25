@@ -18,20 +18,21 @@ ENV GDAL_DATA=/usr/share/gdal
 ENV PROJ_LIB=/usr/share/proj
 
 # спочатку numpy (щоб пришвидшити збірки), потім геостек і решта
-COPY services/api/requirements.txt ./services/api/requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir "numpy>=1.24,<3" && \
     pip install --no-cache-dir --no-binary rasterio,fiona \
         "rasterio>=1.4.0" "fiona>=1.9.0" && \
-    pip install --no-cache-dir -r services/api/requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # wait-for-it
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 # код
-COPY services/api ./services/api
+COPY . /app
+
 ENV PYTHONPATH=/app
 
 # ❗ CMD у одному рядку (щоб парсер точно не спіткнувся)
-CMD ["/wait-for-it.sh", "postgis:5432", "--", "uvicorn", "services.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/wait-for-it.sh", "postgis:5432", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
