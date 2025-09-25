@@ -47,6 +47,7 @@ services:
          context: .
          dockerfile: services/api/Dockerfile
     environment:
+      ENV PYTHONPATH: /app
       POSTGRES_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgis:5432/${POSTGRES_DB}
       TERRACOTTA_URL: ${TERRACOTTA_URL}
       DEFAULT_DEMS: ${DEFAULT_DEMS}
