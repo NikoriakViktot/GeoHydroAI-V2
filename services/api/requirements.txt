@@ -4,6 +4,7 @@ uvicorn[standard]==0.35.0
 # Не пінь starlette окремо: fastapi підтягне сумісну версію
 orjson>=3.10.0
 requests
+
 # ── конфіг
 pydantic>=2.7
 pydantic-settings>=2.4
@@ -22,6 +23,7 @@ fiona>=1.9.0
 geopandas>=0.14.0
 pandas>=2.1.0
 numpy>=1.24.0
+rasterio>=1.4.0
 
 # ── файли/аналітика
 duckdb>=0.9.0
@@ -30,6 +32,8 @@ pyarrow>=11.0.0
 # ── інше (опційно: векторні БД, аплоад)
 pgvector>=0.2.0
 python-multipart>=0.0.9
+scikit-learn==1.6.1
+
 
 
 # ── міграції (коли дійдемо до схеми/seed)

@@ -59,13 +59,18 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    expose:
-      - "${API_PORT:-8000}}:8000"
     networks: [web]
     volumes:
       - ./data/parquet:/app/data/parquet:ro   # <-- тут твій layers_index.json
       - ./data/cogs:/app/data/cogs:ro         # <-- щоб Dash читав GeoTIFF
       - tc_tmp:/tmp
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
 
 
   dash:
