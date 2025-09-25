@@ -1,7 +1,7 @@
 #services/api/routers/filters.py
 
 from fastapi import APIRouter, Query
-from services.api.di import build_duck_repo
+from ..di import build_duck_repo
 
 router = APIRouter(prefix="/filters", tags=["filters"])
 
