@@ -28,6 +28,8 @@ services:
       TC_DB: /app/tc_db/terracotta.sqlite
       TC_PORT: 5000
       TC_HOST: 0.0.0.0
+      TC_RESAMPLING_METHOD: bilinear
+
     volumes:
       - ./data/cogs:/app/data/cogs:ro
       - tcdb:/app/tc_db

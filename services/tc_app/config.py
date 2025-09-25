@@ -18,3 +18,4 @@ TC_URL  = f"http://{TC_HOST}:{TC_PORT}"
 
 DEM_KEYS = ["alos", "aster", "copernicus", "fab", "nasa", "srtm", "tan"]
 LULC_YEARS = list(range(2018, 2026))
+
