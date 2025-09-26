@@ -59,15 +59,15 @@ for mod in (
     except Exception:
         logging.exception("FATAL: failed to import %s", mod)
 
-from flask import abort, request
-# server = app.server
-@server.before_request
-def block_non_dem():
-    p = request.path
-    if not (p.startswith("/dem/")
-            or p.startswith("/_dash")
-            or p.startswith("/assets")):
-        abort(404)
+# from flask import abort, request
+# # server = app.server
+# @server.before_request
+# def block_non_dem():
+#     p = request.path
+#     if not (p.startswith("/dem/")
+#             or p.startswith("/_dash")
+#             or p.startswith("/assets")):
+#         abort(404)
 
 
 
