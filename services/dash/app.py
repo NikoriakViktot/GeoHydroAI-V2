@@ -27,7 +27,7 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
-    # requests_pathname_prefix='/dashboard/',
+    requests_pathname_prefix='/dashboard/',
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
