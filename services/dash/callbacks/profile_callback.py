@@ -278,20 +278,18 @@ def update_profile(track_rgt_spot, date,
     Input("hand_slider", "value"),
     Input("hand_toggle", "value"),
     Input("basemap_style", "value"),
-    Input("dem_dropdown", "value"),  # ◀︎ NEW
-
 )
-def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style, dem_value):
+def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
     if not selected_profile or not all(selected_profile.values()):
         return _deck_spec_from_tracks(None, basemap_style)
     try:
         track, rgt, spot = map(float, selected_profile["track"].split("_"))
+        dem  = selected_profile.get("dem")
         date = selected_profile.get("date")
-        dem  = dem_value or selected_profile.get("dem") or DEFAULT_DEM  # ◀︎ take from dropdown
     except Exception:
         return _deck_spec_from_tracks(None, basemap_style)
     use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
     hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2) else None
-    df = _query_tracks(track, rgt, spot, date, dem, hand_q)  # ◀︎ дем вже правильний
+    df = _query_tracks(track, rgt, spot, date, dem, hand_q)
     df = _add_distance(df)
     return _deck_spec_from_tracks(df, basemap_style)
