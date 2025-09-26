@@ -1,26 +1,38 @@
-from dash import callback, Output, Input, State
 import plotly.graph_objs as go
 import dash_leaflet as dl
-import pandas as pd
 import numpy as np
 from pyproj import Geod
 import geopandas as gpd
 import duckdb
-from utils.db import DuckDBData
+
 from utils.plot_track import build_profile_figure_with_hand
 from utils.style import empty_dark_figure
-from registry import get_db
+from dash import callback, Output, Input, State, no_update, exceptions
+import dash_leaflet as dl
+import dash
+import pandas as pd
+import json
+import logging
+
 from src.interpolation_track import (
         kalman_smooth,
     interpolate_linear,
     )
-import dash
+from registry import get_db, get_df
+
+logger = logging.getLogger(__name__)  # ✅ тепер logger існує
 
 app = dash.get_app()
+db = get_db("tracks")
 
-# db = DuckDBData("data/tracks_3857_1.parquet")
-# db = DuckDBData("data/NMAD_dem.parquet")
-db = get_db("nmad")
+# (опційно) basin, якщо треба локально:
+try:
+    basin: gpd.GeoDataFrame = get_df("basin")
+    basin = basin.to_crs("EPSG:4326")
+    basin_json = json.loads(basin.to_json())
+except Exception as e:
+    logger.exception("Failed to load basin: %s", e)
+    basin_json = None
 
 
 DEM_LIST = [
@@ -355,7 +367,6 @@ def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
     df = db.get_profile(track, rgt, spot, dem, date, hand_q)
     if df is not None:
         if "distance_m" not in df:
-            from pyproj import Geod
             geod = Geod(ellps="WGS84")
             d = np.zeros(len(df))
             if len(df) > 1:
