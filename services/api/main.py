@@ -24,12 +24,12 @@ logger = logging.getLogger("geoapi")
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(api_app: FastAPI):
     logger.info("API starting...")
     yield
     logger.info("API stopping...")
 
-app = FastAPI(
+api_app = FastAPI(
     title="GeoHydroAI API",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
@@ -38,6 +38,17 @@ app = FastAPI(
 #     openapi_url="/openapi.json", # Remove /api
 )
 
+root_app = FastAPI()
+
+root_app.mount("/api", api_app)
+
+# Додатково, якщо потрібно, root_app може реагувати на `/`
+@root_app.get("/")
+def read_root():
+    return {"message": "Welcome to root"}
+
+# “root_app” — це фактичний застосунок, який запускаєте
+app = root_app
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
