@@ -33,7 +33,7 @@ app = FastAPI(
     title="GeoHydroAI API",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
-    docs_url="/docs",  # Remove /api
+    # docs_url="/docs",  # Remove /api
     redoc_url="/redoc", # Remove /api
     # openapi_url="/openapi.json", # Remove /api
 )
