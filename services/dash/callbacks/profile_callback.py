@@ -23,7 +23,7 @@ from registry import get_db, get_df
 logger = logging.getLogger(__name__)  # ✅ тепер logger існує
 
 app = dash.get_app()
-db = get_db("tracks")
+db = get_db("nmad")
 
 # (опційно) basin, якщо треба локально:
 try:

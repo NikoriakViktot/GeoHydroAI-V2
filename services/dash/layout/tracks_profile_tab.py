@@ -3,21 +3,41 @@ import dash_deckgl
 from dash import html, dcc
 from utils.style import dark_card_style, dropdown_style, empty_dark_figure
 from registry import get_df
-
+import logging
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
+logger = logging.getLogger(__name__)  # ✅ тепер logger існує
 
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
 try:
-    basin: gpd.GeoDataFrame = get_df("basin").to_crs("EPSG:4326")
+    basin: gpd.GeoDataFrame = get_df("basin")
+    logger.info("Basin loaded, CRS=%s, rows=%d", basin.crs, len(basin))
+    basin = basin.to_crs("EPSG:4326")
     basin_json = json.loads(basin.to_json())
-except Exception:
+except Exception as e:
+    logger.exception("Failed to load basin: %s", e)
     basin_json = None
+
 
 profile_tab_layout = html.Div([
     html.H4("ICESat-2 Track Profiles", style={"color": "#EEEEEE"}),
 
     html.Div([
+        dcc.Dropdown(
+            id="dem_select",
+            options=[
+                {"label": "ALOS DEM", "value": "alos_dem"},
+                {"label": "ASTER DEM", "value": "aster_dem"},
+                {"label": "Copernicus DEM", "value": "copernicus_dem"},
+                {"label": "FABDEM", "value": "fab_dem"},
+                {"label": "NASA DEM", "value": "nasa_dem"},
+                {"label": "SRTM", "value": "srtm_dem"},
+                {"label": "TanDEM-X", "value": "tan_dem"},
+            ],
+            value="alos_dem",
+            clearable=False,
+            style={**dropdown_style, "width": "180px", "marginLeft": "8px"},
+        ),
         dcc.Dropdown(id="year_dropdown",
                      options=[{"label": str(y), "value": y} for y in YEARS],
                      value=YEARS[-1], clearable=False,
