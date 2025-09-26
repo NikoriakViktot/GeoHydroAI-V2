@@ -2,7 +2,9 @@
 import duckdb
 import pandas as pd
 import numpy as np
+import logging
 
+logger = logging.getLogger(__name__)
 
 class DuckDBData:
     def __init__(self, parquet_file, persistent=False):
@@ -132,18 +134,26 @@ class DuckDBData:
         return {"type": "FeatureCollection", "features": features}
 
     # --- 8. LULC/landform для фільтрів ---
-    def get_unique_lulc_names(self, dem):
-        sql = f"""
-            SELECT DISTINCT lulc_name
-            FROM '{self.parquet_file}'
-            WHERE delta_{dem} IS NOT NULL AND lulc_name IS NOT NULL
-            AND atl03_cnf = 4 AND atl08_class = 1
-            ORDER BY lulc_name
-        """
-        df = self.query(sql)
-        return [{"label": x, "value": x} for x in df["lulc_name"].dropna().tolist()]
 
 
+    def get_unique_lulc_names(self, dem: str | None):
+        # якщо DEM невідомий — нічого не фільтруємо і нічого не ламаємо
+        if not dem:
+            logger.warning("get_unique_lulc_names: DEM is None -> returning empty list")
+            return []
+        try:
+            sql = f"""
+                SELECT DISTINCT lulc_name
+                FROM '{self.path}'
+                WHERE delta_{dem} IS NOT NULL AND lulc_name IS NOT NULL
+            """
+            df = duckdb.query(sql).to_df()
+            if "lulc_name" not in df:
+                return []
+            return [{"label": x, "value": x} for x in df["lulc_name"].dropna().tolist()]
+        except Exception as e:
+            logger.error("get_unique_lulc_names failed: %s", e)
+            return []
     def get_unique_landform(self, dem):
         landform_col = f"{dem}_landform"
         sql = f"""

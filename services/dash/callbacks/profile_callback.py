@@ -4,6 +4,7 @@ import numpy as np
 from pyproj import Geod
 import geopandas as gpd
 import duckdb
+import os
 
 from utils.plot_track import build_profile_figure_with_hand
 from utils.style import empty_dark_figure
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)  # ✅ тепер logger існує
 
 app = dash.get_app()
 db = get_db("nmad")
-
+DEFAULT_DEM = os.getenv("DEFAULT_TRACK_DEM", "alos_dem")
 # (опційно) basin, якщо треба локально:
 try:
     basin: gpd.GeoDataFrame = get_df("basin")
@@ -35,20 +36,73 @@ except Exception as e:
     basin_json = None
 
 
+def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
+    if delta is None or not np.isfinite(delta):
+        return [200, 200, 200, 180]
+    x = float(np.clip(delta / vmax, -1.0, 1.0))
+    if x < 0:
+        t = abs(x); r, g, b = int(255*(1-t)), int(255*(1-t)), 255
+    else:
+        t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
+    return [r, g, b, 200]
+
+def _build_track_layers(df, basemap_style):
+    layers = []
+    # 1) басейн зверху всього
+    if basin_json:
+        layers.append({
+            "@@type": "GeoJsonLayer", "id": "basin-outline",
+            "data": basin_json, "stroked": True, "filled": False,
+            "getLineColor": [0, 102, 255, 220],
+            "getFillColor": [0, 0, 0, 0],
+            "getLineWidth": 2.5,
+            "lineWidthUnits": "pixels",
+            "lineWidthMinPixels": 2,
+            "parameters": {"depthTest": False}
+        })
+
+    # 2) якщо є трек — додаємо точки/лінію
+    if df is not None and not df.empty:
+        df = df.sort_values("distance_m")
+        lon = df["x"].to_numpy(); lat = df["y"].to_numpy()
+        delta_col = next((c for c in df.columns if c.startswith("delta_")), None)
+        deltas = df[delta_col].to_numpy() if delta_col else np.full(len(df), np.nan)
+
+        SAMPLE = 10
+        pts = [{"position": [float(lon[i]), float(lat[i])],
+                "color": _color_rd_bu(float(deltas[i]))}
+               for i in range(0, len(df), SAMPLE)]
+
+        path_coords = [[float(x), float(y)] for x, y in zip(lon, lat)]
+
+        layers += [
+            {"@@type": "ScatterplotLayer", "id": "track-points",
+             "data": pts, "pickable": True,
+             "getPosition": "@@=d.position",
+             "getFillColor": "@@=d.color",
+             "radiusUnits": "meters", "getRadius": 22},
+            {"@@type": "PathLayer", "id": "track-path",
+             "data": [{"path": path_coords}],
+             "getPath": "@@=d.path", "getWidth": 2, "widthUnits": "pixels",
+             "getColor": [255, 200, 0, 220]}
+        ]
+
+        view = {"longitude": float(np.nanmean(lon)), "latitude": float(np.nanmean(lat)), "zoom": 10}
+    else:
+        view = {"longitude": 25.03, "latitude": 47.8, "zoom": 9}
+
+    return json.dumps({"mapStyle": basemap_style, "initialViewState": view, "layers": layers})
+
+
+
+
 DEM_LIST = [
     "alos_dem", "aster_dem", "copernicus_dem", "fab_dem",
     "nasa_dem", "srtm_dem", "tan_dem"
 ]
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
-try:
-    basin: gpd.GeoDataFrame = get_df("basin")
-    logger.info("Basin loaded, CRS=%s, rows=%d", basin.crs, len(basin))
-    basin = basin.to_crs("EPSG:4326")
-    basin_json = json.loads(basin.to_json())
-except Exception as e:
-    logger.exception("Failed to load basin: %s", e)
-    basin_json = None
+
 
 # --- Track/RGT/Spot Dropdown
 @app.callback(
@@ -82,147 +136,111 @@ def update_dates_dropdown(track_rgt_spot, selected_profile):
 
 
 # --- STORE: єдиний callback для синхронізації state/history
-@app.callback(
+@callback(
     Output("selected_profile", "data"),
     Output("profile_history", "data"),
     Input("year_dropdown", "value"),
     Input("track_rgt_spot_dropdown", "value"),
-    Input("dem_select", "value"),
     Input("date_dropdown", "value"),
     State("selected_profile", "data"),
     State("profile_history", "data"),
     prevent_initial_call=True
 )
-def sync_profile_to_store(year, track, dem, date, prev_profile, history):
-    # Записуємо весь поточний профіль
-    profile = {"year": year, "track": track, "dem": dem, "date": date}
-    if not history:
-        history = []
+def sync_profile_to_store(year, track, date, prev_profile, history):
+    # Дем беремо зі стора, а якщо його там нема — дефолт
+    dem = (prev_profile or {}).get("dem", DEFAULT_DEM)
+    profile = {"year": year, "track": track, "date": date, "dem": dem}
+
+    history = history or []
     if not prev_profile or prev_profile != profile:
         history.append(profile)
+
     return profile, history
 
-
 def add_distance_m(df, lon_col="x", lat_col="y"):
+    if df is None or df.empty: return df
     geod = Geod(ellps="WGS84")
-    if lon_col in df and lat_col in df:
-        lons = df[lon_col].values
-        lats = df[lat_col].values
-        # Вираховуємо послідовні відстані між точками в метрах
-        dists = np.zeros(len(df))
-        if len(df) > 1:
-            _, _, dists_pair = geod.inv(lons[:-1], lats[:-1], lons[1:], lats[1:])
-            dists[1:] = dists_pair
-        df = df.copy()
-        df["distance_m"] = np.cumsum(dists)
-    else:
-        df["distance_m"] = np.arange(len(df))
-    return df
+    lons, lats = df[lon_col].to_numpy(), df[lat_col].to_numpy()
+    d = np.zeros(len(df))
+    if len(df) > 1:
+        _, _, dp = geod.inv(lons[:-1], lats[:-1], lons[1:], lats[1:])
+        d[1:] = dp
+    out = df.copy(); out["distance_m"] = np.cumsum(d)
+    return out
 
-
-@app.callback(
+@callback(
     Output("track_profile_graph", "figure"),
     Output("dem_stats", "children"),
     Input("track_rgt_spot_dropdown", "value"),
-    Input("dem_select", "value"),
     Input("date_dropdown", "value"),
     Input("hand_slider", "value"),
     Input("hand_toggle", "value"),
     Input("interp_method", "value"),
     Input("kalman_q", "value"),
     Input("kalman_r", "value"),
-
+    State("selected_profile", "data"),
 )
-def update_profile(track_rgt_spot,
-                   dem, date,
-                   hand_range,
-                   hand_toggle,
-                   interp_method,
-                   kalman_q,
-                   kalman_r,):
-    # --- 0. Перевірка наявності ключів
-    if not (track_rgt_spot and date and dem):
-        return empty_dark_figure(text="Немає даних для побудови профілю."), "No error stats"
+def update_profile(track_rgt_spot, date,
+                   hand_range, hand_toggle,
+                   interp_method, kalman_q, kalman_r,
+                   selected_profile):
+    if not track_rgt_spot or not date:
+        return empty_dark_figure(text="Виберіть трек і дату"), "No error stats"
+
+    dem = (selected_profile or {}).get("dem") or DEFAULT_DEM
 
     try:
         track, rgt, spot = map(float, track_rgt_spot.split("_"))
     except Exception:
         return empty_dark_figure(text="Некоректний формат треку."), "No error stats"
 
-    # --- 1. HAND-фільтр (за бажанням)
-    use_hand = "on" in hand_toggle
-    hand_range_for_query = hand_range if (use_hand and hand_range and len(hand_range) == 2 and all(
-        isinstance(x, (int, float)) for x in hand_range)) else None
+    use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
+    hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2
+                            and all(isinstance(x, (int, float)) for x in hand_range)) else None
 
-    # --- 2. Дані (повний профіль + hand профіль)
-    df_hand = db.get_profile(track, rgt, spot, dem, date, hand_range_for_query)
-    if not df_hand.empty and "distance_m" not in df_hand:
+    df_hand = db.get_profile(track, rgt, spot, dem, date, hand_q)
+    df_all  = db.get_profile(track, rgt, spot, dem, date, None)
+
+    if df_hand is not None and not df_hand.empty and "distance_m" not in df_hand:
         df_hand = add_distance_m(df_hand)
-    df_all = db.get_profile(track, rgt, spot, dem, date, None)
-    if not df_all.empty and "distance_m" not in df_all:
+    if df_all is not None and not df_all.empty and "distance_m" not in df_all:
         df_all = add_distance_m(df_all)
 
-    # --- 3. Перевірка даних для DEM
-    if (
-        df_all is None or df_all.empty or
-        f"h_{dem}" not in df_all or
-        df_all[f"h_{dem}"].dropna().empty
-    ):
+    if (df_all is None or df_all.empty or
+        f"h_{dem}" not in df_all or df_all[f"h_{dem}"].dropna().empty):
         return empty_dark_figure(text="Немає даних для побудови профілю."), "No error stats"
 
-    # --- 4. Готуємо ICESat-2 профіль для фільтрації
-    if "distance_m" in df_all and "orthometric_height" in df_all:
-        df_ice = df_all[["distance_m", "orthometric_height"]].dropna().copy()
-        df_ice = df_ice.sort_values("distance_m")
-    else:
-        df_ice = pd.DataFrame(columns=["distance_m", "orthometric_height"])
-
-
     interpolated_df = None
-
-    if interp_method and interp_method not in ["none", "raw", None, ""]:
+    if interp_method and interp_method not in ["none", "raw", "", None]:
+        df_ice = df_all[["distance_m","orthometric_height"]].dropna().sort_values("distance_m") \
+                if "distance_m" in df_all else pd.DataFrame()
         if not df_ice.empty:
-            grid = np.linspace(df_ice["distance_m"].min(), df_ice["distance_m"].max(), 300)
             if interp_method == "linear":
+                grid = np.linspace(df_ice["distance_m"].min(), df_ice["distance_m"].max(), 300)
                 interpolated_df = interpolate_linear(df_ice, grid=grid)
             elif interp_method == "kalman":
-                transition_cov = 10 ** kalman_q
-                observation_cov = kalman_r
-                smooth_df = kalman_smooth(
-                    df_ice,
-                    transition_covariance=transition_cov,
-                    observation_covariance=observation_cov
+                transition_cov = 10 ** (kalman_q if kalman_q is not None else -1)
+                observation_cov = kalman_r if kalman_r is not None else 0.6
+                smooth_df = kalman_smooth(df_ice,
+                                          transition_covariance=transition_cov,
+                                          observation_covariance=observation_cov)
+                interpolated_df = smooth_df[["distance_m","kalman_smooth"]].rename(
+                    columns={"kalman_smooth":"orthometric_height"}
                 )
-                interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
-                    columns={"kalman_smooth": "orthometric_height"}
-                )
-        else:
-            # Якщо ICESat-2 немає, будуємо профіль по FABDEM
-            if "distance_m" in df_all and f"h_fab_dem" in df_all:
-                interpolated_df = df_all[["distance_m", "h_fab_dem"]].dropna().copy()
-                interpolated_df.rename(columns={f"h_fab_dem": "orthometric_height"}, inplace=True)
 
-    # --- Всі дані передаємо у малювалку!
     fig = build_profile_figure_with_hand(
-        df_all=df_all,
-        df_hand=df_hand,
-        dem_key=dem,
-        use_hand=use_hand,
-        interpolated_df=interpolated_df,
-        interp_method=interp_method
+        df_all=df_all, df_hand=df_hand,
+        dem_key=dem, use_hand=use_hand,
+        interpolated_df=interpolated_df, interp_method=interp_method
     )
 
-
-
-    # --- 7. Підпис статистики
     stats = db.get_dem_stats(df_all, dem)
-    stats_text = (
-        f"Mean error: {stats['mean']:.2f} м, "
-        f"Min: {stats['min']:.2f} м, Max: {stats['max']:.2f} м, "
-        f"Points: {stats['count']}" if stats else "No error stats"
-    )
+    stats_text = (f"Mean error: {stats['mean']:.2f} м, Min: {stats['min']:.2f} м, "
+                  f"Max: {stats['max']:.2f} м, Points: {stats['count']}"
+                  if stats else "No error stats")
 
     return fig, stats_text
+
 
 
 
@@ -376,4 +394,4 @@ def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
             df = df.copy(); df["distance_m"] = np.cumsum(d)
         df.attrs["dem"] = dem
 
-    return _build_track_layers(df, basin_json, basemap_style)
+    return _build_track_layers(df, basemap_style)
