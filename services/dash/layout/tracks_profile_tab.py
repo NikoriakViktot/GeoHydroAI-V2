@@ -39,15 +39,17 @@ def _basin_layer(geojson: dict) -> dict:
         "parameters": {"depthTest": False}
     }
 
-# ВИПРАВЛЕНА ФУНКЦІЯ: Ініціалізація специфікації DeckGL
 def _initial_spec(map_style: str) -> str:
-    """Повертає початкову специфікацію DeckGL з контуром басейну."""
+    """
+    Повертає початкову специфікацію DeckGL з контуром басейну.
+    Використовується для початкового завантаження карти.
+    """
     layers = ([ _basin_layer(basin_json) ] if basin_json else [])
     return json.dumps({
         "mapStyle": map_style,
         "controller": True,
         "initialViewState": {
-            "bounds": basin_bounds,   # Фіксація камери по басейну
+            "bounds": basin_bounds,
             "pitch": 0, "bearing": 0, "minZoom": 7, "maxZoom": 13
         },
         "layers": layers
@@ -95,7 +97,7 @@ profile_tab_layout = html.Div(
             style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
         ),
 
-        # 2. СЛАЙДЕРИ KALMAN (в єдиному контейнері для кращої організації)
+        # 2. СЛАЙДЕРИ KALMAN
         html.Div([
             html.Div([
                 html.Label("Kalman Q (Process Noise)",
@@ -128,8 +130,8 @@ profile_tab_layout = html.Div(
                 id="track_profile_graph",
                 figure=empty_dark_figure(),
                 style={
-                    "height": "500px",  # Зменшена висота
-                    "width": "100%",    # Повна ширина
+                    "height": "400px",
+                    "width": "100%",
                     "backgroundColor": "#181818",
                     "minHeight": "300px",
                 },
@@ -149,7 +151,7 @@ profile_tab_layout = html.Div(
                    "width": "100%"}
         ),
 
-        # 3. КАРТА (ТЕПЕР ПІД СТАТИСТИКОЮ І НА ПОВНУ ШИРИНУ)
+        # 3. КАРТА (ПІД СТАТИСТИКОЮ)
         html.Div([
             html.Label("Track Location and Delta Map",
                        style={"color": "#EEE", "marginBottom": "5px"}),
@@ -161,9 +163,8 @@ profile_tab_layout = html.Div(
                 cursor_position="bottom-right",
                 events=["hover", "click"],
                 description={"top-right": "<div id='track-legend'></div>"},
-                style={"width": "100%"} # Забезпечуємо повну ширину для адаптивності
             ),
-        ], style={"width": "100%", "marginTop": "10px", "minHeight": "450px"})
+        ], style={"width": "100%", "marginTop": "10px", "minHeight": "450px"}), # Стилі застосовуються тут
 
     ],
     # Загальні стилі контейнера - АДАПТИВНА ШИРИНА ТА ВИСОТА
