@@ -18,7 +18,7 @@ content = html.Div([
         children=[
             dcc.Tab(label="📊 DEM Comparison", value="tab-1", style=tab_style, selected_style=selected_tab_style),
             dcc.Tab(label="📈 Track Profile", value="tab-2", style=tab_style, selected_style=selected_tab_style),
-            dcc.Tab(label="🗺️ ICESat-2 Tracks Map", value="tab-3", style=tab_style, selected_style=selected_tab_style),
+            # dcc.Tab(label="🗺️ ICESat-2 Tracks Map", value="tab-3", style=tab_style, selected_style=selected_tab_style),
             dcc.Tab(label="🏆 Best DEM", value="tab-4", style=tab_style, selected_style=selected_tab_style),
             dcc.Tab(label="CDF Accumulation", value="tab-5", style=tab_style, selected_style=selected_tab_style),
         ],

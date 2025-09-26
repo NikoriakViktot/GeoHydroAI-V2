@@ -4,6 +4,7 @@ import dash_leaflet as dl
 import pandas as pd
 import numpy as np
 from pyproj import Geod
+import geopandas as gpd
 import duckdb
 from utils.db import DuckDBData
 from utils.plot_track import build_profile_figure_with_hand
@@ -28,7 +29,14 @@ DEM_LIST = [
 ]
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
-
+try:
+    basin: gpd.GeoDataFrame = get_df("basin")
+    logger.info("Basin loaded, CRS=%s, rows=%d", basin.crs, len(basin))
+    basin = basin.to_crs("EPSG:4326")
+    basin_json = json.loads(basin.to_json())
+except Exception as e:
+    logger.exception("Failed to load basin: %s", e)
+    basin_json = None
 
 # --- Track/RGT/Spot Dropdown
 @app.callback(
@@ -276,3 +284,85 @@ def update_map_points(selected_profile, hand_range, hand_toggle):
                 )
             )
     return markers
+
+
+def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
+    if delta is None or not np.isfinite(delta):
+        return [200, 200, 200, 180]
+    x = float(np.clip(delta / vmax, -1.0, 1.0))
+    if x < 0:
+        t = abs(x); r, g, b = int(255*(1-t)), int(255*(1-t)), 255
+    else:
+        t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
+    return [r, g, b, 200]
+
+def _build_track_layers(df, basin_geojson, basemap_style):
+    if df is None or df.empty:
+        return json.dumps({"mapStyle": basemap_style,
+                           "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 8},
+                           "layers": []})
+
+    df = df.sort_values("distance_m")
+    lon = df["x"].to_numpy(); lat = df["y"].to_numpy()
+    delta_col = f"delta_{df.attrs.get('dem', 'dem')}" if hasattr(df, "attrs") else None
+    deltas = df[delta_col].to_numpy() if (delta_col and delta_col in df) else np.full(len(df), np.nan)
+
+    SAMPLE = 10
+    pts = [{"position": [float(lon[i]), float(lat[i])],
+            "color": _color_rd_bu(float(deltas[i]))} for i in range(0, len(df), SAMPLE)]
+
+    path_coords = [[float(x), float(y)] for x, y in zip(lon, lat)]
+
+    layers = [
+        {"@@type": "ScatterplotLayer", "id": "track-points",
+         "data": pts, "pickable": True,
+         "getPosition": "@@=d.position",
+         "getFillColor": "@@=d.color",
+         "getLineColor": [255, 255, 255, 220],
+         "radiusUnits": "meters", "getRadius": 22, "lineWidthMinPixels": 0.5},
+        {"@@type": "PathLayer", "id": "track-path",
+         "data": [{"path": path_coords}],
+         "getPath": "@@=d.path", "getWidth": 2, "widthUnits": "pixels",
+         "getColor": [255, 200, 0, 220]}
+    ]
+    if basin_geojson:
+        layers.append({"@@type": "GeoJsonLayer", "id": "basin",
+                       "data": basin_geojson, "stroked": True, "filled": False,
+                       "getLineColor": [0, 102, 255, 200], "getLineWidth": 2})
+
+    view = {"longitude": float(np.nanmean(lon)), "latitude": float(np.nanmean(lat)), "zoom": 10}
+    return json.dumps({"mapStyle": basemap_style, "initialViewState": view, "layers": layers})
+
+@callback(
+    Output("deck-track", "spec"),
+    Input("selected_profile", "data"),
+    Input("hand_slider", "value"),
+    Input("hand_toggle", "value"),
+    Input("basemap_style", "value"),
+    prevent_initial_call=True
+)
+def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
+    if not selected_profile or not all(selected_profile.values()):
+        return no_update
+    try:
+        track, rgt, spot = map(float, selected_profile["track"].split("_"))
+    except Exception:
+        return no_update
+    dem = selected_profile["dem"]; date = selected_profile["date"]
+    use_hand = "on" in (hand_toggle or [])
+    hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2) else None
+
+    df = db.get_profile(track, rgt, spot, dem, date, hand_q)
+    if df is not None:
+        if "distance_m" not in df:
+            from pyproj import Geod
+            geod = Geod(ellps="WGS84")
+            d = np.zeros(len(df))
+            if len(df) > 1:
+                _, _, d_pair = geod.inv(df["x"].to_numpy()[:-1], df["y"].to_numpy()[:-1],
+                                        df["x"].to_numpy()[1:],  df["y"].to_numpy()[1:])
+                d[1:] = d_pair
+            df = df.copy(); df["distance_m"] = np.cumsum(d)
+        df.attrs["dem"] = dem
+
+    return _build_track_layers(df, basin_json, basemap_style)

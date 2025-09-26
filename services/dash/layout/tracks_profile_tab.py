@@ -1,121 +1,80 @@
+import os, json, geopandas as gpd
+import dash_deckgl
 from dash import html, dcc
 from utils.style import dark_card_style, dropdown_style, empty_dark_figure
+from registry import get_df
 
-# Available years for ICESat-2 track selection
+MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
+
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+try:
+    basin: gpd.GeoDataFrame = get_df("basin").to_crs("EPSG:4326")
+    basin_json = json.loads(basin.to_json())
+except Exception:
+    basin_json = None
 
 profile_tab_layout = html.Div([
     html.H4("ICESat-2 Track Profiles", style={"color": "#EEEEEE"}),
 
-    # --- Control panel: all dropdown menus in a single row ---
     html.Div([
-        # Year selection
+        dcc.Dropdown(id="year_dropdown",
+                     options=[{"label": str(y), "value": y} for y in YEARS],
+                     value=YEARS[-1], clearable=False,
+                     style={**dropdown_style, "width": "90px"}),
+        dcc.Dropdown(id="track_rgt_spot_dropdown", options=[],
+                     style={**dropdown_style, "width": "240px", "marginLeft": "8px"}),
+        dcc.Dropdown(id="date_dropdown", options=[],
+                     style={**dropdown_style, "width": "140px", "marginLeft": "8px"}),
+        dcc.Dropdown(id="interp_method",
+                     options=[{"label": "No interpolation", "value": "none"},
+                              {"label": "Linear interpolation", "value": "linear"},
+                              {"label": "Kalman filter", "value": "kalman"}],
+                     value="none", clearable=False,
+                     style={**dropdown_style, "width": "190px", "marginLeft": "8px"}),
+        # ⬇️ селектор стилю підложки
         dcc.Dropdown(
-            id="year_dropdown",
-            options=[{"label": str(y), "value": y} for y in YEARS],
-            value=YEARS[-1],
-            clearable=False,
-            style={**dropdown_style, "width": "90px"}
-        ),
-        # Track / RGT / Spot selection
-        dcc.Dropdown(
-            id="track_rgt_spot_dropdown",
-            options=[],
-            style={**dropdown_style, "width": "240px", "marginLeft": "8px"}
-        ),
-        # Date selection
-        dcc.Dropdown(
-            id="date_dropdown",
-            options=[],
-            style={**dropdown_style, "width": "140px", "marginLeft": "8px"}
-        ),
-        # Interpolation method selection
-        dcc.Dropdown(
-            id="interp_method",
+            id="basemap_style",
             options=[
-                {"label": "No interpolation", "value": "none"},
-                {"label": "Linear interpolation", "value": "linear"},
-                {"label": "Kalman filter", "value": "kalman"},
+                {"label": "Mapbox Outdoors", "value": "mapbox://styles/mapbox/outdoors-v12"},
+                {"label": "Mapbox Satellite", "value": "mapbox://styles/mapbox/satellite-v9"},
             ],
-            value="none",
+            value="mapbox://styles/mapbox/outdoors-v12",
             clearable=False,
-            style={**dropdown_style, "width": "190px", "marginLeft": "8px"}
+            style={**dropdown_style, "width": "220px", "marginLeft": "8px"}
         ),
     ], style={"display": "flex", "gap": "10px", "marginBottom": "10px"}),
 
-    # --- Kalman filter parameters with explanatory notes ---
-    html.Div([
-        html.Label([
-            "Kalman Q (Process noise)",
-            html.Span(
-                " — Lower values produce stronger smoothing; "
-                "higher values increase sensitivity to changes.",
-                style={"fontSize": "12px", "marginLeft": "8px", "color": "#AAA"}
-            )
-        ], style={"color": "#EEE"}),
-        dcc.Slider(
-            id="kalman_q",
-            min=-2, max=0, step=0.1, value=-1,
-            marks={i: f"1e{i}" for i in range(-6, 0)},
-            tooltip={"placement": "bottom"},
-            included=False,
-        ),
-    ], style={"marginBottom": "10px", "marginLeft": "8px"}),
+    # Kalman sliders (як у тебе) ...
 
-    html.Div([
-        html.Label([
-            "Kalman R (Observation noise)",
-            html.Span(
-                " — Higher values reduce sensitivity to outliers.",
-                style={"fontSize": "12px", "marginLeft": "8px", "color": "#AAA"}
-            )
-        ], style={"color": "#EEE"}),
-        dcc.Slider(
-            id="kalman_r",
-            min=0, max=2, step=0.1, value=0.6,
-            marks={i: str(i) for i in range(0, 3)},
-            tooltip={"placement": "bottom"},
-            included=False,
-        ),
-    ], style={"marginBottom": "16px", "marginLeft": "8px"}),
-
-    # --- Track profile graph with loading indicator ---
     dcc.Loading(
         id="track_profile_loading",
         type="circle",
         color="#1c8cff",
-        children=[
-            dcc.Graph(
-                id="track_profile_graph",
-                figure=empty_dark_figure(),
-                style={
-                    "height": "540px",
-                    "width": "100%",
-                    "minWidth": "650px",
-                    "marginBottom": "36px",
-                    "backgroundColor": "#181818"
-                }
-            )
-        ]
+        children=[dcc.Graph(id="track_profile_graph",
+                            figure=empty_dark_figure(),
+                            style={"height": "540px", "width": "100%", "minWidth": "650px",
+                                   "marginBottom": "18px", "backgroundColor": "#181818"})]
     ),
 
-    # --- DEM statistics card ---
-    html.Div([
-        html.Div(
-            id="dem_stats",
-            style={
-                **dark_card_style,
-                "marginTop": "40px",
-                "fontSize": "15px",
-                "display": "inline-flex",
-                "width": "fit-content",
-                "maxWidth": "600px",
-            }
-        )
-    ], style={"display": "flex", "justifyContent": "center"}),
-], style={
-    "backgroundColor": "#181818",
-    "color": "#EEEEEE",
-    "minHeight": "480px",
-    "padding": "18px 12px 32px 12px",
-})
+    # ⬇️ НОВЕ: карта deck.gl під графіком
+    dash_deckgl.DashDeckgl(
+        id="deck-track",
+        spec=json.dumps({
+            "mapStyle": "mapbox://styles/mapbox/outdoors-v12",
+            "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 9, "pitch": 0, "bearing": 0},
+            "layers": []
+        }),
+        height=420,
+        mapbox_key=MAPBOX_ACCESS_TOKEN,
+        cursor_position="bottom-right",
+        events=["hover", "click"],
+        description={"top-right": "<div id='track-legend'></div>"}
+    ),
+
+    html.Div([html.Div(id="dem_stats", style={**dark_card_style, "marginTop": "20px",
+                                              "fontSize": "15px", "display": "inline-flex",
+                                              "width": "fit-content", "maxWidth": "600px"})],
+             style={"display": "flex", "justifyContent": "center"}),
+], style={"backgroundColor": "#181818", "color": "#EEEEEE",
+          "minHeight": "480px", "padding": "18px 12px 32px 12px"})
