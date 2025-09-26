@@ -35,7 +35,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",  # Remove /api
     redoc_url="/redoc", # Remove /api
-    openapi_url="/openapi.json", # Remove /api
+    # openapi_url="/openapi.json", # Remove /api
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1024)
