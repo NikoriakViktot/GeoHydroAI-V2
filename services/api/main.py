@@ -53,7 +53,7 @@ app.include_router(compare_router)
 app.include_router(dem_router)
 
 # Health
-@app.get("/healthz", status_code=status.HTTP_200_OK)
+@app.get("api/healthz", status_code=status.HTTP_200_OK)
 def health():
     return {"status": "ok"}
 
