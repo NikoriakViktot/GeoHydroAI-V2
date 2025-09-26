@@ -33,11 +33,11 @@ api_app = FastAPI(
     title="GeoHydroAI API",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
-#     docs_url="/docs",  # Remove /api
-#     redoc_url="/redoc", # Remove /api
-#     openapi_url="/openapi.json", # Remove /api
+    root_path="/api",                 # важливо
+    docs_url="/docs",                 # буде доступно як /api/docs
+    redoc_url="/redoc",               # /api/redoc
+    openapi_url="/openapi.json",      # /api/openapi.json
 )
-
 root_app = FastAPI()
 
 root_app.mount("/api", api_app)
