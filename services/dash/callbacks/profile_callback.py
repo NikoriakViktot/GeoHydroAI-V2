@@ -44,27 +44,17 @@ def _color_rd_bu(delta: float, vmax: float = 20.0):
         t = x;    r, g, b = 255, int(255*(1-t)), int(255*(1-t))
     return [r, g, b, 220]
 
-def _query_tracks(track, rgt, spot, date, dem, hand_range=None):
-    # фільтр HAND (колонка типу alos_dem_2000)
-    hand_sql = ""
-    if hand_range and len(hand_range) == 2:
-        hand_col = f"{dem}_2000"
-        hand_sql = f" AND {hand_col} IS NOT NULL AND {hand_col} BETWEEN {hand_range[0]} AND {hand_range[1]}"
-
+# було: def _query_tracks(track, rgt, spot, date, dem, hand_range=None):
+def _query_tracks(track, rgt, spot, date):
     sql = f"""
     SELECT
         CAST(x AS DOUBLE) AS x,
         CAST(y AS DOUBLE) AS y,
-        orthometric_height,
-        h_{dem}        AS h_dem,
-        delta_{dem}    AS delta,
         time
     FROM read_parquet('{TRACKS_PARQUET}')
     WHERE track={track} AND rgt={rgt} AND spot={spot}
       AND DATE(time) = DATE '{date}'
       AND atl03_cnf = 4 AND atl08_class = 1
-      AND h_{dem} IS NOT NULL AND delta_{dem} IS NOT NULL
-      {hand_sql}
     ORDER BY x
     """
     try:
@@ -73,6 +63,7 @@ def _query_tracks(track, rgt, spot, date, dem, hand_range=None):
         print("DuckDB tracks query failed:", e)
         import pandas as pd
         return pd.DataFrame()
+
 
 def _add_distance(df):
     if df is None or df.empty:
@@ -103,23 +94,19 @@ def _deck_spec_from_tracks(df, basemap_style):
     # 2. ТОЧКИ ТРЕКУ ТА ЛІНІЯ (головна мета цього запиту)
     if df is not None and not df.empty:
         lon, lat = df["x"].to_numpy(), df["y"].to_numpy()
-        delta     = df["delta"].to_numpy()
-        # САМПЛІНГ, щоб не «вбивати» фронт
-        step = max(1, len(df)//2000)  # до ~2000 маркерів
-        pts = [{"position": [float(lon[i]), float(lat[i])],
-                "color": _color_rd_bu(float(delta[i]))}
-               for i in range(0, len(df), step)]
+        step = max(1, len(df) // 2000)
+        pts = [{"position": [float(lon[i]), float(lat[i])]} for i in range(0, len(df), step)]
         path = [[float(x), float(y)] for x, y in zip(lon, lat)]
 
         layers += [
-            {   # ScatterplotLayer (точки)
+            {
                 "@@type": "ScatterplotLayer", "id": "track-points",
-                "data": pts, "pickable": True,
+                "data": pts, "pickable": False,
                 "parameters": {"depthTest": False},
                 "radiusUnits": "pixels",
                 "getRadius": 3, "radiusMinPixels": 2, "radiusMaxPixels": 8,
                 "getPosition": "@@=d.position",
-                "getFillColor": "@@=d.color"
+                "getFillColor": [0, 122, 255, 200]  # сталий колір
             },
             {
                 "@@type": "PathLayer", "id": "track-path",
@@ -128,6 +115,7 @@ def _deck_spec_from_tracks(df, basemap_style):
                 "getColor": [255, 200, 0, 220], "parameters": {"depthTest": False}
             }
         ]
+
 
     return json.dumps({
         "mapStyle": basemap_style,
@@ -178,17 +166,17 @@ def update_dates_dropdown(track_rgt_spot, selected_profile):
     Input("year_dropdown", "value"),
     Input("track_rgt_spot_dropdown", "value"),
     Input("date_dropdown", "value"),
+    Input("dem_dropdown", "value"),                      # ◀︎ NEW
     State("selected_profile", "data"),
     State("profile_history", "data"),
     prevent_initial_call=True
 )
-def sync_profile_to_store(year, track, date, prev_profile, history):
-    dem = (prev_profile or {}).get("dem", DEFAULT_DEM)
+def sync_profile_to_store(year, track, date, dem_value, prev_profile, history):
+    dem = dem_value or (prev_profile or {}).get("dem") or DEFAULT_DEM
     profile = {"year": year, "track": track, "date": date, "dem": dem}
-    history = history or []
-    if not prev_profile or prev_profile != profile:
-        history.append(profile)
+    history = (history or []) + ([] if prev_profile == profile else [profile])
     return profile, history
+
 
 def add_distance_m(df, lon_col="x", lat_col="y"):
     if df is None or df.empty: return df
@@ -212,22 +200,26 @@ def add_distance_m(df, lon_col="x", lat_col="y"):
     Input("interp_method", "value"),
     Input("kalman_q", "value"),
     Input("kalman_r", "value"),
-    State("selected_profile", "data"),
+    Input("dem_dropdown", "value"),  # ◀︎ NEW
+    Input("selected_profile", "data"),                   # ◀︎ NEW (було State)
 )
 def update_profile(track_rgt_spot, date,
                    hand_range, hand_toggle,
                    interp_method, kalman_q, kalman_r,
-                   selected_profile):
+                   dem_value, selected_profile):
     if not track_rgt_spot or not date:
         return empty_dark_figure(text="Виберіть трек і дату"), "No error stats"
-    dem = (selected_profile or {}).get("dem") or DEFAULT_DEM
+
+    dem = dem_value or (selected_profile or {}).get("dem") or DEFAULT_DEM
     try:
         track, rgt, spot = map(float, track_rgt_spot.split("_"))
     except Exception:
         return empty_dark_figure(text="Некоректний формат треку."), "No error stats"
+
     use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
     hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2
                             and all(isinstance(x, (int, float)) for x in hand_range)) else None
+
     df_hand = db.get_profile(track, rgt, spot, dem, date, hand_q)
     df_all  = db.get_profile(track, rgt, spot, dem, date, None)
     if df_hand is not None and not df_hand.empty and "distance_m" not in df_hand:
@@ -266,26 +258,22 @@ def update_profile(track_rgt_spot, date,
     return fig, stats_text
 
 # --- CALLBACK: ОНОВЛЕННЯ MAP (ПЕРЕВІРКА) ---
-# Цей колбек бере дані треку, форматує їх через _deck_spec_from_tracks (який додає шари точок і ліній)
-# і оновлює 'spec' компонента dash_deckgl.
+
 @callback(
     Output("deck-track", "spec"),
     Input("selected_profile", "data"),
-    Input("hand_slider", "value"),
-    Input("hand_toggle", "value"),
     Input("basemap_style", "value"),
 )
-def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
+def update_track_map(selected_profile, basemap_style):
     if not selected_profile or not all(selected_profile.values()):
         return _deck_spec_from_tracks(None, basemap_style)
     try:
         track, rgt, spot = map(float, selected_profile["track"].split("_"))
-        dem  = selected_profile.get("dem")
         date = selected_profile.get("date")
     except Exception:
         return _deck_spec_from_tracks(None, basemap_style)
-    use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
-    hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2) else None
-    df = _query_tracks(track, rgt, spot, date, dem, hand_q)
-    df = _add_distance(df)
+
+    # ❗ без dem/hand — це лише геометрія
+    df = _query_tracks(track, rgt, spot, date)
+    df = _add_distance(df)  # опційно; можна й прибрати
     return _deck_spec_from_tracks(df, basemap_style)

@@ -130,7 +130,7 @@ profile_tab_layout = html.Div(
                 id="track_profile_graph",
                 figure=empty_dark_figure(),
                 style={
-                    "height": "400px",
+                    "height": "400px", # Зменшена висота для кращої видимості статистики
                     "width": "100%",
                     "backgroundColor": "#181818",
                     "minHeight": "300px",
@@ -163,8 +163,9 @@ profile_tab_layout = html.Div(
                 cursor_position="bottom-right",
                 events=["hover", "click"],
                 description={"top-right": "<div id='track-legend'></div>"},
+                # 'style' видалено тут, щоб уникнути помилки
             ),
-        ], style={"width": "100%", "marginTop": "10px", "minHeight": "450px"}), # Стилі застосовуються тут
+        ], style={"width": "100%", "marginTop": "10px", "minHeight": "450px"}), # Стилі застосовуються до цього Div
 
     ],
     # Загальні стилі контейнера - АДАПТИВНА ШИРИНА ТА ВИСОТА
