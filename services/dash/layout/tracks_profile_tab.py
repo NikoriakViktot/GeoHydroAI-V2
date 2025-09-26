@@ -23,21 +23,7 @@ profile_tab_layout = html.Div([
     html.H4("ICESat-2 Track Profiles", style={"color": "#EEEEEE"}),
 
     html.Div([
-        dcc.Dropdown(
-            id="dem_select",
-            options=[
-                {"label": "ALOS DEM", "value": "alos_dem"},
-                {"label": "ASTER DEM", "value": "aster_dem"},
-                {"label": "Copernicus DEM", "value": "copernicus_dem"},
-                {"label": "FABDEM", "value": "fab_dem"},
-                {"label": "NASA DEM", "value": "nasa_dem"},
-                {"label": "SRTM", "value": "srtm_dem"},
-                {"label": "TanDEM-X", "value": "tan_dem"},
-            ],
-            value="alos_dem",
-            clearable=False,
-            style={**dropdown_style, "width": "180px", "marginLeft": "8px"},
-        ),
+
         dcc.Dropdown(id="year_dropdown",
                      options=[{"label": str(y), "value": y} for y in YEARS],
                      value=YEARS[-1], clearable=False,
