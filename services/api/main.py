@@ -64,11 +64,11 @@ app.include_router(compare_router)
 app.include_router(dem_router)
 
 # Health
-@app.get("/healthz", status_code=status.HTTP_200_OK)
+@app.get("api/healthz", status_code=status.HTTP_200_OK)
 def health():
     return {"status": "ok"}
 
-@app.get("/dbhealth", status_code=status.HTTP_200_OK)
+@app.get("api/dbhealth", status_code=status.HTTP_200_OK)
 def dbhealth(db: Session = Depends(get_sync_session)):
     db.execute(text("SELECT 1"))
     return {"db": "ok"}
