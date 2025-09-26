@@ -115,9 +115,9 @@ profile_tab_layout = html.Div(
                         id="track_profile_graph",
                         figure=empty_dark_figure(),
                         style={
-                            "height": "540px",
+                            "height": "400px",
                             "width": "100%",
-                            "minWidth": "640px",
+                            "minWidth": "500px",
                             "backgroundColor": "#181818",
                         },
                     )],
@@ -138,7 +138,7 @@ profile_tab_layout = html.Div(
                 dash_deckgl.DashDeckgl(
                     id="deck-track",
                     spec=_initial_spec("mapbox://styles/mapbox/outdoors-v12"),
-                    height=360,
+                    height=400,
                     mapbox_key=MAPBOX_ACCESS_TOKEN,
                     cursor_position="bottom-right",
                     events=["hover", "click"],
