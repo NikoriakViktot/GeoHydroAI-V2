@@ -37,6 +37,8 @@ app = dash.Dash(
 )
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
+def url(p: str) -> str:
+    return app.get_relative_path(p)
 
 # from flask import Response
 # @server.route("/_dash-component-suites/dash_deckgl/dash_deckgl.min.js.map")
@@ -67,11 +69,11 @@ def block_non_dem():
             or p.startswith("/assets")):
         abort(404)
 
-base = app.get_relative_path("/")
+
 
 navbar = html.Div(
     [
-        dcc.Link("Dashboard ", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
+        dcc.Link("Dashboard ", href="/dashboard", className="btn btn-primary", style={"marginRight": "28px"}),
         dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
         dcc.Link("Flood Scenarios", href="/flood-dem-diif", className="btn btn-secondary", style={"marginRight": "28px"}),
     ],
