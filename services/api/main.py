@@ -34,9 +34,9 @@ api_app = FastAPI(
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
     root_path="/api",                 # важливо
-    docs_url="api/docs",                 # буде доступно як /api/docs
-    redoc_url="api/redoc",               # /api/redoc
-    openapi_url="api/openapi.json",      # /api/openapi.json
+    docs_url="/docs",                 # буде доступно як /api/docs
+    redoc_url="/redoc",               # /api/redoc
+    openapi_url="/openapi.json",      # /api/openapi.json
 )
 root_app = FastAPI()
 
