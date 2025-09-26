@@ -73,8 +73,8 @@ def block_non_dem():
 
 navbar = html.Div(
     [
-        dcc.Link("Dashboard ", href="/dashboard", className="btn btn-primary", style={"marginRight": "28px"}),
-        dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
+        dcc.Link("Dashboard ", href=url("dashboard"), className="btn btn-primary", style={"marginRight": "28px"}),
+        dcc.Link("DEM Difference", href=url("/dem-diff"), className="btn btn-secondary", style={"marginRight": "28px"}),
         dcc.Link("Flood Scenarios", href="/flood-dem-diif", className="btn btn-secondary", style={"marginRight": "28px"}),
     ],
     style={
