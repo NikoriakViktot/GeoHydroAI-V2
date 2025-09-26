@@ -27,7 +27,7 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
-    #requests_pathname_prefix='/dem/',
+    requests_pathname_prefix='/dem/',
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -57,7 +57,17 @@ for mod in (
     except Exception:
         logging.exception("FATAL: failed to import %s", mod)
 
+from flask import abort, request
+server = app.server
+@server.before_request
+def block_non_dem():
+    p = request.path
+    if not (p.startswith("/dem/")
+            or p.startswith("/_dash")
+            or p.startswith("/assets")):
+        abort(404)
 
+base = app.get_relative_path("/")
 
 navbar = html.Div(
     [
