@@ -27,6 +27,7 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
+    requests_pathname_prefix='/dashboard/',
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -60,7 +61,7 @@ for mod in (
 
 navbar = html.Div(
     [
-        dcc.Link("Dashboard ", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
+        dcc.Link("Dashboard ", href="/dashboard", className="btn btn-primary", style={"marginRight": "28px"}),
         dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
         dcc.Link("Flood Scenarios", href="/flood-dem-diif", className="btn btn-secondary", style={"marginRight": "28px"}),
     ],
