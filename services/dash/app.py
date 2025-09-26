@@ -38,10 +38,10 @@ app = dash.Dash(
 app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
 
-from flask import Response
-@server.route("/_dash-component-suites/dash_deckgl/dash_deckgl.min.js.map")
-def _dash_deckgl_sourcemap():
-    return Response("{}", mimetype="application/json")
+# from flask import Response
+# @server.route("/_dash-component-suites/dash_deckgl/dash_deckgl.min.js.map")
+# def _dash_deckgl_sourcemap():
+#     return Response("{}", mimetype="application/json")
 
 # ІМПОРТИ КОЛБЕКІВ — без navigate
 for mod in (
