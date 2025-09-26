@@ -33,9 +33,9 @@ app = FastAPI(
     title="GeoHydroAI API",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
-    docs_url="/api/docs",  # Remove /api
-    redoc_url="/api/redoc", # Remove /api
-    openapi_url="/api/openapi.json", # Remove /api
+    # docs_url="/api/docs",  # Remove /api
+    # redoc_url="/api/redoc", # Remove /api
+    # openapi_url="/api/openapi.json", # Remove /api
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1024)
