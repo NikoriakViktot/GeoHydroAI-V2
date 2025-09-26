@@ -26,6 +26,7 @@ except Exception as e:
     basin_bounds = [24.5, 47.3, 26.0, 48.2]
 
 def _basin_layer(geojson: dict) -> dict:
+    """Створює шар GeoJson для відображення контуру басейну."""
     return {
         "@@type": "GeoJsonLayer", "id": "basin-outline",
         "data": geojson,
@@ -38,15 +39,18 @@ def _basin_layer(geojson: dict) -> dict:
         "parameters": {"depthTest": False}
     }
 
+# ВИПРАВЛЕНА ФУНКЦІЯ: Ініціалізація специфікації DeckGL
 def _initial_spec(map_style: str) -> str:
+    """Повертає початкову специфікацію DeckGL з контуром басейну."""
+    layers = ([ _basin_layer(basin_json) ] if basin_json else [])
     return json.dumps({
         "mapStyle": map_style,
         "controller": True,
         "initialViewState": {
-            "bounds": basin_bounds,   # фіксація камери по басейну
+            "bounds": basin_bounds,   # Фіксація камери по басейну
             "pitch": 0, "bearing": 0, "minZoom": 7, "maxZoom": 13
         },
-        "layers": ([ _basin_layer(basin_json) ] if basin_json else [])
+        "layers": layers
     })
 
 
@@ -99,9 +103,9 @@ profile_tab_layout = html.Div(
                 html.Span("— Lower = smoother track profile.",
                           style={"fontSize": "12px", "marginLeft": "10px", "color": "#AAA"}),
                 dcc.Slider(id="kalman_q", min=-2, max=0, step=0.1, value=-1,
-                           marks={i: f"1e{i}" for i in range(-6, 0, 2)},
+                           marks={i: f"1e{i}" for i in range(-6, 1, 2)},
                            tooltip={"placement": "bottom", "always_visible": False}, included=False),
-            ], style={"flex": "1 1 50%"}),  # Займає половину рядка
+            ], style={"flex": "1 1 50%"}),
 
             html.Div([
                 html.Label("Kalman R (Observation Noise)",
@@ -111,10 +115,10 @@ profile_tab_layout = html.Div(
                 dcc.Slider(id="kalman_r", min=0, max=2, step=0.1, value=0.6,
                            marks={i: str(i) for i in range(0, 3, 1)},
                            tooltip={"placement": "bottom", "always_visible": False}, included=False),
-            ], style={"flex": "1 1 50%"}),  # Займає іншу половину рядка
+            ], style={"flex": "1 1 50%"}),
         ], style={"display": "flex", "gap": "30px", "marginBottom": "30px", "padding": "0 8px"}),
 
-        # --- БЛОК Б: ВІЗУАЛІЗАЦІЯ (Горизонтальний/Вертикальний потік) ---
+        # --- БЛОК Б: ВІЗУАЛІЗАЦІЯ (ВЕРТИКАЛЬНИЙ ПОТІК) ---
 
         # 1. ГРАФІК
         dcc.Loading(
@@ -124,15 +128,15 @@ profile_tab_layout = html.Div(
                 id="track_profile_graph",
                 figure=empty_dark_figure(),
                 style={
-                    "height": "400px",  # Зменшена висота для кращої видимості
-                    "width": "100%",  # Повна ширина
+                    "height": "500px",  # Зменшена висота
+                    "width": "100%",    # Повна ширина
                     "backgroundColor": "#181818",
                     "minHeight": "300px",
                 },
             )],
         ),
 
-        # 2. СТАТИСТИКА (з більш помітним стилем)
+        # 2. СТАТИСТИКА
         html.Div(
             id="dem_stats",
             style={**dark_card_style,
@@ -141,8 +145,8 @@ profile_tab_layout = html.Div(
                    "padding": "10px 15px",
                    "fontSize": "16px",
                    "fontWeight": "bold",
-                   "borderLeft": "4px solid #1c8cff",  # Візуальний акцент
-                   "width": "100%"}  # Займає всю ширину
+                   "borderLeft": "4px solid #1c8cff",
+                   "width": "100%"}
         ),
 
         # 3. КАРТА (ТЕПЕР ПІД СТАТИСТИКОЮ І НА ПОВНУ ШИРИНУ)
@@ -152,20 +156,21 @@ profile_tab_layout = html.Div(
             dash_deckgl.DashDeckgl(
                 id="deck-track",
                 spec=_initial_spec("mapbox://styles/mapbox/outdoors-v12"),
-                height=450,  # Трохи більше висоти для карти
+                height=450,
                 mapbox_key=MAPBOX_ACCESS_TOKEN,
                 cursor_position="bottom-right",
                 events=["hover", "click"],
                 description={"top-right": "<div id='track-legend'></div>"},
-                style={"width": "100%"}
+                style={"width": "100%"} # Забезпечуємо повну ширину для адаптивності
             ),
         ], style={"width": "100%", "marginTop": "10px", "minHeight": "450px"})
 
     ],
-    # Загальні стилі контейнера
+    # Загальні стилі контейнера - АДАПТИВНА ШИРИНА ТА ВИСОТА
     style={"backgroundColor": "#181818", "color": "#EEEEEE",
-           "minHeight": "100vh",  # Забезпечуємо мінімальну висоту екрана
-           "padding": "24px"},  # Єдиний відступ по периметру
+           "width": "100%",
+           "minHeight": "100vh",
+           "padding": "24px"},
 )
 
 # експортуємо, щоб колбеки могли це використати
