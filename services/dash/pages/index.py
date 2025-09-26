@@ -13,7 +13,7 @@ from callbacks.best_model_callback import update_best_dem_tab
 
 dash.register_page(
     __name__,
-    path="/dashboard",
+    path="/",
     name="Dashboard",
     title="GeoHydroAI | Карта ICESat-2",
     order=0

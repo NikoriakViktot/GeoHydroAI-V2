@@ -58,7 +58,7 @@ for mod in (
         logging.exception("FATAL: failed to import %s", mod)
 
 from flask import abort, request
-server = app.server
+# server = app.server
 @server.before_request
 def block_non_dem():
     p = request.path
@@ -71,7 +71,7 @@ base = app.get_relative_path("/")
 
 navbar = html.Div(
     [
-        dcc.Link("Dashboard ", href="/dashboard", className="btn btn-primary", style={"marginRight": "28px"}),
+        dcc.Link("Dashboard ", href="/", className="btn btn-primary", style={"marginRight": "28px"}),
         dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
         dcc.Link("Flood Scenarios", href="/flood-dem-diif", className="btn btn-secondary", style={"marginRight": "28px"}),
     ],

@@ -88,6 +88,11 @@ services:
      ports:
        - "${DASH_PORT:-8050}:8050"
      restart: unless-stopped
+     healthcheck:
+       test: [ "CMD", "curl", "-fsS", "http://localhost:8050/_dash-layout" ]
+       interval: 10s
+       timeout: 5s
+       retries: 6
      networks: [web]
      volumes:
        - ./data/parquet:/app/data/parquet:ro   # <-- тут твій layers_index.json
