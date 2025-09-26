@@ -1,20 +1,17 @@
-import plotly.graph_objs as go
-import dash_leaflet as dl
-import numpy as np
-from pyproj import Geod
 import geopandas as gpd
 import duckdb
 import os
+import duckdb, numpy as np, json
+from pyproj import Geod
 
 from utils.plot_track import build_profile_figure_with_hand
 from utils.style import empty_dark_figure
 from dash import callback, Output, Input, State, no_update, exceptions
-import dash_leaflet as dl
 import dash
 import pandas as pd
-import json
 import logging
-from layout.tracks_profile_tab import basin_json
+import config as S  # у тебе вже є ці константи
+from layout.tracks_profile_tab import basin_json,  basin_bounds
 
 from src.interpolation_track import (
         kalman_smooth,
@@ -34,55 +31,114 @@ DEM_LIST = [
 YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
 
-def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
+
+TRACKS_PARQUET = str(S.TRACKS_PARQUET)  # наприклад: "/app/data/tracks_3857_1.parquet"
+
+def _color_rd_bu(delta: float, vmax: float = 20.0):
     if delta is None or not np.isfinite(delta):
         return [200, 200, 200, 180]
     x = float(np.clip(delta / vmax, -1.0, 1.0))
     if x < 0:
-        t = abs(x); r, g, b = int(255*(1-t)), int(255*(1-t)), 255
+        t = -x;   r, g, b = int(255*(1-t)), int(255*(1-t)), 255
     else:
-        t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
-    return [r, g, b, 200]
+        t = x;    r, g, b = 255, int(255*(1-t)), int(255*(1-t))
+    return [r, g, b, 220]
 
-def build_track_spec(df, basemap_style, basin_geojson=basin_json) -> str:
+def _query_tracks(track, rgt, spot, date, dem, hand_range=None):
+    # фільтр HAND (колонка типу alos_dem_2000)
+    hand_sql = ""
+    if hand_range and len(hand_range) == 2:
+        hand_col = f"{dem}_2000"
+        hand_sql = f" AND {hand_col} IS NOT NULL AND {hand_col} BETWEEN {hand_range[0]} AND {hand_range[1]}"
+
+    sql = f"""
+    SELECT 
+        CAST(x AS DOUBLE) AS x,
+        CAST(y AS DOUBLE) AS y,
+        orthometric_height,
+        h_{dem}        AS h_dem,
+        delta_{dem}    AS delta,
+        time
+    FROM read_parquet('{TRACKS_PARQUET}')
+    WHERE track={track} AND rgt={rgt} AND spot={spot}
+      AND DATE(time) = DATE '{date}'
+      AND atl03_cnf = 4 AND atl08_class = 1
+      AND h_{dem} IS NOT NULL AND delta_{dem} IS NOT NULL
+      {hand_sql}
+    ORDER BY x
+    """
+    try:
+        return duckdb.query(sql).to_df()
+    except Exception as e:
+        # щоб не валити весь колбек
+        print("DuckDB tracks query failed:", e)
+        import pandas as pd
+        return pd.DataFrame()
+
+def _add_distance(df):
+    if df is None or df.empty:
+        return df
+    geod = Geod(ellps="WGS84")
+    d = np.zeros(len(df))
+    if len(df) > 1:
+        _, _, dp = geod.inv(df["x"].to_numpy()[:-1], df["y"].to_numpy()[:-1],
+                            df["x"].to_numpy()[1:],  df["y"].to_numpy()[1:])
+        d[1:] = dp
+    df = df.copy()
+    df["distance_m"] = np.cumsum(d)
+    return df
+
+def _deck_spec_from_tracks(df, basemap_style):
     layers = []
-    # басейн
-    if basin_geojson:
+    # контур басейну
+    if basin_json:
         layers.append({
             "@@type": "GeoJsonLayer", "id": "basin-outline",
-            "data": basin_geojson, "stroked": True, "filled": False,
+            "data": basin_json, "stroked": True, "filled": False,
             "getLineColor": [0, 102, 255, 220],
             "getFillColor": [0, 0, 0, 0],
-            "getLineWidth": 2.5, "lineWidthUnits": "pixels", "lineWidthMinPixels": 2,
-            "parameters": {"depthTest": False}
+            "getLineWidth": 2.5, "lineWidthUnits": "pixels",
+            "lineWidthMinPixels": 2, "parameters": {"depthTest": False}
         })
 
-    # трек
-    view = {"longitude": 25.03, "latitude": 47.8, "zoom": 9}
+    # точки треку
     if df is not None and not df.empty:
-        df = df.sort_values("distance_m")
         lon, lat = df["x"].to_numpy(), df["y"].to_numpy()
-        delta_col = next((c for c in df.columns if c.startswith("delta_")), None)
-        deltas = df[delta_col].to_numpy() if delta_col else np.full(len(df), np.nan)
-
+        delta     = df["delta"].to_numpy()
+        # САМПЛІНГ, щоб не «вбивати» фронт
+        step = max(1, len(df)//2000)  # до ~2000 маркерів
         pts = [{"position": [float(lon[i]), float(lat[i])],
-                "color": _color_rd_bu(float(deltas[i]))}
-               for i in range(0, len(df), 10)]
-        path_coords = [[float(x), float(y)] for x, y in zip(lon, lat)]
+                "color": _color_rd_bu(float(delta[i]))}
+               for i in range(0, len(df), step)]
+        path = [[float(x), float(y)] for x, y in zip(lon, lat)]
 
         layers += [
-            {"@@type": "ScatterplotLayer", "id": "track-points",
-             "data": pts, "pickable": True, "getPosition": "@@=d.position",
-             "getFillColor": "@@=d.color", "radiusUnits": "meters", "getRadius": 22},
-            {"@@type": "PathLayer", "id": "track-path",
-             "data": [{"path": path_coords}],
-             "getPath": "@@=d.path", "getWidth": 2, "widthUnits": "pixels",
-             "getColor": [255, 200, 0, 220]}
+            {   # робимо радіус в ПІКСЕЛЯХ — буде видно на будь-якому зумі
+                "@@type": "ScatterplotLayer", "id": "track-points",
+                "data": pts, "pickable": True,
+                "parameters": {"depthTest": False},
+                "radiusUnits": "pixels",
+                "getRadius": 3, "radiusMinPixels": 2, "radiusMaxPixels": 8,
+                "getPosition": "@@=d.position",
+                "getFillColor": "@@=d.color"
+            },
+            {
+                "@@type": "PathLayer", "id": "track-path",
+                "data": [{"path": path}],
+                "getPath": "@@=d.path", "widthUnits": "pixels", "getWidth": 2,
+                "getColor": [255, 200, 0, 220], "parameters": {"depthTest": False}
+            }
         ]
-        view = {"longitude": float(np.nanmean(lon)), "latitude": float(np.nanmean(lat)), "zoom": 10}
 
-    return json.dumps({"mapStyle": basemap_style, "initialViewState": view, "layers": layers})
-
+    return json.dumps({
+        "mapStyle": basemap_style,
+        "controller": True,
+        "initialViewState": {  # фіксація камери по межі басейну
+            "bounds": list(basin_bounds),
+            "pitch": 0, "bearing": 0, "minZoom": 7, "maxZoom": 13
+        },
+        "layers": layers
+    })
 
 
 # --- Track/RGT/Spot Dropdown
@@ -295,49 +351,28 @@ def update_map_points(selected_profile, hand_range, hand_toggle):
     return markers
 
 
-def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
-    if delta is None or not np.isfinite(delta):
-        return [200, 200, 200, 180]
-    x = float(np.clip(delta / vmax, -1.0, 1.0))
-    if x < 0:
-        t = abs(x); r, g, b = int(255*(1-t)), int(255*(1-t)), 255
-    else:
-        t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
-    return [r, g, b, 200]
-
-
 @callback(
     Output("deck-track", "spec"),
     Input("selected_profile", "data"),
     Input("hand_slider", "value"),
     Input("hand_toggle", "value"),
     Input("basemap_style", "value"),
-    prevent_initial_call=True
 )
 def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
+    # початково — тільки басейн
     if not selected_profile or not all(selected_profile.values()):
-        # все одно повертаємо spec з басейном
-        return build_track_spec(None, basemap_style)
+        return _deck_spec_from_tracks(None, basemap_style)
 
     try:
         track, rgt, spot = map(float, selected_profile["track"].split("_"))
+        dem  = selected_profile.get("dem")
+        date = selected_profile.get("date")
     except Exception:
-        return build_track_spec(None, basemap_style)
-
-    dem  = selected_profile.get("dem") or os.getenv("DEFAULT_TRACK_DEM", "alos_dem")
-    date = selected_profile["date"]
+        return _deck_spec_from_tracks(None, basemap_style)
 
     use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
     hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2) else None
 
-    df = db.get_profile(track, rgt, spot, dem, date, hand_q)
-    if df is not None and "distance_m" not in df:
-        geod = Geod(ellps="WGS84")
-        d = np.zeros(len(df))
-        if len(df) > 1:
-            _, _, dp = geod.inv(df["x"].to_numpy()[:-1], df["y"].to_numpy()[:-1],
-                                df["x"].to_numpy()[1:],  df["y"].to_numpy()[1:])
-            d[1:] = dp
-        df = df.copy(); df["distance_m"] = np.cumsum(d)
-
-    return build_track_spec(df, basemap_style)
+    df = _query_tracks(track, rgt, spot, date, dem, hand_q)
+    df = _add_distance(df)
+    return _deck_spec_from_tracks(df, basemap_style)
