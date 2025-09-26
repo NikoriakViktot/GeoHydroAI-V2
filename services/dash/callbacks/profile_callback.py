@@ -14,6 +14,7 @@ import dash
 import pandas as pd
 import json
 import logging
+from layout.tracks_profile_tab import basin_json
 
 from src.interpolation_track import (
         kalman_smooth,
@@ -26,15 +27,12 @@ logger = logging.getLogger(__name__)  # ✅ тепер logger існує
 app = dash.get_app()
 db = get_db("nmad")
 DEFAULT_DEM = os.getenv("DEFAULT_TRACK_DEM", "alos_dem")
-# (опційно) basin, якщо треба локально:
-try:
-    basin: gpd.GeoDataFrame = get_df("basin")
-    basin = basin.to_crs("EPSG:4326")
-    basin_json = json.loads(basin.to_json())
-except Exception as e:
-    logger.exception("Failed to load basin: %s", e)
-    basin_json = None
-
+DEM_LIST = [
+    "alos_dem", "aster_dem", "copernicus_dem", "fab_dem",
+    "nasa_dem", "srtm_dem", "tan_dem"
+]
+YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
 
 def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
     if delta is None or not np.isfinite(delta):
@@ -46,62 +44,45 @@ def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
         t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
     return [r, g, b, 200]
 
-def _build_track_layers(df, basemap_style):
+def build_track_spec(df, basemap_style, basin_geojson=basin_json) -> str:
     layers = []
-    # 1) басейн зверху всього
-    if basin_json:
+    # басейн
+    if basin_geojson:
         layers.append({
             "@@type": "GeoJsonLayer", "id": "basin-outline",
-            "data": basin_json, "stroked": True, "filled": False,
+            "data": basin_geojson, "stroked": True, "filled": False,
             "getLineColor": [0, 102, 255, 220],
             "getFillColor": [0, 0, 0, 0],
-            "getLineWidth": 2.5,
-            "lineWidthUnits": "pixels",
-            "lineWidthMinPixels": 2,
+            "getLineWidth": 2.5, "lineWidthUnits": "pixels", "lineWidthMinPixels": 2,
             "parameters": {"depthTest": False}
         })
 
-    # 2) якщо є трек — додаємо точки/лінію
+    # трек
+    view = {"longitude": 25.03, "latitude": 47.8, "zoom": 9}
     if df is not None and not df.empty:
         df = df.sort_values("distance_m")
-        lon = df["x"].to_numpy(); lat = df["y"].to_numpy()
+        lon, lat = df["x"].to_numpy(), df["y"].to_numpy()
         delta_col = next((c for c in df.columns if c.startswith("delta_")), None)
         deltas = df[delta_col].to_numpy() if delta_col else np.full(len(df), np.nan)
 
-        SAMPLE = 10
         pts = [{"position": [float(lon[i]), float(lat[i])],
                 "color": _color_rd_bu(float(deltas[i]))}
-               for i in range(0, len(df), SAMPLE)]
-
+               for i in range(0, len(df), 10)]
         path_coords = [[float(x), float(y)] for x, y in zip(lon, lat)]
 
         layers += [
             {"@@type": "ScatterplotLayer", "id": "track-points",
-             "data": pts, "pickable": True,
-             "getPosition": "@@=d.position",
-             "getFillColor": "@@=d.color",
-             "radiusUnits": "meters", "getRadius": 22},
+             "data": pts, "pickable": True, "getPosition": "@@=d.position",
+             "getFillColor": "@@=d.color", "radiusUnits": "meters", "getRadius": 22},
             {"@@type": "PathLayer", "id": "track-path",
              "data": [{"path": path_coords}],
              "getPath": "@@=d.path", "getWidth": 2, "widthUnits": "pixels",
              "getColor": [255, 200, 0, 220]}
         ]
-
         view = {"longitude": float(np.nanmean(lon)), "latitude": float(np.nanmean(lat)), "zoom": 10}
-    else:
-        view = {"longitude": 25.03, "latitude": 47.8, "zoom": 9}
 
     return json.dumps({"mapStyle": basemap_style, "initialViewState": view, "layers": layers})
 
-
-
-
-DEM_LIST = [
-    "alos_dem", "aster_dem", "copernicus_dem", "fab_dem",
-    "nasa_dem", "srtm_dem", "tan_dem"
-]
-YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
-hand_column_map = {dem: f"{dem}_2000" for dem in DEM_LIST}
 
 
 # --- Track/RGT/Spot Dropdown
@@ -242,8 +223,6 @@ def update_profile(track_rgt_spot, date,
     return fig, stats_text
 
 
-
-
 @app.callback(
     Output("point_group", "children"),
     Input("selected_profile", "data"),
@@ -326,42 +305,6 @@ def _color_rd_bu(delta: float, vmax: float = 20.0) -> list[int]:
         t = x; r, g, b = 255, int(255*(1-t)), int(255*(1-t))
     return [r, g, b, 200]
 
-def _build_track_layers(df, basin_geojson, basemap_style):
-    if df is None or df.empty:
-        return json.dumps({"mapStyle": basemap_style,
-                           "initialViewState": {"longitude": 25.03, "latitude": 47.8, "zoom": 8},
-                           "layers": []})
-
-    df = df.sort_values("distance_m")
-    lon = df["x"].to_numpy(); lat = df["y"].to_numpy()
-    delta_col = f"delta_{df.attrs.get('dem', 'dem')}" if hasattr(df, "attrs") else None
-    deltas = df[delta_col].to_numpy() if (delta_col and delta_col in df) else np.full(len(df), np.nan)
-
-    SAMPLE = 10
-    pts = [{"position": [float(lon[i]), float(lat[i])],
-            "color": _color_rd_bu(float(deltas[i]))} for i in range(0, len(df), SAMPLE)]
-
-    path_coords = [[float(x), float(y)] for x, y in zip(lon, lat)]
-
-    layers = [
-        {"@@type": "ScatterplotLayer", "id": "track-points",
-         "data": pts, "pickable": True,
-         "getPosition": "@@=d.position",
-         "getFillColor": "@@=d.color",
-         "getLineColor": [255, 255, 255, 220],
-         "radiusUnits": "meters", "getRadius": 22, "lineWidthMinPixels": 0.5},
-        {"@@type": "PathLayer", "id": "track-path",
-         "data": [{"path": path_coords}],
-         "getPath": "@@=d.path", "getWidth": 2, "widthUnits": "pixels",
-         "getColor": [255, 200, 0, 220]}
-    ]
-    if basin_geojson:
-        layers.append({"@@type": "GeoJsonLayer", "id": "basin",
-                       "data": basin_geojson, "stroked": True, "filled": False,
-                       "getLineColor": [0, 102, 255, 200], "getLineWidth": 2})
-
-    view = {"longitude": float(np.nanmean(lon)), "latitude": float(np.nanmean(lat)), "zoom": 10}
-    return json.dumps({"mapStyle": basemap_style, "initialViewState": view, "layers": layers})
 
 @callback(
     Output("deck-track", "spec"),
@@ -373,25 +316,28 @@ def _build_track_layers(df, basin_geojson, basemap_style):
 )
 def update_track_map(selected_profile, hand_range, hand_toggle, basemap_style):
     if not selected_profile or not all(selected_profile.values()):
-        return no_update
+        # все одно повертаємо spec з басейном
+        return build_track_spec(None, basemap_style)
+
     try:
         track, rgt, spot = map(float, selected_profile["track"].split("_"))
     except Exception:
-        return no_update
-    dem = selected_profile["dem"]; date = selected_profile["date"]
-    use_hand = "on" in (hand_toggle or [])
+        return build_track_spec(None, basemap_style)
+
+    dem  = selected_profile.get("dem") or os.getenv("DEFAULT_TRACK_DEM", "alos_dem")
+    date = selected_profile["date"]
+
+    use_hand = isinstance(hand_toggle, (list, tuple, set)) and "on" in hand_toggle
     hand_q = hand_range if (use_hand and hand_range and len(hand_range) == 2) else None
 
     df = db.get_profile(track, rgt, spot, dem, date, hand_q)
-    if df is not None:
-        if "distance_m" not in df:
-            geod = Geod(ellps="WGS84")
-            d = np.zeros(len(df))
-            if len(df) > 1:
-                _, _, d_pair = geod.inv(df["x"].to_numpy()[:-1], df["y"].to_numpy()[:-1],
-                                        df["x"].to_numpy()[1:],  df["y"].to_numpy()[1:])
-                d[1:] = d_pair
-            df = df.copy(); df["distance_m"] = np.cumsum(d)
-        df.attrs["dem"] = dem
+    if df is not None and "distance_m" not in df:
+        geod = Geod(ellps="WGS84")
+        d = np.zeros(len(df))
+        if len(df) > 1:
+            _, _, dp = geod.inv(df["x"].to_numpy()[:-1], df["y"].to_numpy()[:-1],
+                                df["x"].to_numpy()[1:],  df["y"].to_numpy()[1:])
+            d[1:] = dp
+        df = df.copy(); df["distance_m"] = np.cumsum(d)
 
-    return _build_track_layers(df, basemap_style)
+    return build_track_spec(df, basemap_style)

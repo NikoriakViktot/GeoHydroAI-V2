@@ -207,8 +207,8 @@ def update_dashboard(n_clicks, tab, cdf_data,
     if tab == "tab-2":
 
         return profile_tab_layout
-    if tab == "tab-3":
-        return tracks_map_layout
+    # if tab == "tab-3":
+    #     return tracks_map_layout
     if tab == "tab-4":
         return html.Div([
             dcc.Dropdown(

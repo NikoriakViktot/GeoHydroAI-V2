@@ -40,6 +40,10 @@ server = app.server
 def url(p: str) -> str:
     return app.get_relative_path(p)
 
+@server.route("/health")
+def health():
+    return "ok", 200
+
 # from flask import Response
 # @server.route("/_dash-component-suites/dash_deckgl/dash_deckgl.min.js.map")
 # def _dash_deckgl_sourcemap():

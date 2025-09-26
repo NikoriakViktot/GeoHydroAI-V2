@@ -89,8 +89,8 @@ services:
        - "${DASH_PORT:-8050}:8050"
      restart: unless-stopped
      healthcheck:
-       test: [ "CMD", "curl", "-fsS", "http://localhost:8050/_dash-layout" ]
-       interval: 10s
+       test: ["CMD", "curl", "-f", "http://localhost:8050/health"]
+       interval: 30s
        timeout: 5s
        retries: 6
      networks: [web]
