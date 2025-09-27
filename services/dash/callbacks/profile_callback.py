@@ -124,7 +124,7 @@ def update_profile(track_rgt_spot, dem, date, hand_range, hand_toggle, interp_me
     except Exception:
         return empty_dark_figure(text="Некоректний формат треку."), "No error stats"
 
-    use_hand = "on" in hand_toggle
+    use_hand = ("on" in hand_toggle) if hand_toggle else False
     hand_range_for_query = (
         hand_range if (use_hand and hand_range and len(hand_range) == 2 and all(isinstance(x, (int, float)) for x in hand_range))
         else None
