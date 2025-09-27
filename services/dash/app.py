@@ -62,8 +62,9 @@ for mod in (
         __import__(mod)
     except Exception:
         logging.exception("FATAL: failed to import %s", mod)
+        raise
 
-# from flask import abort, request
+    # from flask import abort, request
 # # server = app.server
 # @server.before_request
 # def block_non_dem():
