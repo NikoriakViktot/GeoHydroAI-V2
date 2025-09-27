@@ -6,7 +6,7 @@ import pandas as pd
 import dash
 
 # ➜ шляхи беремо з конфіга і використовуємо read_parquet(...) у SQL
-import services.dash.config as S
+import config as S
 T_TRACKS = f"read_parquet('{S.TRACKS_PARQUET.as_posix()}')"
 
 from dash import callback, Output, Input, State
