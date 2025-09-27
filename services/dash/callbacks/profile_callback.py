@@ -11,7 +11,7 @@ import dash
 import pandas as pd
 import logging
 import config as S
-from layout.tracks_profile_tab import basin_json, basin_bounds
+from layout.tracks_map_tab import basin_json, basin_bounds
 
 from src.interpolation_track import (
         kalman_smooth,

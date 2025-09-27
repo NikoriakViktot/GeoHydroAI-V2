@@ -1,4 +1,4 @@
-#layout/tracks_profile_tab.py
+#layout/tracks_map_tab.py
 
 
 from dash import html
@@ -17,11 +17,14 @@ try:
     print("Basin loaded! CRS:", basin.crs)
     basin = basin.to_crs("EPSG:4326")
     basin_json = json.loads(basin.to_json())
+
+    # ➜ додай межі басейну у форматі [[south, west], [north, east]]
+    xmin, ymin, xmax, ymax = basin.total_bounds
+    basin_bounds = [[ymin, xmin], [ymax, xmax]]
 except Exception as e:
     print("❌ Error loading basin:", e)
     basin_json = None
-
-
+    basin_bounds = None
 
 tracks_map_layout = html.Div([
     html.H4("Карта ICESat-2 треків", style={"color": "#EEEEEE"}),
