@@ -333,4 +333,4 @@ def update_map_and_profile(selected_profile, hand_range, hand_toggle, history):
         history = []
     if not history or history[-1] != selected_profile:
         history.append(selected_profile)
-    return pts, fig, stats_text, history
+    return pts

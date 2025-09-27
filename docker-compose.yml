@@ -89,7 +89,7 @@ services:
        - "${DASH_PORT:-8050}:8050"
      restart: unless-stopped
      healthcheck:
-       test: ["CMD", "curl", "-f", "http://localhost:8050/health"]
+       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8050/health', timeout=2).read()" ]
        interval: 30s
        timeout: 5s
        retries: 6

@@ -15,7 +15,7 @@ dash.register_page(
     __name__,
     path="/dashboard",
     name="Dashboard",
-    title="GeoHydroAI | Карта ICESat-2",
+    title="GeoHydroAI",
     order=0
 )
 
