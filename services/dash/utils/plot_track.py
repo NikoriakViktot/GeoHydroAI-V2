@@ -1,5 +1,6 @@
 import plotly.graph_objs as go
 from utils.style import empty_dark_figure
+import pandas as pd
 
 def build_profile_figure_with_hand(
     df_all,
@@ -9,6 +10,10 @@ def build_profile_figure_with_hand(
     interpolated_df=None,
     interp_method=None
 ):
+    if not isinstance(df_all, pd.DataFrame):
+        df_all = pd.DataFrame()
+    if not isinstance(df_hand, pd.DataFrame):
+        df_hand = pd.DataFrame()
     fig = go.Figure()
     # DEM
     if not df_all.empty and f"h_{dem_key}" in df_all:

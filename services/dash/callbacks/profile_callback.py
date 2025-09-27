@@ -103,6 +103,13 @@ def add_distance_m(df, lon_col="x", lat_col="y"):
         df["distance_m"] = np.arange(len(df))
     return df
 
+from utils.style import empty_dark_figure
+from pyproj import Geod
+import numpy as np
+import pandas as pd
+import logging
+logger = logging.getLogger(__name__)
+
 @callback(
     Output("track_profile_graph", "figure"),
     Output("dem_stats", "children"),
@@ -115,82 +122,100 @@ def add_distance_m(df, lon_col="x", lat_col="y"):
     Input("kalman_q", "value"),
     Input("kalman_r", "value"),
 )
-def update_profile(track_rgt_spot, dem, date, hand_range, hand_toggle, interp_method, kalman_q, kalman_r):
-    if not (track_rgt_spot and date and dem):
-        return empty_dark_figure(text="Немає даних для побудови профілю."), "No error stats"
-
+def update_profile(track_rgt_spot, dem, date,
+                   hand_range, hand_toggle, interp_method, kalman_q, kalman_r):
     try:
-        track, rgt, spot = map(float, track_rgt_spot.split("_"))
-    except Exception:
-        return empty_dark_figure(text="Некоректний формат треку."), "No error stats"
+        # 1) базові перевірки
+        if not (track_rgt_spot and date and dem):
+            return empty_dark_figure(text="Виберіть трек/дату/DEM"), "No error stats"
 
-    use_hand = ("on" in hand_toggle) if hand_toggle else False
-    hand_range_for_query = (
-        hand_range if (use_hand and hand_range and len(hand_range) == 2 and all(isinstance(x, (int, float)) for x in hand_range))
-        else None
-    )
+        try:
+            track, rgt, spot = map(float, track_rgt_spot.split("_"))
+        except Exception:
+            return empty_dark_figure(text="Некоректний формат треку"), "No error stats"
 
-    df_hand = nmad_db.get_profile(track, rgt, spot, dem, date, hand_range_for_query)
-    df_all  = nmad_db.get_profile(track, rgt, spot, dem, date, None)
+        # 2) HAND toggle безпечний
+        hand_toggle = hand_toggle or []
+        if isinstance(hand_toggle, str):
+            hand_toggle = [hand_toggle]
+        use_hand = "on" in hand_toggle
 
-    # (опціонально) додай distance_m, якщо його немає
-    def add_distance_m(df):
-        if df is None or df.empty: return df
-        if "distance_m" in df: return df
-        geod = Geod(ellps="WGS84")
-        lons, lats = df["x"].values, df["y"].values
-        d = np.zeros(len(df))
-        if len(df) > 1:
-            _, _, d_pair = geod.inv(lons[:-1], lats[:-1], lons[1:], lats[1:])
-            d[1:] = d_pair
-        df = df.copy()
-        df["distance_m"] = np.cumsum(d)
-        return df
+        hand_q = (hand_range if (use_hand and hand_range and len(hand_range) == 2
+                                 and all(isinstance(x, (int, float)) for x in hand_range))
+                  else None)
 
-    df_hand = add_distance_m(df_hand)
-    df_all  = add_distance_m(df_all)
+        # 3) Дані
+        df_hand = nmad_db.get_profile(track, rgt, spot, dem, date, hand_q)
+        df_all  = nmad_db.get_profile(track, rgt, spot, dem, date, None)
 
-    # Інтерполяції/сгладжування — без змін
-    interpolated_df = None
-    if interp_method and interp_method not in ["none", "raw", None, ""]:
-        import numpy as np
-        from src.interpolation_track import kalman_smooth, interpolate_linear
+        # 4) distance_m, але не падаємо, якщо None/порожньо
+        def add_distance_m(df):
+            if not isinstance(df, pd.DataFrame) or df.empty:
+                return df
+            if "distance_m" in df:
+                return df
+            geod = Geod(ellps="WGS84")
+            lons, lats = df["x"].to_numpy(), df["y"].to_numpy()
+            d = np.zeros(len(df))
+            if len(df) > 1:
+                _, _, d_pair = geod.inv(lons[:-1], lats[:-1], lons[1:], lats[1:])
+                d[1:] = d_pair
+            out = df.copy()
+            out["distance_m"] = np.cumsum(d)
+            return out
 
-        if (df_all is not None and not df_all.empty
-            and "distance_m" in df_all and "orthometric_height" in df_all):
-            df_ice = df_all[["distance_m", "orthometric_height"]].dropna().sort_values("distance_m")
-            if not df_ice.empty:
-                grid = np.linspace(df_ice["distance_m"].min(), df_ice["distance_m"].max(), 300)
-                if interp_method == "linear":
-                    interpolated_df = interpolate_linear(df_ice, grid=grid)
-                elif interp_method == "kalman":
-                    transition_cov = 10 ** kalman_q
-                    observation_cov = kalman_r
-                    smooth_df = kalman_smooth(
-                        df_ice,
-                        transition_covariance=transition_cov,
-                        observation_covariance=observation_cov
-                    )
-                    interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
-                        columns={"kalman_smooth": "orthometric_height"}
-                    )
+        df_hand = add_distance_m(df_hand)
+        df_all  = add_distance_m(df_all)
 
-    fig = build_profile_figure_with_hand(
-        df_all=df_all,
-        df_hand=df_hand,
-        dem_key=dem,
-        use_hand=use_hand,
-        interpolated_df=interpolated_df,
-        interp_method=interp_method
-    )
+        # 5) якщо взагалі немає DEM або воно порожнє — повертаємо пустий граф
+        if (not isinstance(df_all, pd.DataFrame) or df_all.empty or
+            f"h_{dem}" not in df_all or df_all[f"h_{dem}"].dropna().empty):
+            return empty_dark_figure(text="Немає даних для профілю"), "No error stats"
 
-    stats = nmad_db.get_dem_stats(df_all, dem)  # лишаємо твій API
-    stats_text = (
-        f"Mean error: {stats['mean']:.2f} м, Min: {stats['min']:.2f} м, "
-        f"Max: {stats['max']:.2f} м, Points: {stats['count']}" if stats else "No error stats"
-    )
+        # 6) Інтерполяція з безпечними дефолтами
+        interpolated_df = None
+        if interp_method and interp_method not in ["none", "raw", "", None]:
+            if "distance_m" in df_all and "orthometric_height" in df_all:
+                df_ice = df_all[["distance_m", "orthometric_height"]].dropna().sort_values("distance_m")
+                if not df_ice.empty:
+                    if interp_method == "linear":
+                        grid = np.linspace(df_ice["distance_m"].min(), df_ice["distance_m"].max(), 300)
+                        interpolated_df = interpolate_linear(df_ice, grid=grid)
+                    elif interp_method == "kalman":
+                        kq = kalman_q if isinstance(kalman_q, (int, float)) else -1  # 10**-1 = 0.1
+                        kr = kalman_r if isinstance(kalman_r, (int, float)) else 0.6
+                        smooth_df = kalman_smooth(
+                            df_ice,
+                            transition_covariance=10 ** kq,
+                            observation_covariance=kr
+                        )
+                        interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
+                            columns={"kalman_smooth": "orthometric_height"}
+                        )
 
-    return fig, stats_text
+        # 7) Малюємо (твоя функція — з п. A)
+        fig = build_profile_figure_with_hand(
+            df_all=df_all,
+            df_hand=df_hand,
+            dem_key=dem,
+            use_hand=use_hand,
+            interpolated_df=interpolated_df,
+            interp_method=interp_method,
+        )
+
+        # 8) Статистика
+        stats = nmad_db.get_dem_stats(df_all, dem)
+        stats_text = (
+            f"Mean error: {stats['mean']:.2f} м, Min: {stats['min']:.2f} м, "
+            f"Max: {stats['max']:.2f} м, Points: {stats['count']}"
+            if stats else "No error stats"
+        )
+        return fig, stats_text
+
+    except Exception as e:
+        logger.exception("update_profile failed")
+        return empty_dark_figure(text=f"Server error: {e}"), "No error stats"
+
 
 # TRACKS_PARQUET = str(S.TRACKS_PARQUET)
 #
