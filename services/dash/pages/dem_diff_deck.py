@@ -33,8 +33,8 @@ from utils.dem_tools import (
 
 # ---------- Константи UI ----------
 
-MAIN_MAP_HEIGHT = 550
-RIGHT_PANEL_WIDTH = 400
+MAIN_MAP_HEIGHT = 480
+RIGHT_PANEL_WIDTH = 360
 
 # ---------- Логи ----------
 
@@ -214,25 +214,40 @@ def basin_layer(geojson: dict) -> dict:
 def build_dem_url(colormap="viridis"):
     return f"{TC_BASE}/singleband/dem/fab_dem/{{z}}/{{x}}/{{y}}.png?colormap={colormap}&stretch_range=[250,2200]"
 
+def view_from_geojson_bbox(gj, fallback=None):
+    try:
+        xs, ys = [], []
+        for feat in gj.get("features", []):
+            def _walk(c):
+                if isinstance(c[0], (float, int)):  # [x,y]
+                    xs.append(c[0]); ys.append(c[1])
+                else:
+                    for cc in c: _walk(cc)
+            _walk(feat["geometry"]["coordinates"])
+        west, east = min(xs), max(xs)
+        south, north = min(ys), max(ys)
+        lon = (west + east) / 2
+        lat = (south + north) / 2
+        # груба оцінка масштабу (deck.gl fitBounds аналог спрощено)
+        span = max(east - west, north - south)
+        zoom = max(6.0, min(12.0, 8.8 - np.log2(span/4)))  # підженемо під Європу
+        return {"longitude": float(lon), "latitude": float(lat), "zoom": float(zoom), "pitch": 0, "bearing": 0}
+    except Exception:
+        return fallback or {"longitude": 25.03, "latitude": 47.8, "zoom": 8}
 
-def build_spec(
-        dem_url: str | None,
-        diff_bitmap: dict | None,
-        basin: dict | None,
-        init_view=None,
-        map_style="mapbox://styles/mapbox/light-v11",
-) -> str:
+def build_spec(dem_url,
+               diff_bitmap,
+               basin,
+               init_view=None,
+               map_style="mapbox://styles/mapbox/light-v11"):
     layers = []
-    if dem_url:
-        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.85))
-    if diff_bitmap:
-        layers.append(diff_bitmap)
-    if basin:
-        layers.append(basin_layer(basin))
+    if dem_url: layers.append(tile_layer("dem-tiles", dem_url, opacity=0.85))
+    if diff_bitmap: layers.append(diff_bitmap)
+    if basin: layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view
-                            or {"longitude": 25.03, "latitude": 47.8, "zoom": 8, "pitch": 0, "bearing": 0},
+        "initialViewState": init_view or view_from_geojson_bbox(basin, fallback={"longitude":25.03,"latitude":47.8,"zoom":8}) if basin else {"longitude":25.03,"latitude":47.8,"zoom":8},
+        "controller": True,     # зручно масштабувати колесом
         "layers": layers,
     }
     return json.dumps(spec)
@@ -314,7 +329,7 @@ layout = html.Div(
                                 "color": "white",
                                 "border": "none",
                                 "borderRadius": "6px",
-                                "padding": "8px 16px",
+                                "padding": "6px 12px",
                                 "cursor": "pointer",
                                 "fontWeight": "bold",
                                 "fontSize": "14px",
@@ -323,7 +338,8 @@ layout = html.Div(
                         ),
                     ],
                     style={
-                        "width": "220px",
+                        "border": "1px solid rgba(255,255,255,0.15)",
+                        "width": "180px",
                         "padding": "12px",
                         "backgroundColor": "#1e1e1e",
                         "borderRadius": "8px",
@@ -348,7 +364,7 @@ layout = html.Div(
                             style={
                                 # !!! position: relative ВИДАЛЕНО
                                 "border": "1px solid rgba(255,255,255,0.15)",
-                                "borderRadius": "12px",
+                                "borderRadius": "10px",
                                 "overflow": "hidden",
                                 "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
                                 "backgroundColor": "#111",
@@ -361,11 +377,9 @@ layout = html.Div(
                                 # html.H4("Histogram of Elevation Errors", style={"marginTop": 0}),
                                 dcc.Graph(
                                     id="hist",
-                                    figure=empty_dark_figure(
-                                        260, "Press “Compute Difference”"
-                                    ),
-                                    style={"height": "260px"},
-                                    config={"displaylogo": False},
+                                    figure=empty_dark_figure(220, "Press “Compute Difference”"),
+                                    style={"height": "220px"},  # було 260px
+                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]}
                                 ),
                                 html.Hr(style={'borderColor': 'rgba(255,255,255,0.15)'}),
                                 # НОВЕ МІСЦЕ ДЛЯ ЛЕГЕНДИ: під гістограмою
@@ -391,7 +405,7 @@ layout = html.Div(
                     style={
                         "display": "grid",
                         "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
-                        "gap": "12px",
+                        "gap": "10px",
                         "alignItems": "start",
                         "gridColumn": "2 / 3",
                     },
@@ -420,8 +434,8 @@ layout = html.Div(
             ],
             style={
                 "display": "grid",
-                "gridTemplateColumns": "250px 1fr",
-                "gap": "15px",
+                "gridTemplateColumns": "240px 1fr",
+                "gap": "10px",
                 "alignItems": "start",
                 "gridTemplateRows": "auto auto"
             },
@@ -768,33 +782,28 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)", center=center)
 
     # Створюємо HTML, який буде вставлений у legend-box
-    legend_component = html.Div(
-        [
-            html.Div(f"dH = {dem2} − {dem1}",
-                     style={"fontWeight": 700, "marginBottom": "6px"}),
+    legend_component = html.Div([
+        html.Div(f"dH = {dem2} − {dem1}", style={"fontWeight": 700, "marginBottom": "4px", "fontSize": "12px"}),
+        html.Img(src=legend_uri, style={
+            "height": "120px",  # було 160px
+            "display": "block",
+            "margin": "4px auto 2px",
+            "border": "1px solid rgba(255,255,255,0.1)",
+            "borderRadius": "6px"
+        }),
+        html.Div([
+            html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
+                     style={"lineHeight": "1.3", "fontSize": "11px"}),
+            html.Div("DEM₂ is HIGHER (Uplift/Bias)", style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+            html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
+                     style={"marginTop": "4px", "lineHeight": "1.3", "fontSize": "11px"}),
+            html.Div("DEM₂ is LOWER (Subsidence/Erosion)",
+                     style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+            html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "6px 0"}),
+            html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m", style={"fontSize": "11px", "fontWeight": 700}),
+        ], style={"textAlign": "left"})
+    ], style={"padding": "6px 8px", "background": "#1e1e1e", "borderRadius": "8px"})
 
-            html.Img(src=legend_uri,
-                     style={"height": "160px", "display": "block",
-                            "margin": "6px auto 4px",
-                            "border": "1px solid rgba(255,255,255,0.1)"}),
-
-            html.Div([
-                html.Div([
-                    html.Span("• BLUE: + Change", style={"color": "#6699ff"}),
-                ], style={"lineHeight": "1.4"}),
-                html.Div("DEM₂ is HIGHER (Uplift/Bias)",
-                         style={"marginLeft": "15px", "fontSize": "11px", "color": "#aaa"}),
-                html.Div([
-                    html.Span("• RED: − Change", style={"color": "#ff6666"}),
-                ], style={"marginTop": "5px", "lineHeight": "1.4"}),
-                html.Div("DEM₂ is LOWER (Subsidence/Erosion)",
-                         style={"marginLeft": "15px", "fontSize": "11px", "color": "#aaa"}),
-                html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "8px 0"}),
-                html.Div(f"Range: [{vmin:.2f} m, {vmax:.2f} m] (Visual Extent)",
-                         style={"fontSize": "12px", "fontWeight": 700}),
-            ], style={"textAlign": "left", "fontSize": "12px", "lineHeight": "1.4", "marginTop": "10px"})
-        ]
-    )
     # Гістограма
     hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax), density=False, cumulative=False)
 
