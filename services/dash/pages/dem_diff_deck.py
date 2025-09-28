@@ -355,8 +355,7 @@ layout = html.Div(
                                 "overflow": "hidden",
                                 "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
                                 "backgroundColor": "#111",
-                                "maxWidth": MAP_MAX_WIDTH,  # ← карта не ширше ніж 70% контейнера
-                                "margin": "0 auto"
+                                "width": "100%",
                             },
                         ),
 
