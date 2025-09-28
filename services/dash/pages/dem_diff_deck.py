@@ -777,10 +777,3 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
     # Повертаємо 4 значення
     return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_content_html)
-
-
-@app.callback(Output("deck-events", "children"), Input("deck-main", "lastEvent"))
-def show_evt(evt):
-    if not evt:
-        return ""
-    return f"{evt.get('eventType')} @ {evt.get('coordinate')}"
