@@ -217,6 +217,7 @@ def update_profile(track_rgt_spot, dem, date,
         return empty_dark_figure(text=f"Server error: {e}"), "No error stats"
 
 
+
 # TRACKS_PARQUET = str(S.TRACKS_PARQUET)
 #
 # def _color_rd_bu(delta: float, vmax: float = 20.0):
