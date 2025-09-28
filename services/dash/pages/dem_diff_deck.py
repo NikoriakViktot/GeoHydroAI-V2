@@ -593,11 +593,13 @@ def show_evt(evt):
 
 # ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
 
+# ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
+
 @app.callback(
     Output("deck-main", "spec"),
     Output("hist", "figure"),
     Output("stats", "children"),
-    Output("legend-box", "children"), # <-- НОВИЙ OUTPUT ДЛЯ ЛЕГЕНДИ
+    Output("legend-box", "children"),
     Input("run", "n_clicks"),
     State("dem1", "value"),
     State("dem2", "value"),
@@ -706,15 +708,16 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         logger.exception("Diff error: %s", e)
         return no_update, no_update, f"Computation error: {e}", initial_legend_content
 
-    # Діапазон відображення (vmin, vmax)
+    # Діапазон відображення (vmin, vmax) - ВИКОРИСТОВУЄМО ТІЛЬКИ ДИНАМІЧНИЙ ДІАПАЗОН
     try:
-        if (cat or "").lower() == "dem":
-            vmin, vmax = -25.0, 25.0
-        else:
-            q1, q99 = np.nanpercentile(diff, [1, 99])
-            vmin, vmax = float(q1), float(q99)
-            if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
-                vmin, vmax = -10.0, 10.0
+        q1, q99 = np.nanpercentile(diff, [1, 99])
+        vmin, vmax = float(q1), float(q99)
+        # Якщо обрано "dem", і перцентилі занадто вузькі, використовуємо фіксований діапазон.
+        if (cat or "").lower() == "dem" and (abs(vmin) < 1.0 or abs(vmax) < 1.0):
+             vmin, vmax = -25.0, 25.0
+        # Фінальна перевірка на NaN
+        if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
+            vmin, vmax = -10.0, 10.0
     except Exception:
         vmin, vmax = -10.0, 10.0
 
@@ -745,7 +748,6 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         Range: [{vmin:.2f} m, {vmax:.2f} m] (1st–99th Pct)
       </div>
     </div>"""
-
 
     # Гістограма
     hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax), density=False, cumulative=False)
