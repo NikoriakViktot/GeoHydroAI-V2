@@ -322,7 +322,7 @@ layout = html.Div(
                 # Права зона (Карта + Гістограма)
                 html.Div(
                     [
-                        # Карта + ЛЕГЕНДА (окремий overlay)
+                        # Карта (ТЕПЕР БЕЗ ОВЕРЛЕЮ ЛЕГЕНДИ)
                         html.Div(
                             [
                                 dash_deckgl.DashDeckgl(
@@ -333,27 +333,10 @@ layout = html.Div(
                                     events=["hover"],
                                     mapbox_key=MAPBOX_ACCESS_TOKEN,
                                 ),
-                                # Блок-контейнер для легенди (спочатку порожній)
-                                html.Div(
-                                    id="legend-box",
-                                    style={
-                                        "position": "absolute",
-                                        "top": "10px",
-                                        "right": "10px",
-                                        "background": "rgba(17, 17, 17, 0.85)",
-                                        "color": "#eee",
-                                        "padding": "8px 10px",
-                                        "borderRadius": "8px",
-                                        "fontFamily": "monospace",
-                                        "fontSize": "12px",
-                                        "maxWidth": "220px",
-                                        "boxShadow": "0 2px 8px rgba(0,0,0,0.4)",
-                                        "zIndex": 10,
-                                    },
-                                ),
+                                # !!! html.Div(id="legend-box") ВИДАЛЕНО ЗВІДСИ
                             ],
                             style={
-                                "position": "relative",
+                                # !!! position: relative ВИДАЛЕНО
                                 "border": "1px solid rgba(255,255,255,0.15)",
                                 "borderRadius": "12px",
                                 "overflow": "hidden",
@@ -362,7 +345,7 @@ layout = html.Div(
                             },
                         ),
 
-                        # Права панель (Гістограма, залишається без змін)
+                        # Права панель (Гістограма + Легенда)
                         html.Div(
                             [
                                 html.H4("Histogram of Elevation Errors", style={"marginTop": 0}),
@@ -373,6 +356,17 @@ layout = html.Div(
                                     ),
                                     style={"height": "260px"},
                                     config={"displaylogo": False},
+                                ),
+                                html.Hr(style={'borderColor': 'rgba(255,255,255,0.15)'}),
+                                # НОВЕ МІСЦЕ ДЛЯ ЛЕГЕНДИ: під гістограмою
+                                html.Div(
+                                    id="legend-box",
+                                    style={
+                                        "padding": "8px 10px",
+                                        "fontFamily": "monospace",
+                                        "fontSize": "12px",
+                                        "background": "#1e1e1e",
+                                    },
                                 ),
                             ],
                             style={
