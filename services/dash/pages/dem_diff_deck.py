@@ -14,7 +14,7 @@ from utils.dem_tools import (
 )
 from registry import get_df
 MAIN_MAP_HEIGHT = 550
-RIGHT_PANEL_WIDTH = 400
+RIGHT_PANEL_WIDTH = 500
 COMPARE_MAP_HEIGHT = 360
 # ---- Логи (детальні)
 logger = logging.getLogger(__name__)
@@ -121,32 +121,62 @@ def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None
         "layers": layers
     }
     return json.dumps(spec)
+
+
 layout = html.Div([
     html.H3("DEM Difference Analysis"),
 
-    # Головна сітка: ліворуч вузька колонка з контролями, праворуч — карта+права панель
+    # === ГОЛОВНА 2-КОЛОННА СІТКА ===
     html.Div([
-        # ---- Ліва панель керування ----
+        # ---- Ліва панель ----
         html.Div([
-            html.Label("DEM 1"),
-            dcc.Dropdown(id="dem1", options=[{"label": d, "value": d} for d in DEM_LIST]),
-            html.Label("DEM 2"),
-            dcc.Dropdown(id="dem2", options=[{"label": d, "value": d} for d in DEM_LIST]),
-            html.Label("Категорія"),
-            dcc.Dropdown(id="cat", options=[{"label": c, "value": c} for c in CATEGORY_LIST]),
-            html.Br(),
-            html.Button("Порахувати різницю", id="run"),
+            html.Label("DEM 1", style={"marginBottom": "4px", "fontWeight": "bold"}),
+            dcc.Dropdown(
+                id="dem1",
+                options=[{"label": d, "value": d} for d in DEM_LIST],
+                style={"marginBottom": "10px", "fontSize": "14px"}
+            ),
+
+            html.Label("DEM 2", style={"marginBottom": "4px", "fontWeight": "bold"}),
+            dcc.Dropdown(
+                id="dem2",
+                options=[{"label": d, "value": d} for d in DEM_LIST],
+                style={"marginBottom": "10px", "fontSize": "14px"}
+            ),
+
+            html.Label("Category", style={"marginBottom": "4px", "fontWeight": "bold"}),
+            dcc.Dropdown(
+                id="cat",
+                options=[{"label": c, "value": c} for c in CATEGORY_LIST],
+                style={"marginBottom": "14px", "fontSize": "14px"}
+            ),
+
+            html.Button(
+                "Compute Difference",
+                id="run",
+                style={
+                    "backgroundColor": "#1f77b4",
+                    "color": "white",
+                    "border": "none",
+                    "borderRadius": "6px",
+                    "padding": "8px 16px",
+                    "cursor": "pointer",
+                    "fontWeight": "bold",
+                    "fontSize": "14px",
+                    "width": "100%"
+                }
+            )
         ], style={
-            "width": "300px",
-            "minWidth": "280px",
-            "paddingRight": "16px"
+            "width": "220px",
+            "padding": "12px",
+            "backgroundColor": "#1e1e1e",
+            "borderRadius": "8px"
         }),
 
-        # ---- Права зона: карта + панель справа ----
+        # ---- Права зона: карта + права панель ----
         html.Div([
-            # внутрішня сітка: карта (розтягується) + права панель фіксованої ширини
+            # Карта в «картці»
             html.Div([
-                # Карта
                 dash_deckgl.DashDeckgl(
                     id="deck-main",
                     spec=build_spec(build_dem_url("viridis"), None, basin_json),
@@ -155,38 +185,50 @@ layout = html.Div([
                     cursor_position="bottom-right",
                     events=["hover"],
                     mapbox_key=MAPBOX_ACCESS_TOKEN,
-                ),
-
-                # Права панель: гістограма + статистика
-                html.Div([
-                    html.H4("Гістограма", style={"marginTop": 0}),
-                    html.Img(id="hist", style={"width": "100%", "borderRadius": "8px"}),
-                    html.Hr(),
-                    html.Div(id="stats", style={"fontFamily": "monospace"})
-                ], style={
-                    "width": f"{RIGHT_PANEL_WIDTH}px",
-                    "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
-                    "paddingLeft": "12px",
-                    "overflowY": "auto"
-                }),
+                )
             ], style={
-                "display": "grid",
-                "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
-                "gap": "12px",
-                "alignItems": "start"
+                "border": "1px solid rgba(255,255,255,0.15)",
+                "borderRadius": "12px",
+                "overflow": "hidden",
+                "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
+                "backgroundColor": "#111",
+                "padding": "2px"
             }),
 
-            # Події під картою (за бажанням)
-            html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"})
-        ], style={"width": "100%"})
-
+            # Права панель
+            html.Div([
+                html.H4("Histogram", style={"marginTop": 0}),
+                html.Img(id="hist", style={
+                    "width": "100%",
+                    "border": "1px solid rgba(255,255,255,0.12)",
+                    "borderRadius": "10px",
+                    "overflow": "hidden"
+                }),
+                html.Hr(),
+                html.Div(id="stats", style={"fontFamily": "monospace"})
+            ], style={
+                "width": f"{RIGHT_PANEL_WIDTH}px",
+                "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
+                "paddingLeft": "12px",
+                "overflowY": "auto"
+            }),
+        ], style={
+            "display": "grid",
+            "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
+            "gap": "12px",
+            "alignItems": "start"
+        }),
     ], style={
         "display": "grid",
         "gridTemplateColumns": "300px 1fr",
         "gap": "8px",
         "alignItems": "start"
-    })
+    }),
+
+    # Події під картою
+    html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"})
 ])
+
 
 # ---- Службові
 def _pick_path(name, category):
@@ -200,34 +242,36 @@ def _pick_path(name, category):
 
 # ---- Колбек
 @app.callback(
-    Output("deck-main","spec"),
-    Output("hist","src"),
-    Output("stats","children"),
-    Input("run","n_clicks"),
-    State("dem1","value"), State("dem2","value"), State("cat","value"),
+    Output("deck-main", "spec"),
+    Output("hist", "src"),
+    Output("stats", "children"),
+    Input("run", "n_clicks"),
+    State("dem1", "value"), State("dem2", "value"), State("cat", "value"),
     prevent_initial_call=True
 )
 def run_diff(n, dem1, dem2, cat):
     logger.info("Run clicked: n=%s, dem1=%s, dem2=%s, cat=%s", n, dem1, dem2, cat)
-    if not dem1 or not dem2 or dem1 == dem2:
-        logger.warning("Invalid DEM selection")
-        return no_update, no_update, "Оберіть різні DEM!"
 
-    # шляхи
+    # Validate selection
+    if not dem1 or not dem2 or dem1 == dem2:
+        logger.warning("Invalid DEM selection (identical or missing)")
+        return no_update, no_update, "Please select two different DEMs."
+
+    # Resolve paths
     p1, p2 = _pick_path(dem1, cat), _pick_path(dem2, cat)
     p1, p2 = _fix_path(p1), _fix_path(p2)
     logger.info("Using paths: %s | %s", p1, p2)
 
-    # обчислення різниці
+    # Compute difference
     try:
         diff, ref = compute_dem_difference(p1, p2)
         nan_pct = float(np.isnan(diff).mean() * 100.0)
-        logger.info("Diff shape=%s, NaNs=%.2f%%", diff.shape, nan_pct)
+        logger.info("Difference shape=%s, NaNs=%.2f%%", diff.shape, nan_pct)
     except Exception as e:
-        logger.exception("Error computing diff: %s", e)
-        return no_update, no_update, f"Помилка при обчисленні: {e}"
+        logger.exception("Error during difference computation: %s", e)
+        return no_update, no_update, f"Computation error: {e}"
 
-    # динамічний/фіксований діапазон відображення
+    # Determine display stretch
     try:
         if (cat or "").lower() == "dem":
             vmin, vmax = -25.0, 25.0
@@ -237,24 +281,24 @@ def run_diff(n, dem1, dem2, cat):
             vmin, vmax = float(q1), float(q99)
             if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
                 vmin, vmax = -10.0, 10.0
-            logger.info("Percentile stretch: [%.3f, %.3f]", vmin, vmax)
+            logger.info("Percentile-based stretch: [%.3f, %.3f]", vmin, vmax)
     except Exception:
         vmin, vmax = -10.0, 10.0
         logger.info("Fallback stretch: [%.3f, %.3f]", vmin, vmax)
 
-    # рендер diff -> data-URI + коректні bounds у WGS84
+    # Render bitmap overlay and bounds (WGS84)
     try:
         img_uri = diff_to_base64_png(diff, ref, vmin=vmin, vmax=vmax, figsize=(8, 8))
-        bounds = raster_bounds_ll(ref)  # [[S,W],[N,E]] у EPSG:4326
-        logger.info("Overlay data-uri length=%d chars, bounds=%s", len(img_uri), bounds)
+        bounds = raster_bounds_ll(ref)  # [[S, W], [N, E]] in EPSG:4326
+        logger.info("Overlay data-URI length=%d chars, bounds=%s", len(img_uri), bounds)
         diff_bitmap = bitmap_layer("diff-bitmap", img_uri, bounds)
     except Exception as e:
-        logger.exception("Error building Bitmap overlay: %s", e)
-        return no_update, no_update, f"Помилка рендерінгу накладання: {e}"
+        logger.exception("Error while building bitmap overlay: %s", e)
+        return no_update, no_update, f"Rendering error (overlay): {e}"
 
-    # легенда / гістограма / статистика
+    # Legend / histogram / statistics
     legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r")
-    legend_html = f"<img src='{legend_uri}' style='height:160px'/>"  # ✅ виправлено
+    legend_html = f"<img src='{legend_uri}' style='height:160px'/>"
 
     hist_png = plot_histogram(diff, clip_range=(vmin, vmax))
     stats = calculate_error_statistics(diff)
@@ -264,7 +308,7 @@ def run_diff(n, dem1, dem2, cat):
     ]
     stats_tbl = html.Table(rows, style={"background": "#181818", "color": "#eee", "padding": "6px"})
 
-    # збірка deck.gl spec
+    # Assemble deck.gl spec
     spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
     spec_obj = json.loads(spec)
     spec_obj.setdefault("description", {})["top-right"] = legend_html

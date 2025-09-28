@@ -14,6 +14,7 @@ from registry import registry as R
 from utils.plots import build_dem_stats_bar, build_error_box, build_error_hist
 from utils.table import format_selected_filters, get_filtered_table_title
 from utils.style import apply_dark_theme
+from utils.style import empty_dark_figure
 
 # ---- logging (робимо рівень безпечним) ----
 _LEVELS = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10, "NOTSET":0}
@@ -213,22 +214,33 @@ def update_dashboard(n_clicks, tab, cdf_data,
         return html.Div([
             dcc.Dropdown(
                 id="groupby_dropdown",
-                options=[{"label":"LULC","value":"lulc"},
-                         {"label":"Slope","value":"slope_horn"},
-                         {"label":"Geomorphon","value":"geomorphon"},
-                         {"label":"HAND","value":"hand"}],
-                value="lulc", clearable=False, style={"width":"300px"},
+                options=[{"label": "LULC", "value": "lulc"},
+                         {"label": "Slope", "value": "slope_horn"},
+                         {"label": "Geomorphon", "value": "geomorphon"},
+                         {"label": "HAND", "value": "hand"}],
+                value="lulc",
+                clearable=False,
+                style={"width": "300px", "marginTop": "20px"}
             ),
-            dcc.Graph(id="tab4-best-dem"),
-            dcc.Graph(id="tab4-all-dem"),
+            dcc.Loading(
+                type="circle",
+                children=[
+                    dcc.Graph(id="tab4-best-dem", figure=empty_dark_figure("Waiting for data…")),
+                    dcc.Graph(id="tab4-all-dem", figure=empty_dark_figure("Waiting for data…")),
+                ]
+            )
         ])
     if tab == "tab-5":
         if not cdf_data:
-            return html.Div("Завантаження CDF...")
+            return dcc.Loading(
+                type="circle",
+                children=html.Div("Loading CDF data..."),
+                color="#007BFF",
+            )
         try:
             cdf_df = pd.read_json(io.StringIO(cdf_data), orient="split")
             return get_cdf_tab(cdf_df)
         except Exception as e:
-            logger.exception("failed to parse cdf json: %s", e)
-            return html.Div("Не вдалося завантажити дані CDF.")
-    return html.Div("Невідома вкладка")
+            logger.exception("Failed to parse CDF JSON: %s", e)
+            return html.Div("Unable to load CDF data.")
+    return html.Div("Unknown tab selected.")

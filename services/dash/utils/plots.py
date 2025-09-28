@@ -131,21 +131,23 @@ def plot_cdf_nmad(cdf_df):
             y=df_["cdf"],
             mode="lines+markers",
             name=dem,
-            hovertemplate=
-            f"<b>{dem.upper()}</b><br>" +
-            "NMAD ≤ %{x:.2f} м<br>" +
-            "Частка: %{y:.1%}<extra></extra>"
+            hovertemplate=(
+                f"<b>{dem.upper()}</b><br>"
+                "NMAD ≤ %{x:.2f} m<br>"
+                "Proportion: %{y:.1%}<extra></extra>"
+            )
         ))
 
     fig.update_layout(
-        xaxis_title="NMAD (м)",
-        yaxis_title="Частка точок ≤ X",
+        xaxis_title="NMAD (m)",
+        yaxis_title="Proportion of points ≤ X",
         hovermode="x unified",
         template="plotly_dark",
         font=dict(size=13),
         margin=dict(t=40, b=40, l=60, r=30)
     )
     return fig
+
 
 
 
@@ -182,11 +184,12 @@ def build_profile_figure_with_hand(df_all, df_hand, dem_key, use_hand):
     if f"delta_{dem_key}" in df_all and not df_all[f"delta_{dem_key}"].dropna().empty:
         delta = df_all[f"delta_{dem_key}"].dropna()
         stats_text = (
-            f"Похибка {dem_key.upper()}: "
-            f"Сер: {delta.mean():.2f} м, "
-            f"Мін: {delta.min():.2f} м, "
-            f"Макс: {delta.max():.2f} м"
+            f"Error in {dem_key.upper()}: "
+            f"Mean: {delta.mean():.2f} m, "
+            f"Min: {delta.min():.2f} m, "
+            f"Max: {delta.max():.2f} m"
         )
+
         fig.add_annotation(
             text=stats_text,
             xref="paper", yref="paper",
@@ -199,20 +202,20 @@ def build_profile_figure_with_hand(df_all, df_hand, dem_key, use_hand):
         )
 
     fig.update_layout(
-        # title="Профіль треку: все vs floodplain",
+        # title="Track profile: all points vs. floodplain",
         xaxis=dict(
-            title="Відстань/Longitude",
-            gridcolor="#666",  # Сіра сітка
-            gridwidth=0.6,  # Товщина ліній сітки
-            griddash="dot",  # Пунктирна сітка
-            zerolinecolor="#555",  # Колір осі X
+            title="Distance / Longitude",
+            gridcolor="#666",  # Gray grid lines
+            gridwidth=0.6,  # Grid line thickness
+            griddash="dot",  # Dotted grid
+            zerolinecolor="#555",  # Axis line color
         ),
         yaxis=dict(
-            title="Ортометрична висота (м)",
-            gridcolor="#666",  # Сіра сітка
-            gridwidth=0.3,  # Товщина ліній сітки
-            griddash="dot",  # Пунктирна сітка
-            zerolinecolor="#555",  # Колір осі Y
+            title="Orthometric Elevation (m)",
+            gridcolor="#666",  # Gray grid lines
+            gridwidth=0.3,  # Grid line thickness
+            griddash="dot",  # Dotted grid
+            zerolinecolor="#555",  # Axis line color
         ),
         height=600,
         legend=dict(
@@ -258,8 +261,12 @@ def build_best_dem_barplot(df, x_col, name_dict=None, title=None):
         y="best_nmad",
         color="best_dem",
         text="best_dem",
-        title=title or "🏆 Найточніша DEM для кожної категорії (за NMAD)",
-        labels={show_x: x_col, "best_nmad": "NMAD (м)", "best_dem": "DEM"}
+        title=title or "🏆 Best-performing DEM for each category (based on NMAD)",
+        labels={
+            show_x: x_col,
+            "best_nmad": "NMAD (m)",
+            "best_dem": "Digital Elevation Model (DEM)"
+        }
     )
     fig.update_layout(xaxis_tickangle=-45)
     fig.update_traces(texttemplate='%{text}', textposition='outside')
@@ -286,8 +293,12 @@ def build_grouped_nmad_barplot(df, x_col, name_dict=None, title=None):
         color="DEM",
         barmode="group",
         text="NMAD",
-        title=title or "NMAD для кожного DEM у кожній категорії",
-        labels={show_x: x_col, "NMAD": "NMAD (м)", "DEM": "DEM"}
+        title=title or "NMAD of each DEM across categories",
+        labels={
+            show_x: x_col,
+            "NMAD": "Normalized Median Absolute Deviation (m)",
+            "DEM": "Digital Elevation Model (DEM)"
+        }
     )
     fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
     fig.update_layout(xaxis_tickangle=-45, uniformtext_minsize=8, uniformtext_mode='hide')

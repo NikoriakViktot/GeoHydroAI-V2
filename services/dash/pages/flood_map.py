@@ -1,20 +1,28 @@
 # pages/map_flood.py
-
-# pages/map_flood.py
 import dash
 from dash import html, dcc
 
 dash.register_page(__name__, path="/flood-dem-diif", name="Flood Scenarios", order=98)
 
 def layout():
-    return html.Div([
-        html.H3("Перенаправляємо на Flood Scenarios…"),
-        html.P("Якщо сторінка не відкрилась автоматично, натисніть: "
-               + html.A("відкрити вручну", href="/flood_scenarios/").to_plotly_json()["props"]["children"]),
-        # Автоперехід (повне перезавантаження сторінки)
-        dcc.Location(id="go", href="/flood_scenarios/", refresh=True),
-    ], style={"padding":"2rem"})
-
+    return html.Div(
+        dcc.Loading(
+            type="circle",  # варіанти: "default", "circle", "dot"
+            color="#007BFF",  # можна задати колір
+            fullscreen=False,  # чи займати весь екран
+            children=[
+                html.Div([
+                    html.H3("Redirecting to Flood Scenarios…"),
+                    html.P(
+                        "If the page does not open automatically, click: "
+                        + html.A("open manually", href="/flood_scenarios/").to_plotly_json()["props"]["children"]
+                    ),
+                    # Автоперехід (повне перезавантаження сторінки)
+                    dcc.Location(id="go", href="/flood_scenarios/", refresh=True),
+                ], style={"padding": "2rem"}),
+            ],
+        )
+    )
 
 #
 # def _strip_www(u: str) -> str:

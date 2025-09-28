@@ -127,12 +127,12 @@ def update_profile(track_rgt_spot, dem, date,
     try:
         # 1) базові перевірки
         if not (track_rgt_spot and date and dem):
-            return empty_dark_figure(text="Виберіть трек/дату/DEM"), "No error stats"
+            return empty_dark_figure(text="Select track/date/DEM"), "No error statistics"
 
         try:
             track, rgt, spot = map(float, track_rgt_spot.split("_"))
         except Exception:
-            return empty_dark_figure(text="Некоректний формат треку"), "No error stats"
+            return empty_dark_figure(text="Invalid track format"), "No error statistics"
 
         # 2) HAND toggle безпечний
         hand_toggle = hand_toggle or []
@@ -169,8 +169,8 @@ def update_profile(track_rgt_spot, dem, date,
 
         # 5) якщо взагалі немає DEM або воно порожнє — повертаємо пустий граф
         if (not isinstance(df_all, pd.DataFrame) or df_all.empty or
-            f"h_{dem}" not in df_all or df_all[f"h_{dem}"].dropna().empty):
-            return empty_dark_figure(text="Немає даних для профілю"), "No error stats"
+                f"h_{dem}" not in df_all or df_all[f"h_{dem}"].dropna().empty):
+            return empty_dark_figure(text="No profile data available"), "No error statistics"
 
         # 6) Інтерполяція з безпечними дефолтами
         interpolated_df = None
