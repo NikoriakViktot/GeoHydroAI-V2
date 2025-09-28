@@ -11,9 +11,14 @@ import dash_deckgl
 from utils.dem_tools import (
     compute_dem_difference, make_colorbar_datauri, calculate_error_statistics,
     diff_to_base64_png, raster_bounds_ll,
-    plotly_histogram_figure, read_binary_raster, pixel_area_m2_from_ref_dem,
-    flood_metrics, plotly_flood_areas_figure, flood_compare_overlay_png
+    plotly_histogram_figure, read_binary_with_meta, align_boolean_pair, crop_to_common_extent,
+    pixel_area_m2_from_ref_dem, flood_metrics,
+    plotly_flood_areas_figure, flood_compare_overlay_png
 )
+
+
+# на самому верху
+from utils.style import empty_dark_figure
 
 from registry import get_df
 
@@ -226,7 +231,7 @@ layout = html.Div([
                 html.H4("Histogram", style={"marginTop": 0}),
                 dcc.Graph(
                     id="hist",
-                    figure={},
+                    figure=empty_dark_figure(260, "Press “Compute Difference”"),
                     style={"height": "260px"},
                     config={"displaylogo": False}
                 ),
@@ -308,26 +313,39 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             return no_update, no_update, "Flood layer not found for selected DEM/HAND/level."
 
         try:
-            # бінарні маски затоплення
-            A = read_binary_raster(p1)
-            B = read_binary_raster(p2)
+            # бінарні маски затоплення (з метаданими)
+            A, A_tx, A_crs, A_w, A_h, _ = read_binary_with_meta(p1)
+            B, B_tx, B_crs, B_w, B_h, _ = read_binary_with_meta(p2)
 
-            # референтний DEM для bounds/площі пікселя
+            # вирівнюємо на одну сітку (B → A)
+            A_aligned, B_aligned = align_boolean_pair(
+                A, A_tx, A_crs, A_w, A_h,
+                B, B_tx, B_crs, B_w, B_h
+            )
+
+            # підстраховка від +-1 пікс різниці по розмірах
+            if A_aligned.shape != B_aligned.shape:
+                A_aligned, B_aligned = crop_to_common_extent(A_aligned, B_aligned)
+
+            # референтний DEM для bounds/площі пікселя (краще той, з сіткою як у A)
             base_dem_path = _pick_path(dem1, "dem") or _pick_path(dem1, None)
             if not base_dem_path:
                 base_dem_path = _pick_path(dem2, "dem") or _pick_path(dem2, None) or p1
             base_dem_path = _fix_path(base_dem_path)
-
             ref = _DEM(base_dem_path)
 
             px_area = pixel_area_m2_from_ref_dem(ref)
-            st = flood_metrics(A, B, px_area)
+
+            # метрики
+            st = flood_metrics(A_aligned, B_aligned, px_area)
 
             # графік площ (Plotly)
-            fig = plotly_flood_areas_figure(st, title=f"Flood {flood_hand} @ {flood_level}: areas & Δ")
+            fig = plotly_flood_areas_figure(
+                st, title=f"Flood {flood_hand} @ {flood_level}: areas & Δ"
+            )
 
             # overlay різниць
-            overlay_uri = flood_compare_overlay_png(A, B, ref)
+            overlay_uri = flood_compare_overlay_png(A_aligned, B_aligned, ref)
             bounds = raster_bounds_ll(ref)
             diff_bitmap = bitmap_layer("flood-diff-bitmap", overlay_uri, bounds)
 
@@ -344,13 +362,19 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             rows = [
                 ("IoU", st["IoU"]), ("F1", st["F1"]),
                 ("precision", st["precision"]), ("recall", st["recall"]),
-                ("Area A (km²)", st["area_A_m2"]/1e6),
-                ("Area B (km²)", st["area_B_m2"]/1e6),
-                ("Δ|A−B| (km²)", st["delta_area_m2"]/1e6),
+                ("Area A (km²)", st["area_A_m2"] / 1e6),
+                ("Area B (km²)", st["area_B_m2"] / 1e6),
+                ("Δ|A−B| (km²)", st["delta_area_m2"] / 1e6),
             ]
             stats_tbl = html.Table(
-                [html.Tr([html.Th(k), html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)]) for k, v in rows],
-                style={"background":"#181818","color":"#eee","padding":"6px"}
+                [
+                    html.Tr([
+                        html.Th(k),
+                        html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)
+                    ])
+                    for k, v in rows
+                ],
+                style={"background": "#181818", "color": "#eee", "padding": "6px"}
             )
 
             # deck.gl spec

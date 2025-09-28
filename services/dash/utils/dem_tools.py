@@ -10,6 +10,9 @@ from rasterio.warp import transform as rio_transform
 from rasterio.warp import reproject, Resampling
 from scipy.stats import skew, kurtosis
 from xdem import DEM
+import pandas as pd
+import plotly.graph_objs as go
+
 
 def compute_dem_difference(path1, path2):
     """
@@ -194,41 +197,59 @@ def raster_bounds_ll(ref_dem):
         west, east = min(lon), max(lon)
         south, north = min(lat), max(lat)
         return [[south, west], [north, east]]
-# utils/dem_tools.py (додати імпорти вгорі)
-import plotly.graph_objects as go
-import pandas as pd
+# ---- flood alignment helpers ----
 
-# --- Flood: читання як бінарних масок ---
-def read_binary_raster(path) -> np.ndarray:
-    """Читає raster і повертає bool-маску (True = затоплено). Вважаємо >0 або ==1 як затоплено."""
-    with rasterio.open(path) as src:
-        a = src.read(1, masked=False)
-        nod = src.nodata
-    mask_valid = np.isfinite(a) if nod is None else (a != nod) & np.isfinite(a)
-    # універсально: будь-яке позитивне/ненульове значення = затоплено
-    flooded = (a > 0) & mask_valid
-    return flooded
 
-def pixel_area_m2_from_ref_dem(ref_dem) -> float:
-    """Оцінка площі пікселя в м² на основі affine transform (наближення для projected CRS)."""
-    with rasterio.open(ref_dem.filename) as src:
-        tr = src.transform
-    # |a| * |e| ~ розмір пікселя (для ортогональних пікселів)
-    return float(abs(tr.a) * abs(tr.e))
+def read_binary_with_meta(path: str):
+    """Читає бінарний GeoTIFF і повертає (mask_bool, transform, crs, width, height, nodata)."""
+    with rasterio.open(path) as ds:
+        arr = ds.read(1)
+        nodata = ds.nodata
+        if nodata is not None:
+            arr = np.where(arr == nodata, 0, arr)
+        return (arr.astype(bool), ds.transform, ds.crs, ds.width, ds.height, nodata)
 
-# --- Метрики flood A vs B ---
-def flood_metrics(A: np.ndarray, B: np.ndarray, px_area_m2: float) -> dict:
-    A = A.astype(bool); B = B.astype(bool)
-    tp = np.sum(A & B); fp = np.sum(~A & B); fn = np.sum(A & ~B)
-    iou = tp / (tp + fp + fn) if (tp + fp + fn) else np.nan
-    precision = tp / (tp + fp) if (tp + fp) else np.nan
-    recall = tp / (tp + fn) if (tp + fn) else np.nan
-    f1 = (2 * precision * recall / (precision + recall)) if (np.isfinite(precision) and np.isfinite(recall) and (precision + recall)) else np.nan
-    area_A = float(np.sum(A) * px_area_m2)
-    area_B = float(np.sum(B) * px_area_m2)
-    d_area = abs(area_A - area_B)
-    return {"IoU": float(iou), "F1": float(f1), "precision": float(precision), "recall": float(recall),
-            "area_A_m2": area_A, "area_B_m2": area_B, "delta_area_m2": d_area}
+def _transform_equal(t1, t2, rtol=1e-6, atol=1e-9):
+    """Порівняння Affine з допуском (бо double не завжди біт-в-біт)."""
+    a = np.array([t1.a, t1.b, t1.c, t1.d, t1.e, t1.f])
+    b = np.array([t2.a, t2.b, t2.c, t2.d, t2.e, t2.f])
+    return np.allclose(a, b, rtol=rtol, atol=atol)
+
+def reproject_to_grid(src_bool: np.ndarray,
+                      src_transform, src_crs,
+                      dst_width: int, dst_height: int,
+                      dst_transform, dst_crs):
+    """Ресемплінг у цільову сітку (nearest для бінарних шарів)."""
+    dst_u8 = np.zeros((dst_height, dst_width), dtype=np.uint8)
+    reproject(
+        source=src_bool.astype(np.uint8),
+        destination=dst_u8,
+        src_transform=src_transform, src_crs=src_crs,
+        dst_transform=dst_transform, dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+        src_nodata=0, dst_nodata=0
+    )
+    return dst_u8.astype(bool)
+
+def align_boolean_pair(A_bool, A_tx, A_crs, A_w, A_h,
+                       B_bool, B_tx, B_crs, B_w, B_h):
+    """Повертає (A_aligned, B_aligned) на одній сітці (сітка A)."""
+    same_grid = (A_w == B_w and A_h == B_h and
+                 (A_crs == B_crs) and _transform_equal(A_tx, B_tx))
+    if same_grid:
+        return A_bool, B_bool
+
+    B_aligned = reproject_to_grid(
+        B_bool, B_tx, B_crs,
+        A_w, A_h, A_tx, A_crs
+    )
+    return A_bool, B_aligned
+
+def crop_to_common_extent(A_bool, B_bool):
+    """Підстраховка: якщо розміри іще різняться на 1–2 пікс — обрізаємо до мінімуму."""
+    h = min(A_bool.shape[0], B_bool.shape[0])
+    w = min(A_bool.shape[1], B_bool.shape[1])
+    return A_bool[:h, :w], B_bool[:h, :w]
 
 # --- Plotly: гістограма для dH (щоб не PNG) ---
 def plotly_histogram_figure(diff_array, bins=60, clip_range=(-50, 50), density=False, cumulative=False, title="Histogram of Elevation Errors"):
