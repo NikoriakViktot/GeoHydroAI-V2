@@ -380,18 +380,18 @@ layout =  html.Div(
                                     style={"height": "200px"},
                                     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                                 ),
-                                dcc.Graph(
-                                    id="violin",
-                                    figure=empty_dark_figure(180, "Violin will appear after run"),
-                                    style={"height": "170px", "marginTop": "6px"},
-                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
-                                ),
-                                dcc.Graph(
-                                    id="ecdf",
-                                    figure=empty_dark_figure(180, "ECDF will appear after run"),
-                                    style={"height": "170px", "marginTop": "6px"},
-                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
-                                ),
+                                # dcc.Graph(
+                                #     id="violin",
+                                #     figure=empty_dark_figure(180, "Violin will appear after run"),
+                                #     style={"height": "170px", "marginTop": "6px"},
+                                #     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                                # ),
+                                # dcc.Graph(
+                                #     id="ecdf",
+                                #     figure=empty_dark_figure(180, "ECDF will appear after run"),
+                                #     style={"height": "170px", "marginTop": "6px"},
+                                #     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                                # ),
                                 html.Hr(style={"borderColor": "rgba(255,255,255,0.15)"}),
                                 html.Div(
                                     id="legend-box",
@@ -648,8 +648,8 @@ def show_evt(evt):
     Output("deck-main", "spec"),
     Output("hist", "figure"),
     Output("stats", "children"),
-    Output("violin", "figure"),
-    Output("ecdf", "figure"),
+    # Output("violin", "figure"),
+    # Output("ecdf", "figure"),
     Output("legend-box", "children"),  # <-- OUTPUT ДЛЯ ЛЕГЕНДИ
     Input("run", "n_clicks"),
     State("dem1", "value"),
@@ -676,7 +676,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     ])
 
     if not dem1 or not dem2:
-        return no_update, no_update, no_update, no_update, "No DEMs available.", initial_legend_content
+        return no_update, no_update,  "No DEMs available.", initial_legend_content
     if dem1 == dem2 and len(DEM_LIST) > 1:
         dem2 = next((d for d in DEM_LIST if d != dem1), dem2)
 
@@ -752,9 +752,9 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             ])
 
             spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
-            empty = empty_dark_figure(160, "")
+            # empty = empty_dark_figure(160, "")
             spec_obj = json.loads(spec)
-            return json.dumps(spec_obj), fig, empty, empty, _flood_stats_table(st), html.Div(flood_legend_component)
+            return json.dumps(spec_obj), fig, _flood_stats_table(st), html.Div(flood_legend_component)
 
         except Exception as e:
             logger.exception("Flood compare error: %s", e)
@@ -767,7 +767,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         diff, ref = compute_dem_difference(p1, p2)
     except Exception as e:
         logger.exception("Diff error: %s", e)
-        return no_update, no_update, no_update, no_update, f"Computation error: {e}", initial_legend_content
+        return no_update, no_update,  f"Computation error: {e}", initial_legend_content
 
     # Діапазон відображення (vmin, vmax)
     try:
@@ -834,8 +834,8 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     clip = (vmin, vmax)
     # Гістограма
     hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=clip, density=False, cumulative=False)
-    violin_fig = plotly_violin_figure(diff, clip_range=clip, title="Distribution (Violin)")
-    ecdf_fig = plotly_ecdf_figure(diff, clip_range=clip, title="ECDF of dH")
+    # violin_fig = plotly_violin_figure(diff, clip_range=clip, title="Distribution (Violin)")
+    # ecdf_fig = plotly_ecdf_figure(diff, clip_range=clip, title="ECDF of dH")
     # Статистика: Basic + Robust
     basic = calculate_error_statistics(diff)
     robust = robust_stats(diff, clip=(1, 99))
@@ -847,4 +847,4 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     spec_obj = json.loads(spec)
 
     # Повертаємо 4 значення
-    return json.dumps(spec_obj), hist_fig, violin_fig, ecdf_fig, stats_tbl, html.Div(legend_component)
+    return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_component)
