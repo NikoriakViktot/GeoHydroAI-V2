@@ -301,6 +301,41 @@ def pixel_area_m2_from_ref_dem(ref_dem) -> float:
         h_m = px_h * m_per_deg_lat
         return float(w_m * h_m)
 
+
+
+def flood_metrics(A: np.ndarray, B: np.ndarray, px_area_m2: float) -> dict:
+    """
+    Бінарні маски A/B -> IoU/F1/precision/recall + площі.
+    """
+    A = A.astype(bool); B = B.astype(bool)
+    tp = np.sum(A & B); fp = np.sum((~A) & B); fn = np.sum(A & (~B))
+
+    denom_iou = tp + fp + fn
+    iou = (tp / denom_iou) if denom_iou else np.nan
+
+    denom_p = tp + fp
+    precision = (tp / denom_p) if denom_p else np.nan
+
+    denom_r = tp + fn
+    recall = (tp / denom_r) if denom_r else np.nan
+
+    f1 = (2 * precision * recall / (precision + recall)) \
+        if (np.isfinite(precision) and np.isfinite(recall) and (precision + recall)) else np.nan
+
+    area_A = float(np.sum(A) * px_area_m2)
+    area_B = float(np.sum(B) * px_area_m2)
+    d_area = abs(area_A - area_B)
+
+    return {
+        "IoU": float(iou),
+        "F1": float(f1),
+        "precision": float(precision),
+        "recall": float(recall),
+        "area_A_m2": area_A,
+        "area_B_m2": area_B,
+        "delta_area_m2": d_area
+    }
+
 # --- Plotly: стовпчики площ затоплення і «перекриття» ---
 def plotly_flood_areas_figure(stats: dict, title="Flooded area comparison"):
     df = pd.DataFrame([
