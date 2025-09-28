@@ -174,6 +174,7 @@ layout = html.Div([
 
     html.Div([
         # Ліва панель
+        html.Div([
             dcc.Dropdown(
                 id="dem1",
                 options=[{"label": d, "value": d} for d in DEM_LIST],
@@ -188,25 +189,39 @@ layout = html.Div([
                 style={"marginBottom": "10px", "fontSize": "14px"},
             ),
 
-            html.Label("Category", style={"marginBottom": "4px", "fontWeight": "bold"}),
-            dcc.Dropdown(id="cat", options=[{"label": c, "value": c} for c in CATEGORY_LIST],
-                         style={"marginBottom": "8px", "fontSize": "14px"}),
+            dcc.Dropdown(
+                id="cat",
+                options=[{"label": c, "value": c} for c in CATEGORY_LIST],
+                value=("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None)),
+                style={"marginBottom": "8px", "fontSize": "14px"},
+            ),
 
             # Параметри тільки для flood_scenarios:
             html.Div([
                 html.Label("HAND model", style={"marginBottom": "4px"}),
-                dcc.Dropdown(id="flood_hand", options=[{"label": h, "value": h} for h in FLOOD_HANDS],
-                             value=(FLOOD_HANDS[0] if FLOOD_HANDS else None), style={"marginBottom": "8px"}),
+                dcc.Dropdown(
+                    id="flood_hand",
+                    options=[{"label": h, "value": h} for h in FLOOD_HANDS],
+                    value=(FLOOD_HANDS[0] if FLOOD_HANDS else None),
+                    style={"marginBottom": "8px"}
+                ),
 
                 html.Label("Flood level", style={"marginBottom": "4px"}),
-                dcc.Dropdown(id="flood_level", options=[{"label": f, "value": f} for f in FLOOD_LEVELS],
-                             value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None)),
+                dcc.Dropdown(
+                    id="flood_level",
+                    options=[{"label": f, "value": f} for f in FLOOD_LEVELS],
+                    value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None)
+                ),
             ], id="flood_opts", style={"display": "none", "marginBottom": "10px"}),
 
-            html.Button("Compute Difference", id="run", style={
-                "backgroundColor": "#1f77b4", "color": "white", "border": "none", "borderRadius": "6px",
-                "padding": "8px 16px", "cursor": "pointer", "fontWeight": "bold", "fontSize": "14px", "width": "100%"
-            })
+            html.Button(
+                "Compute Difference", id="run",
+                style={
+                    "backgroundColor": "#1f77b4", "color": "white", "border": "none",
+                    "borderRadius": "6px", "padding": "8px 16px", "cursor": "pointer",
+                    "fontWeight": "bold", "fontSize": "14px", "width": "100%"
+                }
+            )
         ], style={"width": "220px", "padding": "12px", "backgroundColor": "#1e1e1e", "borderRadius": "8px"}),
 
         # Права зона: карта + права панель
@@ -254,7 +269,6 @@ layout = html.Div([
             "gap": "12px",
             "alignItems": "start"
         }),
-
     ], style={
         "display": "grid",
         "gridTemplateColumns": "300px 1fr",
@@ -289,12 +303,24 @@ def _toggle_flood_opts(cat):
     Input("run", "n_clicks"),
     State("dem1", "value"), State("dem2", "value"), State("cat", "value"),
     State("flood_hand","value"), State("flood_level","value"),
-    prevent_initial_call=True
+    prevent_initial_call=False
 )
 def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     logger.info("Run: dem1=%s dem2=%s cat=%s hand=%s level=%s", dem1, dem2, cat, flood_hand, flood_level)
     if not dem1 or not dem2 or dem1 == dem2:
         return no_update, no_update, "Please select two different DEMs."
+    dem1 = dem1 or ("copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None))
+    dem2 = dem2 or ("srtm_dem" if "srtm_dem" in DEM_LIST else (DEM_LIST[1] if len(DEM_LIST) > 1 else None))
+    cat = (cat or ("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None)))
+
+    logger.info("Run: dem1=%s dem2=%s cat=%s hand=%s level=%s", dem1, dem2, cat, flood_hand, flood_level)
+
+    if not dem1 or not dem2:
+        return no_update, no_update, "No DEMs available."
+
+    if dem1 == dem2 and len(DEM_LIST) > 1:
+        # якщо випадково обидва однакові — оберемо інший для dem2
+        dem2 = next((d for d in DEM_LIST if d != dem1), dem2)
 
     # Пошук шляху з метаданих (з пріоритезацією повних збігів для flood)
     def _find_path_for(dem_name, category, hand=None, level=None):
