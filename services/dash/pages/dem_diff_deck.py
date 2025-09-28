@@ -848,18 +848,20 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
             # Права колонка: текстові пояснення
             html.Div([
-                html.Div("BLUE: + Change", style={"color": "#6699ff", "fontWeight": "bold", "fontSize": "11px"}),
-                html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
-                         style={"fontSize": "10px", "color": "#aaa", "marginBottom": "8px"}),
-
-                html.Div("RED: − Change", style={"color": "#ff6666", "fontWeight": "bold", "fontSize": "11px"}),
+                html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
+                         style={"lineHeight": "1.3", "fontSize": "11px"}),
                 html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
-                         style={"fontSize": "10px", "color": "#aaa"}),
+                         style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
 
-                html.Hr(style={"borderColor": "rgba(255,255,255,0.2)", "margin": "8px 0"}),
+                html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
+                         style={"marginTop": "6px", "lineHeight": "1.3", "fontSize": "11px"}),
+                html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
+                         style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+
+                html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "8px 0"}),
                 html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m",
-                         style={"fontSize": "11px", "fontWeight": "700"})
-            ], style={"paddingLeft": "12px"})
+                         style={"fontSize": "11px", "fontWeight": 700}),
+            ], style={"textAlign": "left"})
         ], style={
             "display": "grid",
             "gridTemplateColumns": "30% 70%",  # ← ширини колонок
