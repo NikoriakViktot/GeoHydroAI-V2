@@ -174,14 +174,19 @@ layout = html.Div([
 
     html.Div([
         # Ліва панель
-        html.Div([
-            html.Label("DEM 1", style={"marginBottom": "4px", "fontWeight": "bold"}),
-            dcc.Dropdown(id="dem1", options=[{"label": d, "value": d} for d in DEM_LIST],
-                         style={"marginBottom": "10px", "fontSize": "14px"}),
+            dcc.Dropdown(
+                id="dem1",
+                options=[{"label": d, "value": d} for d in DEM_LIST],
+                value=("copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None)),
+                style={"marginBottom": "10px", "fontSize": "14px"},
+            ),
 
-            html.Label("DEM 2", style={"marginBottom": "4px", "fontWeight": "bold"}),
-            dcc.Dropdown(id="dem2", options=[{"label": d, "value": d} for d in DEM_LIST],
-                         style={"marginBottom": "10px", "fontSize": "14px"}),
+            dcc.Dropdown(
+                id="dem2",
+                options=[{"label": d, "value": d} for d in DEM_LIST],
+                value=("srtm_dem" if "srtm_dem" in DEM_LIST else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)),
+                style={"marginBottom": "10px", "fontSize": "14px"},
+            ),
 
             html.Label("Category", style={"marginBottom": "4px", "fontWeight": "bold"}),
             dcc.Dropdown(id="cat", options=[{"label": c, "value": c} for c in CATEGORY_LIST],
