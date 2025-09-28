@@ -154,38 +154,27 @@ FLOOD_INDEX, FLOOD_DEMS, FLOOD_HANDS, FLOOD_LEVELS = build_flood_index(layers_in
 
 # ---------- deck.gl helpers ----------
 
-# def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
-#     return {
-#         "@@type": "TileLayer",
-#         "id": layer_id,
-#         "data": url,
-#         "minZoom": 0,
-#         "maxZoom": 19,
-#         "tileSize": 220,
-#         "opacity": opacity,
-#         "renderSubLayers": {
-#             "@@function": [
-#                 "tile",
-#                 {
-#                     "type": "BitmapLayer",
-#                     "id": f"{layer_id}-bitmap",
-#                     "image": "@@tile.data",
-#                     "bounds": "@@tile.bbox",
-#                     "opacity": opacity,
-#                 },
-#             ]
-#         },
-#     }
 def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
-    # без renderSubLayers; використовуємо простіший BitmapTileLayer
     return {
-        "@@type": "BitmapTileLayer",
+        "@@type": "TileLayer",
         "id": layer_id,
         "data": url,
-        "tileSize": 256,          # стандартний розмір тайла
         "minZoom": 0,
         "maxZoom": 19,
+        "tileSize": 220,
         "opacity": opacity,
+        "renderSubLayers": {
+            "@@function": [
+                "tile",
+                {
+                    "type": "BitmapLayer",
+                    "id": f"{layer_id}-bitmap",
+                    "image": "@@tile.data",
+                    "bounds": "@@tile.bbox",
+                    "opacity": opacity,
+                },
+            ]
+        },
     }
 
 def bitmap_layer(layer_id: str, image_data_uri: str, bounds) -> dict:
