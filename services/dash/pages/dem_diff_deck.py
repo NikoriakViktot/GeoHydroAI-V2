@@ -813,23 +813,64 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             f"Elevation Difference (dH): {dem2} (Test) − {dem1} (Ref)",
             style={"fontWeight": "bold", "marginBottom": "6px", "fontSize": "13px"}
         ),
+
         html.Div([
-            html.Span(f"{vmin:.2f}", style={"fontSize": "11px", "marginRight": "6px"}),
-            html.Img(
-                src=legend_uri,
-                style={
-                    "width": "100%",  # розтягується
-                    "height": "40px",
-                    "border": "1px solid rgba(255,255,255,0.2)",
-                    "borderRadius": "4px"
-                }
-            ),
-            html.Span(f"{vmax:.2f}", style={"fontSize": "11px", "marginLeft": "6px"})
-        ], style={"display": "flex", "alignItems": "center"})
+            # Ліва колонка: шкала з підписами
+            html.Div([
+                html.Div(f"{vmax:.2f} m", style={"fontSize": "11px", "marginBottom": "2px"}),
+
+                html.Div([
+                    html.Img(
+                        src=legend_uri,
+                        style={
+                            "height": "220px",
+                            "border": "1px solid rgba(255,255,255,0.2)",
+                            "borderRadius": "4px",
+                            "margin": "0 4px"
+                        }
+                    ),
+                    # Підпис 0 посередині шкали
+                    html.Div("0 m", style={
+                        "position": "absolute",
+                        "top": "50%",
+                        "left": "100%",
+                        "transform": "translateY(-50%)",
+                        "fontSize": "11px"
+                    })
+                ], style={"position": "relative", "display": "inline-block"}),
+
+                html.Div(f"{vmin:.2f} m", style={"fontSize": "11px", "marginTop": "2px"})
+            ], style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center"
+            }),
+
+            # Права колонка: текстові пояснення
+            html.Div([
+                html.Div("BLUE: + Change", style={"color": "#6699ff", "fontWeight": "bold", "fontSize": "11px"}),
+                html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
+                         style={"fontSize": "10px", "color": "#aaa", "marginBottom": "8px"}),
+
+                html.Div("RED: − Change", style={"color": "#ff6666", "fontWeight": "bold", "fontSize": "11px"}),
+                html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
+                         style={"fontSize": "10px", "color": "#aaa"}),
+
+                html.Hr(style={"borderColor": "rgba(255,255,255,0.2)", "margin": "8px 0"}),
+                html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m",
+                         style={"fontSize": "11px", "fontWeight": "700"})
+            ], style={"paddingLeft": "12px"})
+        ], style={
+            "display": "grid",
+            "gridTemplateColumns": "30% 70%",  # ← ширини колонок
+            "gap": "12px",
+            "alignItems": "center"
+                })
     ], style={
         "padding": "10px",
         "background": "#1e1e1e",
-        "borderRadius": "6px"
+        "borderRadius": "6px",
+        "textAlign": "left"
     })
 
     clip = (vmin, vmax)
