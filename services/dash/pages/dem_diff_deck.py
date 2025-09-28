@@ -38,7 +38,7 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 MAIN_MAP_HEIGHT = 500
 RIGHT_PANEL_WIDTH = 500
-MAP_WIDTH_PX = 400           # ← максимальна ширина карти (пікселі)
+MAP_WIDTH_PX = 600           # ← максимальна ширина карти (пікселі)
 ZOOM_DEFAULT = 20            # ← бажаний стартовий зум
 
 # ---------- Логи ----------
@@ -396,7 +396,8 @@ layout =  html.Div(
                                 html.Div(
                                     id="legend-box",
                                     style={
-                                        "padding": "8px 10px",
+                                         "height": "200px",
+                                         "padding": "8px 10px",
                                         "fontFamily": "monospace",
                                         "fontSize": "12px",
                                         "background": "#1e1e1e",
