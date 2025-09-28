@@ -1,36 +1,52 @@
 # pages/dem_diff_deck.py
-import os, json, logging
+import os
+import json
+import logging
 from collections import defaultdict
+
 import numpy as np
 import geopandas as gpd
 from xdem import DEM as _DEM
+
 import dash
 from dash import html, dcc, callback, Output, Input, State, no_update
 import dash_deckgl
 
+from registry import get_df
+from utils.style import empty_dark_figure
 from utils.dem_tools import (
-    compute_dem_difference, make_colorbar_datauri, calculate_error_statistics,
-    diff_to_base64_png, raster_bounds_ll,
-    plotly_histogram_figure, read_binary_with_meta, align_boolean_pair, crop_to_common_extent,
-    pixel_area_m2_from_ref_dem, flood_metrics,
-    plotly_flood_areas_figure, flood_compare_overlay_png
+    compute_dem_difference,
+    make_colorbar_datauri,
+    calculate_error_statistics,
+    diff_to_base64_png,
+    raster_bounds_ll,
+    plotly_histogram_figure,
+    read_binary_with_meta,
+    align_boolean_pair,
+    crop_to_common_extent,
+    pixel_area_m2_from_ref_dem,
+    flood_metrics,
+    plotly_flood_areas_figure,
+    flood_compare_overlay_png,
+    robust_stats,
 )
 
-
-# на самому верху
-from utils.style import empty_dark_figure
-
-from registry import get_df
+# ---------- Константи UI ----------
 
 MAIN_MAP_HEIGHT = 550
 RIGHT_PANEL_WIDTH = 500
 
-# ---- Логи
+# ---------- Логи ----------
+
 logger = logging.getLogger(__name__)
 if not logger.handlers:
-    logging.basicConfig(level=os.getenv("PAGE_LOG_LEVEL", "INFO"),
-                        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=os.getenv("PAGE_LOG_LEVEL", "INFO"),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 logger.info("=== dem_diff_deck page init ===")
+
+# ---------- Зовнішні сервіси ----------
 
 TC_BASE = os.getenv("TERRACOTTA_PUBLIC_URL", "https://www.geohydroai.org/tc").rstrip("/")
 MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
@@ -38,7 +54,8 @@ MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN", "").strip()
 dash.register_page(__name__, path="/dem-diff", name="DEM Diff", order=2)
 app = dash.get_app()
 
-# ---- Basin
+# ---------- Basin (опційно) ----------
+
 try:
     basin: gpd.GeoDataFrame = get_df("basin")
     logger.info("Basin loaded, CRS=%s, rows=%d", basin.crs, len(basin))
@@ -48,10 +65,12 @@ except Exception as e:
     logger.exception("Failed to load basin: %s", e)
     basin_json = None
 
-# ---- layers_index.json
+# ---------- layers_index.json ----------
+
 ASSETS_INDEX_PATH = "assets/layers_index.json"
 with open(ASSETS_INDEX_PATH, "r") as f:
     raw_index = json.load(f)
+
 
 def _fix_path(p: str) -> str:
     if not p:
@@ -67,6 +86,7 @@ def _fix_path(p: str) -> str:
         return "/app/" + p
     return os.path.normpath(p)
 
+
 layers_index = []
 for rec in raw_index:
     r = dict(rec)
@@ -75,17 +95,20 @@ for rec in raw_index:
     layers_index.append(r)
 logger.info("Layers index loaded: %d entries", len(layers_index))
 
-# ---- Групування за DEM та категоріями
+# ---------- Групування за DEM та категоріями ----------
+
 by_dem = defaultdict(list)
 categories = set()
 for l in layers_index:
     by_dem[l.get("dem")].append(l)
     if l.get("category"):
         categories.add(l["category"])
+
 DEM_LIST = sorted([d for d in by_dem.keys() if d])
 CATEGORY_LIST = sorted(categories)
 
-# ---- Flood index (службове)
+# ---------- Flood index (допоміжне) ----------
+
 def _flood_level_key(s):
     if s is None:
         return float("inf")
@@ -96,6 +119,7 @@ def _flood_level_key(s):
         return float(t)
     except Exception:
         return float("inf")
+
 
 def build_flood_index(layers_index):
     idx = {}
@@ -114,173 +138,264 @@ def build_flood_index(layers_index):
             hand_values.add(rec["hand"])
         if rec.get("dem"):
             dem_values.add(rec["dem"])
-    return idx, sorted(dem_values), sorted(hand_values), sorted(flood_values, key=_flood_level_key)
+    return (
+        idx,
+        sorted(dem_values),
+        sorted(hand_values),
+        sorted(flood_values, key=_flood_level_key),
+    )
+
 
 FLOOD_INDEX, FLOOD_DEMS, FLOOD_HANDS, FLOOD_LEVELS = build_flood_index(layers_index)
 
-# ---- deck.gl helper-и
+# ---------- deck.gl helpers ----------
+
 def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
     return {
         "@@type": "TileLayer",
         "id": layer_id,
         "data": url,
-        "minZoom": 0, "maxZoom": 19, "tileSize": 220, "opacity": opacity,
+        "minZoom": 0,
+        "maxZoom": 19,
+        "tileSize": 220,
+        "opacity": opacity,
         "renderSubLayers": {
-            "@@function": ["tile", {
-                "type":"BitmapLayer",
-                "id": f"{layer_id}-bitmap",
-                "image":"@@tile.data", "bounds":"@@tile.bbox", "opacity": opacity
-            }]
+            "@@function": [
+                "tile",
+                {
+                    "type": "BitmapLayer",
+                    "id": f"{layer_id}-bitmap",
+                    "image": "@@tile.data",
+                    "bounds": "@@tile.bbox",
+                    "opacity": opacity,
+                },
+            ]
         },
     }
 
+
 def bitmap_layer(layer_id: str, image_data_uri: str, bounds) -> dict:
-    # bounds з raster_bounds_ll: [[S,W],[N,E]] -> [W,S,E,N]
+    # bounds: [[S,W],[N,E]] → [W,S,E,N]
     (south, west), (north, east) = bounds
     return {
         "@@type": "BitmapLayer",
         "id": layer_id,
         "image": image_data_uri,
         "bounds": [west, south, east, north],
-        "opacity": 0.95
+        "opacity": 0.95,
     }
+
 
 def basin_layer(geojson: dict) -> dict:
     return {
-        "@@type":"GeoJsonLayer","id":"basin-outline",
-        "data": geojson, "stroked": True, "filled": False,
-        "getLineColor":[0,102,255,200], "getLineWidth":2, "lineWidthUnits":"pixels"
+        "@@type": "GeoJsonLayer",
+        "id": "basin-outline",
+        "data": geojson,
+        "stroked": True,
+        "filled": False,
+        "getLineColor": [0, 102, 255, 200],
+        "getLineWidth": 2,
+        "lineWidthUnits": "pixels",
     }
+
 
 def build_dem_url(colormap="viridis"):
     return f"{TC_BASE}/singleband/dem/fab_dem/{{z}}/{{x}}/{{y}}.png?colormap={colormap}&stretch_range=[250,2200]"
 
-def build_spec(dem_url: str | None, diff_bitmap: dict | None, basin: dict | None,
-               init_view=None, map_style="mapbox://styles/mapbox/light-v11") -> str:
+
+def build_spec(
+    dem_url: str | None,
+    diff_bitmap: dict | None,
+    basin: dict | None,
+    init_view=None,
+    map_style="mapbox://styles/mapbox/light-v11",
+) -> str:
     layers = []
-    if dem_url:     layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
-    if diff_bitmap: layers.append(diff_bitmap)
-    if basin:       layers.append(basin_layer(basin))
+    if dem_url:
+        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
+    if diff_bitmap:
+        layers.append(diff_bitmap)
+    if basin:
+        layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view or {"longitude":25.03,"latitude":47.8,"zoom":8,"pitch":0,"bearing":0},
-        "layers": layers
+        "initialViewState": init_view
+        or {"longitude": 25.03, "latitude": 47.8, "zoom": 8, "pitch": 0, "bearing": 0},
+        "layers": layers,
     }
     return json.dumps(spec)
 
-# ---- Layout
-layout = html.Div([
-    html.H3("DEM Difference Analysis"),
+# ---------- Layout ----------
 
-    html.Div([
-        # Ліва панель
-        html.Div([
-            dcc.Dropdown(
-                id="dem1",
-                options=[{"label": d, "value": d} for d in DEM_LIST],
-                value=("copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None)),
-                style={"marginBottom": "10px", "fontSize": "14px"},
-            ),
-
-            dcc.Dropdown(
-                id="dem2",
-                options=[{"label": d, "value": d} for d in DEM_LIST],
-                value=("srtm_dem" if "srtm_dem" in DEM_LIST else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)),
-                style={"marginBottom": "10px", "fontSize": "14px"},
-            ),
-
-            dcc.Dropdown(
-                id="cat",
-                options=[{"label": c, "value": c} for c in CATEGORY_LIST],
-                value=("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None)),
-                style={"marginBottom": "8px", "fontSize": "14px"},
-            ),
-
-            # Параметри тільки для flood_scenarios:
-            html.Div([
-                html.Label("HAND model", style={"marginBottom": "4px"}),
-                dcc.Dropdown(
-                    id="flood_hand",
-                    options=[{"label": h, "value": h} for h in FLOOD_HANDS],
-                    value=(FLOOD_HANDS[0] if FLOOD_HANDS else None),
-                    style={"marginBottom": "8px"}
+layout = html.Div(
+    [
+        html.H3("DEM Difference Analysis"),
+        html.Div(
+            [
+                # Ліва панель
+                html.Div(
+                    [
+                        dcc.Dropdown(
+                            id="dem1",
+                            options=[{"label": d, "value": d} for d in DEM_LIST],
+                            value=(
+                                "copernicus_dem"
+                                if "copernicus_dem" in DEM_LIST
+                                else (DEM_LIST[0] if DEM_LIST else None)
+                            ),
+                            style={"marginBottom": "10px", "fontSize": "14px"},
+                        ),
+                        dcc.Dropdown(
+                            id="dem2",
+                            options=[{"label": d, "value": d} for d in DEM_LIST],
+                            value=(
+                                "srtm_dem"
+                                if "srtm_dem" in DEM_LIST
+                                else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)
+                            ),
+                            style={"marginBottom": "10px", "fontSize": "14px"},
+                        ),
+                        dcc.Dropdown(
+                            id="cat",
+                            options=[{"label": c, "value": c} for c in CATEGORY_LIST],
+                            value=(
+                                "dem"
+                                if "dem" in CATEGORY_LIST
+                                else (CATEGORY_LIST[0] if CATEGORY_LIST else None)
+                            ),
+                            style={"marginBottom": "8px", "fontSize": "14px"},
+                        ),
+                        # Параметри тільки для flood_scenarios
+                        html.Div(
+                            [
+                                html.Label(
+                                    "HAND model", style={"marginBottom": "4px"}
+                                ),
+                                dcc.Dropdown(
+                                    id="flood_hand",
+                                    options=[
+                                        {"label": h, "value": h} for h in FLOOD_HANDS
+                                    ],
+                                    value=(FLOOD_HANDS[0] if FLOOD_HANDS else None),
+                                    style={"marginBottom": "8px"},
+                                ),
+                                html.Label(
+                                    "Flood level", style={"marginBottom": "4px"}
+                                ),
+                                dcc.Dropdown(
+                                    id="flood_level",
+                                    options=[
+                                        {"label": f, "value": f} for f in FLOOD_LEVELS
+                                    ],
+                                    value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None),
+                                ),
+                            ],
+                            id="flood_opts",
+                            style={"display": "none", "marginBottom": "10px"},
+                        ),
+                        html.Button(
+                            "Compute Difference",
+                            id="run",
+                            style={
+                                "backgroundColor": "#1f77b4",
+                                "color": "white",
+                                "border": "none",
+                                "borderRadius": "6px",
+                                "padding": "8px 16px",
+                                "cursor": "pointer",
+                                "fontWeight": "bold",
+                                "fontSize": "14px",
+                                "width": "100%",
+                            },
+                        ),
+                    ],
+                    style={
+                        "width": "220px",
+                        "padding": "12px",
+                        "backgroundColor": "#1e1e1e",
+                        "borderRadius": "8px",
+                    },
                 ),
-
-                html.Label("Flood level", style={"marginBottom": "4px"}),
-                dcc.Dropdown(
-                    id="flood_level",
-                    options=[{"label": f, "value": f} for f in FLOOD_LEVELS],
-                    value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None)
+                # Права зона: карта + права панель
+                html.Div(
+                    [
+                        # Карта
+                        html.Div(
+                            [
+                                dash_deckgl.DashDeckgl(
+                                    id="deck-main",
+                                    spec=build_spec(
+                                        build_dem_url("viridis"), None, basin_json
+                                    ),
+                                    description={
+                                        "top-right": (
+                                            "<div style='background:#111;padding:6px 8px;"
+                                            "border-radius:6px;color:#eee;font:12px/1.3 monospace;max-width:200px'>"
+                                            "<b>DEM tiles</b><br/>"
+                                            "Оберіть DEM1/DEM2 і натисніть “Compute Difference”.</div>"
+                                        )
+                                    },
+                                    height=MAIN_MAP_HEIGHT,
+                                    cursor_position="bottom-right",
+                                    events=["hover"],
+                                    mapbox_key=MAPBOX_ACCESS_TOKEN,
+                                )
+                            ],
+                            style={
+                                "border": "1px solid rgba(255,255,255,0.15)",
+                                "borderRadius": "12px",
+                                "overflow": "hidden",
+                                "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
+                                "backgroundColor": "#111",
+                                "padding": "2px",
+                            },
+                        ),
+                        # Права панель
+                        html.Div(
+                            [
+                                html.H4("Histogram", style={"marginTop": 0}),
+                                dcc.Graph(
+                                    id="hist",
+                                    figure=empty_dark_figure(
+                                        260, "Press “Compute Difference”"
+                                    ),
+                                    style={"height": "260px"},
+                                    config={"displaylogo": False},
+                                ),
+                                html.Hr(),
+                                html.Div(
+                                    id="stats", style={"fontFamily": "monospace"}
+                                ),
+                            ],
+                            style={
+                                "width": f"{RIGHT_PANEL_WIDTH}px",
+                                "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
+                                "paddingLeft": "12px",
+                                "overflowY": "auto",
+                            },
+                        ),
+                    ],
+                    style={
+                        "display": "grid",
+                        "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
+                        "gap": "12px",
+                        "alignItems": "start",
+                    },
                 ),
-            ], id="flood_opts", style={"display": "none", "marginBottom": "10px"}),
+            ],
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "300px 1fr",
+                "gap": "8px",
+                "alignItems": "start",
+            },
+        ),
+        html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"}),
+    ]
+)
 
-            html.Button(
-                "Compute Difference", id="run",
-                style={
-                    "backgroundColor": "#1f77b4", "color": "white", "border": "none",
-                    "borderRadius": "6px", "padding": "8px 16px", "cursor": "pointer",
-                    "fontWeight": "bold", "fontSize": "14px", "width": "100%"
-                }
-            )
-        ], style={"width": "220px", "padding": "12px", "backgroundColor": "#1e1e1e", "borderRadius": "8px"}),
+# ---------- Службові ----------
 
-        # Права зона: карта + права панель
-        html.Div([
-            # Карта
-            html.Div([
-                dash_deckgl.DashDeckgl(
-                    id="deck-main",
-                    spec=build_spec(build_dem_url("viridis"), None, basin_json),
-                    description={"top-right": "<div id='legend'>Legend</div>"},
-                    height=MAIN_MAP_HEIGHT,
-                    cursor_position="bottom-right",
-                    events=["hover"],
-                    mapbox_key=MAPBOX_ACCESS_TOKEN,
-                )
-            ], style={
-                "border": "1px solid rgba(255,255,255,0.15)",
-                "borderRadius": "12px",
-                "overflow": "hidden",
-                "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
-                "backgroundColor": "#111",
-                "padding": "2px"
-            }),
-
-            # Права панель
-            html.Div([
-                html.H4("Histogram", style={"marginTop": 0}),
-                dcc.Graph(
-                    id="hist",
-                    figure=empty_dark_figure(260, "Press “Compute Difference”"),
-                    style={"height": "260px"},
-                    config={"displaylogo": False}
-                ),
-                html.Hr(),
-                html.Div(id="stats", style={"fontFamily": "monospace"})
-            ], style={
-                "width": f"{RIGHT_PANEL_WIDTH}px",
-                "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
-                "paddingLeft": "12px",
-                "overflowY": "auto"
-            }),
-        ], style={
-            "display": "grid",
-            "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
-            "gap": "12px",
-            "alignItems": "start"
-        }),
-    ], style={
-        "display": "grid",
-        "gridTemplateColumns": "300px 1fr",
-        "gap": "8px",
-        "alignItems": "start"
-    }),
-
-    # Події під картою
-    html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"})
-])
-
-# ---- Службові
 def _pick_path(name, category):
     arr = by_dem.get(name, [])
     if not arr:
@@ -291,52 +406,73 @@ def _pick_path(name, category):
                 return it.get("path")
     return arr[0].get("path")
 
-@callback(Output("flood_opts","style"), Input("cat","value"))
-def _toggle_flood_opts(cat):
-    return {"display":"block","marginBottom":"10px"} if cat == "flood_scenarios" else {"display":"none"}
 
-# ---- Колбек
+@callback(Output("flood_opts", "style"), Input("cat", "value"))
+def _toggle_flood_opts(cat):
+    return (
+        {"display": "block", "marginBottom": "10px"}
+        if cat == "flood_scenarios"
+        else {"display": "none"}
+    )
+
+# ---------- Основний колбек ----------
+
 @app.callback(
     Output("deck-main", "spec"),
     Output("hist", "figure"),
     Output("stats", "children"),
     Input("run", "n_clicks"),
-    State("dem1", "value"), State("dem2", "value"), State("cat", "value"),
-    State("flood_hand","value"), State("flood_level","value"),
-    prevent_initial_call=False
+    State("dem1", "value"),
+    State("dem2", "value"),
+    State("cat", "value"),
+    State("flood_hand", "value"),
+    State("flood_level", "value"),
+    prevent_initial_call=False,
 )
 def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
-    logger.info("Run: dem1=%s dem2=%s cat=%s hand=%s level=%s", dem1, dem2, cat, flood_hand, flood_level)
-    if not dem1 or not dem2 or dem1 == dem2:
-        return no_update, no_update, "Please select two different DEMs."
-    dem1 = dem1 or ("copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None))
-    dem2 = dem2 or ("srtm_dem" if "srtm_dem" in DEM_LIST else (DEM_LIST[1] if len(DEM_LIST) > 1 else None))
-    cat = (cat or ("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None)))
+    # Нормалізуємо дефолти спочатку → автозапуск при завантаженні
+    dem1 = dem1 or (
+        "copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None)
+    )
+    dem2 = dem2 or (
+        "srtm_dem"
+        if "srtm_dem" in DEM_LIST
+        else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)
+    )
+    cat = cat or ("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None))
 
-    logger.info("Run: dem1=%s dem2=%s cat=%s hand=%s level=%s", dem1, dem2, cat, flood_hand, flood_level)
+    logger.info(
+        "Run: dem1=%s dem2=%s cat=%s hand=%s level=%s",
+        dem1,
+        dem2,
+        cat,
+        flood_hand,
+        flood_level,
+    )
 
     if not dem1 or not dem2:
         return no_update, no_update, "No DEMs available."
-
     if dem1 == dem2 and len(DEM_LIST) > 1:
-        # якщо випадково обидва однакові — оберемо інший для dem2
         dem2 = next((d for d in DEM_LIST if d != dem1), dem2)
 
-    # Пошук шляху з метаданих (з пріоритезацією повних збігів для flood)
+    # Пошук шляху з метаданих (з пріоритетом повних збігів для flood)
     def _find_path_for(dem_name, category, hand=None, level=None):
-        cand = [r for r in by_dem.get(dem_name, []) if r.get("category")==category]
+        cand = [r for r in by_dem.get(dem_name, []) if r.get("category") == category]
         if category == "flood_scenarios":
             if hand:
-                cand = [r for r in cand if r.get("hand")==hand]
+                cand = [r for r in cand if r.get("hand") == hand]
             if level:
-                cand = [r for r in cand if r.get("flood")==level]
+                cand = [r for r in cand if r.get("flood") == level]
             if not cand:
                 return None
-            cand.sort(key=lambda r: (r.get("hand") is not None, r.get("flood") is not None), reverse=True)
+            cand.sort(
+                key=lambda r: (r.get("hand") is not None, r.get("flood") is not None),
+                reverse=True,
+            )
             return _fix_path(cand[0]["path"])
         return _fix_path(cand[0]["path"]) if cand else None
 
-    # --- FLOOD-порівняння ---
+    # ---------- FLOOD сценарії ----------
     if cat == "flood_scenarios":
         p1 = _find_path_for(dem1, "flood_scenarios", flood_hand, flood_level)
         p2 = _find_path_for(dem2, "flood_scenarios", flood_hand, flood_level)
@@ -344,21 +480,20 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             return no_update, no_update, "Flood layer not found for selected DEM/HAND/level."
 
         try:
-            # бінарні маски затоплення (з метаданими)
+            # Читаємо бінарні маски
             A, A_tx, A_crs, A_w, A_h, _ = read_binary_with_meta(p1)
             B, B_tx, B_crs, B_w, B_h, _ = read_binary_with_meta(p2)
 
-            # вирівнюємо на одну сітку (B → A)
+            # Вирівнюємо на одну сітку (B → A)
             A_aligned, B_aligned = align_boolean_pair(
-                A, A_tx, A_crs, A_w, A_h,
-                B, B_tx, B_crs, B_w, B_h
+                A, A_tx, A_crs, A_w, A_h, B, B_tx, B_crs, B_w, B_h
             )
 
-            # підстраховка від +-1 пікс різниці по розмірах
+            # Обрізка до спільного розміру (про всяк випадок)
             if A_aligned.shape != B_aligned.shape:
                 A_aligned, B_aligned = crop_to_common_extent(A_aligned, B_aligned)
 
-            # референтний DEM для bounds/площі пікселя (краще той, з сіткою як у A)
+            # Референтний DEM для bounds/площі пікселя
             base_dem_path = _pick_path(dem1, "dem") or _pick_path(dem1, None)
             if not base_dem_path:
                 base_dem_path = _pick_path(dem2, "dem") or _pick_path(dem2, None) or p1
@@ -367,20 +502,20 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
             px_area = pixel_area_m2_from_ref_dem(ref)
 
-            # метрики
+            # Метрики
             st = flood_metrics(A_aligned, B_aligned, px_area)
 
-            # графік площ (Plotly)
+            # Барчарт площ
             fig = plotly_flood_areas_figure(
                 st, title=f"Flood {flood_hand} @ {flood_level}: areas & Δ"
             )
 
-            # overlay різниць
+            # Overlay
             overlay_uri = flood_compare_overlay_png(A_aligned, B_aligned, ref)
             bounds = raster_bounds_ll(ref)
             diff_bitmap = bitmap_layer("flood-diff-bitmap", overlay_uri, bounds)
 
-            # легенда overlay
+            # Легенда overlay
             legend_html = """
             <div style='background:#111;padding:6px 8px;border-radius:6px;color:#eee;font:12px/1.3 monospace'>
               <b>Overlay:</b>
@@ -389,36 +524,16 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
               <span style='display:inline-block;width:10px;height:10px;background:#ff6;opacity:0.8;margin:0 6px 0 12px;vertical-align:middle'></span>Both
             </div>"""
 
-            # табличка метрик
-            rows = [
-                ("IoU", st["IoU"]), ("F1", st["F1"]),
-                ("precision", st["precision"]), ("recall", st["recall"]),
-                ("Area A (km²)", st["area_A_m2"] / 1e6),
-                ("Area B (km²)", st["area_B_m2"] / 1e6),
-                ("Δ|A−B| (km²)", st["delta_area_m2"] / 1e6),
-            ]
-            stats_tbl = html.Table(
-                [
-                    html.Tr([
-                        html.Th(k),
-                        html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)
-                    ])
-                    for k, v in rows
-                ],
-                style={"background": "#181818", "color": "#eee", "padding": "6px"}
-            )
-
-            # deck.gl spec
             spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
             spec_obj = json.loads(spec)
             spec_obj.setdefault("description", {})["top-right"] = legend_html
-            return json.dumps(spec_obj), fig, stats_tbl
+            return json.dumps(spec_obj), fig, _flood_stats_table(st)
 
         except Exception as e:
             logger.exception("Flood compare error: %s", e)
             return no_update, no_update, f"Flood comparison error: {e}"
 
-    # --- dH-порівняння (continuous)
+    # ---------- dH (continuous) ----------
     p1 = _find_path_for(dem1, cat)
     p2 = _find_path_for(dem2, cat)
     try:
@@ -427,7 +542,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         logger.exception("Diff error: %s", e)
         return no_update, no_update, f"Computation error: {e}"
 
-    # діапазон відображення
+    # Діапазон відображення
     try:
         if (cat or "").lower() == "dem":
             vmin, vmax = -25.0, 25.0
@@ -439,7 +554,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     except Exception:
         vmin, vmax = -10.0, 10.0
 
-    # overlay
+    # Overlay PNG
     try:
         img_uri = diff_to_base64_png(diff, ref, vmin=vmin, vmax=vmax, figsize=(8, 8))
         bounds = raster_bounds_ll(ref)
@@ -448,17 +563,22 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         logger.exception("Overlay build error: %s", e)
         return no_update, no_update, f"Rendering error (overlay): {e}"
 
-    # легенда
-    legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r")
-    legend_html = f"<img src='{legend_uri}' style='height:160px'/>"
+    # Легенда (двосхила нормалізація навколо 0, підсилення кольорів у make_colorbar_datauri)
+    legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)", center=0)
+    legend_html = f"""
+    <div style='background:#111;padding:8px 10px;border-radius:8px;color:#eee;font:12px/1.35 monospace;max-width:180px'>
+      <div style='font-weight:700;margin-bottom:6px'>dH = {dem2} − {dem1}</div>
+      <img src='{legend_uri}' style='height:160px;display:block;margin:6px auto 4px'/>
+      <div>Range: [{vmin:.2f}, {vmax:.2f}] m</div>
+    </div>"""
 
-    # гістограма (Plotly) + таблиця статистик
-    hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax),
-                                       density=False, cumulative=False)
-    stats = calculate_error_statistics(diff)
-    rows = [html.Tr([html.Th(k), html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v)])
-            for k, v in stats.items()]
-    stats_tbl = html.Table(rows, style={"background": "#181818", "color": "#eee", "padding": "6px"})
+    # Гістограма
+    hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax), density=False, cumulative=False)
+
+    # Статистика: Basic + Robust
+    basic = calculate_error_statistics(diff)
+    robust = robust_stats(diff, clip=(1, 99))
+    stats_tbl = _dh_stats_tables(basic, robust)
 
     # deck.gl spec
     spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
@@ -467,7 +587,55 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     return json.dumps(spec_obj), hist_fig, stats_tbl
 
 
-@app.callback(Output("deck-events","children"), Input("deck-main","lastEvent"))
+def _flood_stats_table(st: dict):
+    rows = [
+        ("IoU", st["IoU"]),
+        ("F1", st["F1"]),
+        ("precision", st["precision"]),
+        ("recall", st["recall"]),
+        ("Area A (km²)", st["area_A_m2"] / 1e6),
+        ("Area B (km²)", st["area_B_m2"] / 1e6),
+        ("Δ|A−B| (km²)", st["delta_area_m2"] / 1e6),
+    ]
+    return html.Table(
+        [
+            html.Tr(
+                [
+                    html.Th(k),
+                    html.Td(f"{v:.3f}" if isinstance(v, float) and np.isfinite(v) else v),
+                ]
+            )
+            for k, v in rows
+        ],
+        style={"background": "#181818", "color": "#eee", "padding": "6px"},
+    )
+
+
+def _dh_stats_tables(basic: dict, robust: dict):
+    def _row(k, v):
+        is_num = isinstance(v, (int, float)) and np.isfinite(v)
+        return html.Tr([html.Th(k), html.Td(f"{v:.3f}" if is_num else v)])
+
+    basic_keys = ["count", "mean_error", "median_error", "std_dev", "rmse", "min", "max", "skewness", "kurtosis"]
+    robust_keys = ["median", "nmad", "mae", "rmse", "p5", "p95", "outlier_%", "skew", "kurtosis"]
+
+    return html.Div(
+        [
+            html.Div("Basic stats", style={"fontWeight": "bold", "margin": "6px 0 4px"}),
+            html.Table(
+                [_row(k, basic.get(k, np.nan)) for k in basic_keys],
+                style={"background": "#181818", "color": "#eee", "padding": "6px", "marginBottom": "8px"},
+            ),
+            html.Div("Robust stats", style={"fontWeight": "bold", "margin": "6px 0 4px"}),
+            html.Table(
+                [_row(k, robust.get(k, np.nan)) for k in robust_keys],
+                style={"background": "#181818", "color": "#eee", "padding": "6px"},
+            ),
+        ]
+    )
+
+
+@app.callback(Output("deck-events", "children"), Input("deck-main", "lastEvent"))
 def show_evt(evt):
     if not evt:
         return ""

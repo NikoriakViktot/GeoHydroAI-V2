@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+
 import rasterio
 from rasterio.warp import transform as rio_transform
 from rasterio.warp import reproject, Resampling
@@ -12,6 +13,7 @@ from scipy.stats import skew, kurtosis
 from xdem import DEM
 import pandas as pd
 import plotly.graph_objs as go
+import xdem
 
 
 def compute_dem_difference(path1, path2):
@@ -79,20 +81,60 @@ def save_temp_diff_as_cog(diff_array, reference_dem, prefix="demdiff_"):
         dst.write(diff_array.astype("float32"), 1)
     return out_path
 
+def make_colorbar_datauri(
+    vmin, vmax,
+    cmap="RdBu_r",                 # можна спробувати: "turbo", "seismic"
+    label="ΔH (m)",
+    sat_boost=1.25,                # множник насиченості (S у HSV)
+    val_boost=1.05,                # трохи піднімемо яскравість (V)
+    gamma=0.9,                     # <1 підсилює краї (PowerNorm)
+    center=None,                   # для різниць постав center=0 і отримаєш двосхилу норм.
+    dpi=180
+):
 
-def make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)"):
-    fig, ax = plt.subplots(figsize=(2, 5))
-    # темний фон під легенду
+    # 1) беремо базову палітру і підвищуємо насиченість/яскравість
+    base = mpl.cm.get_cmap(cmap, 256)
+    colors = base(np.linspace(0, 1, 256))
+    rgb = colors[:, :3]
+    hsv = mpl.colors.rgb_to_hsv(rgb[np.newaxis, ...])[0]
+    hsv[:, 1] = np.clip(hsv[:, 1] * sat_boost, 0, 1)
+    hsv[:, 2] = np.clip(hsv[:, 2] * val_boost, 0, 1)
+    colors[:, :3] = mpl.colors.hsv_to_rgb(hsv[np.newaxis, ...])[0]
+    cmap_boost = mpl.colors.ListedColormap(colors)
+
+    # 2) нормалізація: або степенева (контраст на краях), або двосхила з центром
+    if center is None:
+        norm = mpl.colors.PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
+    else:
+        norm = mpl.colors.TwoSlopeNorm(vmin=vmin, vcenter=center, vmax=vmax)
+
+    # 3) рендер
+    fig, ax = plt.subplots(figsize=(2, 5), dpi=dpi)
     fig.patch.set_alpha(0.0)
     ax.set_facecolor("none")
-    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
+    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap_boost, norm=norm, orientation="vertical")
     cb.set_label(label, fontsize=12, color="#eee")
     cb.ax.tick_params(colors="#eee")
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight", transparent=True, pad_inches=0.1)
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+
+# def make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)"):
+#     fig, ax = plt.subplots(figsize=(2, 5))
+#     # темний фон під легенду
+#     fig.patch.set_alpha(0.0)
+#     ax.set_facecolor("none")
+#     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+#     cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation="vertical")
+#     cb.set_label(label, fontsize=12, color="#eee")
+#     cb.ax.tick_params(colors="#eee")
+#     buf = io.BytesIO()
+#     fig.savefig(buf, format="png", bbox_inches="tight", transparent=True, pad_inches=0.1)
+#     plt.close(fig)
+#     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 def plot_histogram(diff_array, bins=60, clip_range=(-50, 50)):
@@ -134,6 +176,67 @@ def get_raster_bounds(raster_path):
         return [[b.bottom, b.left], [b.top, b.right]]
 
 
+def _nmad(a, axis=None, keepdims=False, return_median=False):
+    """
+    Normalized Median Absolute Deviation (NMAD), NaN-safe.
+
+    Parameters
+    ----------
+    a : array_like
+    axis : int | tuple[int] | None
+    keepdims : bool
+    return_median : bool
+        Якщо True — повертає (nmad, median).
+
+    Returns
+    -------
+    nmad : float | ndarray
+    median : float | ndarray  (опційно)
+    """
+    a = np.asanyarray(a)
+    # медіана з пропуском NaN
+    med = np.nanmedian(a, axis=axis, keepdims=True)
+    # |x - median|
+    mad = np.nanmedian(np.abs(a - med), axis=axis, keepdims=keepdims)
+    nmad_val = 1.4826 * mad  # шкалування під нормальний розподіл
+
+    # якщо всі NaN по вибранiй осі — np.nanmedian поверне NaN; це те, що зазвичай треба
+    if return_median:
+        return nmad_val, (med if keepdims else np.squeeze(med, axis=axis))
+    return nmad_val
+
+def robust_stats(diff: np.ndarray, clip=None):
+    v = diff[np.isfinite(diff)]
+    if v.size == 0:
+        return {
+            "count": 0, "median": np.nan, "nmad": np.nan, "mae": np.nan, "rmse": np.nan,
+            "mean": np.nan, "std": np.nan, "min": np.nan, "max": np.nan,
+            "p5": np.nan, "p95": np.nan, "outlier_%": np.nan, "skew": np.nan, "kurtosis": np.nan
+        }
+    if clip is not None:
+        lo, hi = np.nanpercentile(v, clip)
+        v = v[(v >= lo) & (v <= hi)]
+    p5, p95 = np.nanpercentile(v, [5, 95])
+    T = 3 * _nmad(v)  # поріг аутлаєрів
+    outlier = np.sum(np.abs(v - np.nanmedian(v)) > T) / v.size * 100.0
+    return {
+        "count": int(v.size),
+        "median": float(np.nanmedian(v)),
+        "nmad": float(_nmad(v)),
+        "mae": float(np.nanmean(np.abs(v))),
+        "rmse": float(np.sqrt(np.nanmean(v**2))),
+        "mean": float(np.nanmean(v)),
+        "std": float(np.nanstd(v)),
+        "min": float(np.nanmin(v)),
+        "max": float(np.nanmax(v)),
+        "p5": float(p5),
+        "p95": float(p95),
+        "outlier_%": float(outlier),
+        "skew": float(skew(v, nan_policy="omit")),
+        "kurtosis": float(kurtosis(v, nan_policy="omit")),
+    }
+
+
 def calculate_error_statistics(diff_array: np.ndarray):
     valid = diff_array[~np.isnan(diff_array)]
     if valid.size == 0:
@@ -160,6 +263,36 @@ def calculate_error_statistics(diff_array: np.ndarray):
         "kurtosis": float(kurtosis(valid)),
     }
 
+def xdem_uncertainty(diff_arr, ref_dem, stable_mask=None, random_state=42):
+    """
+    Повертає:
+      - err_map: карта 1σ випадкової помилки (м)
+      - params: параметри моделі варіограми
+      - rho: функція кореляції rho(h) (callable)
+      - stderr_mean: 1σ похибка середнього по всій області diff_arr (спрощено)
+    """
+    try:
+        # атрибути рельєфу
+        slope, maxc = xdem.terrain.get_terrain_attribute(ref_dem, attribute=["slope","maximum_curvature"])
+        # гетероскедастичність
+        errors, df_bin, err_fn = xdem.spatialstats.infer_heteroscedasticity_from_stable(
+            dvalues=diff_arr, list_var=[slope, maxc], list_var_names=["slope","maxc"],
+            unstable_mask=None if stable_mask is None else ~stable_mask
+        )
+        # стандартизація та варіограма
+        z = diff_arr / errors
+        emp_vgm, params, rho = xdem.spatialstats.infer_spatial_correlation_from_stable(
+            dvalues=z, list_models=["Gaussian","Spherical"], random_state=random_state
+        )
+        # груба оцінка похибки середнього по всій області
+        mean_sig = float(np.nanmean(errors))
+        # ефективна к-ть зразків (спрощено за площею растру без векторів)
+        n_eff = np.isfinite(diff_arr).sum()
+        stderr_mean = mean_sig / np.sqrt(max(1, n_eff))
+        return {"err_map": getattr(errors, "data", errors),
+                "params": params, "rho": rho, "stderr_mean": float(stderr_mean)}
+    except Exception as e:
+        return {"error": str(e)}
 
 # ---------- overlay як data-URI + bounds для deck.gl ----------
 
