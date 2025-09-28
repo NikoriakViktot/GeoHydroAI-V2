@@ -152,29 +152,39 @@ FLOOD_INDEX, FLOOD_DEMS, FLOOD_HANDS, FLOOD_LEVELS = build_flood_index(layers_in
 
 # ---------- deck.gl helpers ----------
 
+# def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
+#     return {
+#         "@@type": "TileLayer",
+#         "id": layer_id,
+#         "data": url,
+#         "minZoom": 0,
+#         "maxZoom": 19,
+#         "tileSize": 220,
+#         "opacity": opacity,
+#         "renderSubLayers": {
+#             "@@function": [
+#                 "tile",
+#                 {
+#                     "type": "BitmapLayer",
+#                     "id": f"{layer_id}-bitmap",
+#                     "image": "@@tile.data",
+#                     "bounds": "@@tile.bbox",
+#                     "opacity": opacity,
+#                 },
+#             ]
+#         },
+#     }
 def tile_layer(layer_id: str, url: str, opacity: float = 1.0) -> dict:
+    # без renderSubLayers; використовуємо простіший BitmapTileLayer
     return {
-        "@@type": "TileLayer",
+        "@@type": "BitmapTileLayer",
         "id": layer_id,
         "data": url,
+        "tileSize": 256,          # стандартний розмір тайла
         "minZoom": 0,
         "maxZoom": 19,
-        "tileSize": 220,
         "opacity": opacity,
-        "renderSubLayers": {
-            "@@function": [
-                "tile",
-                {
-                    "type": "BitmapLayer",
-                    "id": f"{layer_id}-bitmap",
-                    "image": "@@tile.data",
-                    "bounds": "@@tile.bbox",
-                    "opacity": opacity,
-                },
-            ]
-        },
     }
-
 
 def bitmap_layer(layer_id: str, image_data_uri: str, bounds) -> dict:
     # bounds: [[S,W],[N,E]] → [W,S,E,N]
@@ -677,25 +687,35 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             diff_bitmap = bitmap_layer("flood-diff-bitmap", overlay_uri, bounds)
 
             # Легенда FLOOD
-            flood_legend_content = """
-            <div>
-              <div style='font-weight:700;margin-bottom:6px'>Flood Comparison</div>
-              <div style='line-height:1.4'>
-                <span style='display:inline-block;width:10px;height:10px;background:rgba(255,0,0,0.7);margin-right:4px;vertical-align:middle;border-radius:2px;'></span>
-                <span style='color:#ff6666'>A only</span> (Lost area in DEM₂)
-              </div>
-              <div style='line-height:1.4'>
-                <span style='display:inline-block;width:10px;height:10px;background:rgba(0,255,0,0.7);margin-right:4px;vertical-align:middle;border-radius:2px;'></span>
-                <span style='color:#66ff66'>B only</span> (Gained area in DEM₂)
-              </div>
-              <div style='line-height:1.4'>
-                <span style='display:inline-block;width:10px;height:10px;background:rgba(255,255,0,0.7);margin-right:4px;vertical-align:middle;border-radius:2px;'></span>
-                <span style='color:#ffff66'>Both</span> (Consistent area)
-              </div>
-            </div>"""
+            flood_legend_component = html.Div([
+                html.Div("Flood Comparison", style={"fontWeight": 700, "marginBottom": "6px"}),
+                html.Div([
+                    html.Span(style={"display": "inline-block", "width": "10px", "height": "10px",
+                                     "background": "rgba(255,0,0,0.7)", "marginRight": "6px",
+                                     "verticalAlign": "middle", "borderRadius": "2px"}),
+                    html.Span("A only", style={"color": "#ff6666"}),
+                    html.Span("  (Lost area in DEM₂)",
+                              style={"color": "#aaa", "fontSize": "11px", "marginLeft": "6px"}),
+                ], style={"lineHeight": "1.4"}),
+                html.Div([
+                    html.Span(style={"display": "inline-block", "width": "10px", "height": "10px",
+                                     "background": "rgba(0,255,0,0.7)", "marginRight": "6px",
+                                     "verticalAlign": "middle", "borderRadius": "2px"}),
+                    html.Span("B only", style={"color": "#66ff66"}),
+                    html.Span("  (Gained area in DEM₂)",
+                              style={"color": "#aaa", "fontSize": "11px", "marginLeft": "6px"}),
+                ], style={"lineHeight": "1.4"}),
+                html.Div([
+                    html.Span(style={"display": "inline-block", "width": "10px", "height": "10px",
+                                     "background": "rgba(255,255,0,0.7)", "marginRight": "6px",
+                                     "verticalAlign": "middle", "borderRadius": "2px"}),
+                    html.Span("Both", style={"color": "#ffff66"}),
+                    html.Span("  (Consistent area)", style={"color": "#aaa", "fontSize": "11px", "marginLeft": "6px"}),
+                ], style={"lineHeight": "1.4"}),
+            ])
 
             spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
-            return json.dumps(spec), fig, _flood_stats_table(st), html.Div(flood_legend_content)
+            return json.dumps(spec), fig, _flood_stats_table(st), html.Div(flood_legend_component)
 
         except Exception as e:
             logger.exception("Flood compare error: %s", e)
@@ -748,20 +768,33 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)", center=center)
 
     # Створюємо HTML, який буде вставлений у legend-box
-    legend_content_html = f"""
-    <div>
-      <div style='font-weight:700;margin-bottom:6px'>dH = {dem2} − {dem1}</div>
-      <img src='{legend_uri}' style='height:160px;display:block;margin:6px auto 4px; border: 1px solid rgba(255,255,255,0.1);'/>
-      <div style='text-align:left;font-size:12px;line-height:1.4;margin-top:10px;'>
-        <div style='color:#6699ff;'>• BLUE: + Change</div>
-        <div style='margin-left: 15px; font-size:11px; color:#aaa;'>DEM₂ is **HIGHER** (Uplift/Bias)</div>
-        <div style='color:#ff6666; margin-top:5px;'>• RED: − Change</div>
-        <div style='margin-left: 15px; font-size:11px; color:#aaa;'>DEM₂ is **LOWER** (Subsidence/Erosion)</div>
-        <hr style='border-color:rgba(255,255,255,0.1); margin: 8px 0'/>
-        <div style='font-size:12px; font-weight:700;'>Range: [{vmin:.2f} m, {vmax:.2f} m] (Visual Extent)</div>
-      </div>
-    </div>"""
+    legend_component = html.Div(
+        [
+            html.Div(f"dH = {dem2} − {dem1}",
+                     style={"fontWeight": 700, "marginBottom": "6px"}),
 
+            html.Img(src=legend_uri,
+                     style={"height": "160px", "display": "block",
+                            "margin": "6px auto 4px",
+                            "border": "1px solid rgba(255,255,255,0.1)"}),
+
+            html.Div([
+                html.Div([
+                    html.Span("• BLUE: + Change", style={"color": "#6699ff"}),
+                ], style={"lineHeight": "1.4"}),
+                html.Div("DEM₂ is HIGHER (Uplift/Bias)",
+                         style={"marginLeft": "15px", "fontSize": "11px", "color": "#aaa"}),
+                html.Div([
+                    html.Span("• RED: − Change", style={"color": "#ff6666"}),
+                ], style={"marginTop": "5px", "lineHeight": "1.4"}),
+                html.Div("DEM₂ is LOWER (Subsidence/Erosion)",
+                         style={"marginLeft": "15px", "fontSize": "11px", "color": "#aaa"}),
+                html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "8px 0"}),
+                html.Div(f"Range: [{vmin:.2f} m, {vmax:.2f} m] (Visual Extent)",
+                         style={"fontSize": "12px", "fontWeight": 700}),
+            ], style={"textAlign": "left", "fontSize": "12px", "lineHeight": "1.4", "marginTop": "10px"})
+        ]
+    )
     # Гістограма
     hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax), density=False, cumulative=False)
 
@@ -776,4 +809,4 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     spec_obj = json.loads(spec)
 
     # Повертаємо 4 значення
-    return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_content_html)
+    return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_component)
