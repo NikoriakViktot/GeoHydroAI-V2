@@ -595,10 +595,7 @@ def show_evt(evt):
         return ""
     return f"{evt.get('eventType')} @ {evt.get('coordinate')}"
 
-# ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
-# pages/dem_diff_deck.py
 
-# ... (Код до функції run_diff)
 
 # ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
 
@@ -776,8 +773,10 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     # deck.gl spec: додаємо diff_bitmap
     spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
 
+    spec_obj = json.loads(spec)
+
     # Повертаємо 4 значення
-    return json.dumps(spec), hist_fig, stats_tbl, html.Div(legend_content_html)
+    return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_content_html)
 
 
 @app.callback(Output("deck-events", "children"), Input("deck-main", "lastEvent"))
