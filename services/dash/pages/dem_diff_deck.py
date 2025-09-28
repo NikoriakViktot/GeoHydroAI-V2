@@ -37,9 +37,9 @@ from utils.dem_tools import (
 
 # ---------- Константи UI ----------
 MAIN_MAP_HEIGHT = 500
-RIGHT_PANEL_WIDTH = 500
+RIGHT_PANEL_WIDTH = 600
 MAP_WIDTH_PX = 600           # ← максимальна ширина карти (пікселі)
-ZOOM_DEFAULT = 8            # ← бажаний стартовий зум
+ZOOM_DEFAULT = 9            # ← бажаний стартовий зум
 
 # ---------- Логи ----------
 
@@ -377,7 +377,7 @@ layout =  html.Div(
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "200px"},
+                                    style={"height": "220px"},
                                     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                                 ),
                                 # dcc.Graph(
@@ -396,7 +396,7 @@ layout =  html.Div(
                                 html.Div(
                                     id="legend-box",
                                     style={
-                                         "height": "200px",
+                                         "height": "220px",
                                          "padding": "8px 10px",
                                         "fontFamily": "monospace",
                                         "fontSize": "12px",
