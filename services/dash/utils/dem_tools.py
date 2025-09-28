@@ -404,6 +404,7 @@ def plotly_histogram_figure(diff_array, bins=60, clip_range=(-50, 50), density=F
                       margin=dict(l=8,r=8,t=28,b=38), bargap=0.05)
     fig.update_xaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
     fig.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
+    fig.update_layout(margin=dict(l=40, r=10, t=24, b=40), bargap=0.05)
     return fig
 def pixel_area_m2_from_ref_dem(ref_dem) -> float:
     """

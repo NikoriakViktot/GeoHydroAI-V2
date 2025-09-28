@@ -34,7 +34,9 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 
 MAIN_MAP_HEIGHT = 480
-RIGHT_PANEL_WIDTH = 360
+RIGHT_PANEL_WIDTH = 380
+MAP_MAX_WIDTH = "50%"   # карта займає до 70% ширини
+
 
 # ---------- Логи ----------
 
@@ -233,20 +235,16 @@ def view_from_geojson_bbox(gj, fallback=None):
         zoom = max(6.0, min(12.0, 8.8 - np.log2(span/4)))  # підженемо під Європу
         return {"longitude": float(lon), "latitude": float(lat), "zoom": float(zoom), "pitch": 0, "bearing": 0}
     except Exception:
-        return fallback or {"longitude": 25.03, "latitude": 47.8, "zoom": 8}
+        return fallback or {"longitude": 25.03, "latitude": 47.8, "zoom": 10}
 
-def build_spec(dem_url,
-               diff_bitmap,
-               basin,
-               init_view=None,
-               map_style="mapbox://styles/mapbox/light-v11"):
+def build_spec(dem_url, diff_bitmap, basin, init_view=None, map_style="mapbox://styles/mapbox/light-v11"):
     layers = []
     if dem_url: layers.append(tile_layer("dem-tiles", dem_url, opacity=0.85))
     if diff_bitmap: layers.append(diff_bitmap)
     if basin: layers.append(basin_layer(basin))
     spec = {
         "mapStyle": map_style,
-        "initialViewState": init_view or view_from_geojson_bbox(basin, fallback={"longitude":25.03,"latitude":47.8,"zoom":8}) if basin else {"longitude":25.03,"latitude":47.8,"zoom":8},
+        "initialViewState": init_view or view_from_geojson_bbox(basin, fallback={"longitude":25.03,"latitude":47.8,"zoom":10}) if basin else {"longitude":25.03,"latitude":47.8,"zoom":8},
         "controller": True,     # зручно масштабувати колесом
         "layers": layers,
     }
@@ -364,10 +362,12 @@ layout = html.Div(
                             style={
                                 # !!! position: relative ВИДАЛЕНО
                                 "border": "1px solid rgba(255,255,255,0.15)",
-                                "borderRadius": "10px",
+                                "borderRadius": "8px",
                                 "overflow": "hidden",
                                 "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
                                 "backgroundColor": "#111",
+                                "maxWidth": MAP_MAX_WIDTH,  # ← карта не ширше ніж 70% контейнера
+                                "margin": "0 auto"
                             },
                         ),
 
@@ -378,7 +378,7 @@ layout = html.Div(
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "220px"},  # було 260px
+                                    style={"height": "210px"},  # було 260px
                                     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]}
                                 ),
                                 html.Hr(style={'borderColor': 'rgba(255,255,255,0.15)'}),
@@ -396,7 +396,7 @@ layout = html.Div(
                             style={
                                 "width": f"{RIGHT_PANEL_WIDTH}px",
                                 "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
-                                "paddingLeft": "12px",
+                                "paddingLeft": "10px",
                                 "overflowY": "auto",
                                 "height": f"{MAIN_MAP_HEIGHT}px",
                             },
@@ -404,7 +404,7 @@ layout = html.Div(
                     ],
                     style={
                         "display": "grid",
-                        "gridTemplateColumns": f"1fr {RIGHT_PANEL_WIDTH}px",
+                        "gridTemplateColumns": f"minmax(0,1fr) {RIGHT_PANEL_WIDTH}px",
                         "gap": "10px",
                         "alignItems": "start",
                         "gridColumn": "2 / 3",
@@ -434,7 +434,7 @@ layout = html.Div(
             ],
             style={
                 "display": "grid",
-                "gridTemplateColumns": "240px 1fr",
+                "gridTemplateColumns": "230px 1fr",
                 "gap": "10px",
                 "alignItems": "start",
                 "gridTemplateRows": "auto auto"
@@ -783,9 +783,10 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
     # Створюємо HTML, який буде вставлений у legend-box
     legend_component = html.Div([
-        html.Div(f"dH = {dem2} − {dem1}", style={"fontWeight": 700, "marginBottom": "4px", "fontSize": "12px"}),
-        html.Img(src=legend_uri, style={
-            "height": "120px",  # було 160px
+        html.Div(f"Elevation Difference (dH): {dem2} (Test) − {dem1} (Ref)",
+                 title="dH = DEM_Test - DEM_Ref. Positive means DEM_Test is higher.",
+                 style={"fontWeight": 700, "marginBottom": "4px", "fontSize": "12px", "cursor": "help"}),        html.Img(src=legend_uri, style={
+            "height": "100px",  # було 160px
             "display": "block",
             "margin": "4px auto 2px",
             "border": "1px solid rgba(255,255,255,0.1)",
@@ -794,10 +795,11 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         html.Div([
             html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
                      style={"lineHeight": "1.3", "fontSize": "11px"}),
-            html.Div("DEM₂ is HIGHER (Uplift/Bias)", style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+            html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
+                     style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
             html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
                      style={"marginTop": "4px", "lineHeight": "1.3", "fontSize": "11px"}),
-            html.Div("DEM₂ is LOWER (Subsidence/Erosion)",
+            html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
                      style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
             html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "6px 0"}),
             html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m", style={"fontSize": "11px", "fontWeight": 700}),
