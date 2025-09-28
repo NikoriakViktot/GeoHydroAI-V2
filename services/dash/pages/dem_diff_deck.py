@@ -33,8 +33,8 @@ from utils.dem_tools import (
 
 # ---------- Константи UI ----------
 
-MAIN_MAP_HEIGHT = 500
-RIGHT_PANEL_WIDTH = 450
+MAIN_MAP_HEIGHT = 550
+RIGHT_PANEL_WIDTH = 400
 
 # ---------- Логи ----------
 
