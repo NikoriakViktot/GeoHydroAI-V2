@@ -406,6 +406,108 @@ def plotly_histogram_figure(diff_array, bins=60, clip_range=(-50, 50), density=F
     fig.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
     fig.update_layout(margin=dict(l=40, r=10, t=24, b=40), bargap=0.05)
     return fig
+
+
+# --- Plotly: ECDF для dH (НОВА ФУНКЦІЯ) ---
+def plotly_ecdf_figure(diff_array, clip_range=(-50, 50), title="ECDF of Elevation Errors (dH)"):
+    """
+    Побудова графіка Емпіричної кумулятивної функції розподілу (ECDF)
+    для різниці висот (dH) з позначенням 5-го та 95-го перцентилів.
+    """
+    vals = diff_array[np.isfinite(diff_array)]
+    vals = vals[(vals > clip_range[0]) & (vals < clip_range[1])]
+
+    fig = go.Figure()
+    if vals.size == 0:
+        # Обробка випадку, коли немає даних (копіюємо стиль з histogram)
+        fig.update_layout(template="plotly_dark",
+                          annotations=[dict(text="No data after clipping", showarrow=False, x=0.5, y=0.5)])
+        fig.update_xaxes(visible=False);
+        fig.update_yaxes(visible=False)
+        return fig
+
+    # 1. Сортуємо дані
+    sorted_vals = np.sort(vals)
+
+    # 2. Розраховуємо кумулятивну ймовірність: ECDF = (i + 1) / N
+    ecdf = np.arange(1, len(sorted_vals) + 1) / len(sorted_vals)
+
+    # 3. Додаємо лінію ECDF
+    fig.add_trace(go.Scatter(
+        x=sorted_vals,
+        y=ecdf,
+        mode='lines',
+        name='ECDF',
+        line=dict(color="#1f77b4", width=2),
+        hovertemplate='Error (m): %{x:.2f}<br>Probability (P(X ≤ x)): %{y:.3f}<extra></extra>'
+    ))
+
+    # 4. Додаємо маркери для 5-го та 95-го перцентилів
+    p5, p95 = np.nanpercentile(vals, [5, 95])
+
+    fig.add_trace(go.Scatter(
+        x=[p5, p95],
+        y=[0.05, 0.95],
+        mode='markers',
+        marker=dict(size=8, color='gold', symbol='circle'),
+        name=f'P5/P95 ({p5:.2f}/{p95:.2f} m)',
+        hovertemplate='Percentile: %{y}<br>Error (m): %{x:.2f}<extra></extra>'
+    ))
+
+    # 5. Оновлюємо вигляд (темна тема)
+    fig.update_layout(
+        template="plotly_dark",
+        title=title,
+        xaxis_title="Error (m)",
+        yaxis_title="Cumulative Probability (P(X ≤ x))",
+        margin=dict(l=40, r=10, t=24, b=40),
+        hovermode="x unified",
+        legend=dict(yanchor="bottom", y=0.01, xanchor="right", x=0.99)
+    )
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)", range=[0, 1.0])  # Range від 0 до 1
+
+    return fig
+# --- Plotly: violin plot для dH ---
+def plotly_violin_figure(diff_array, clip_range=None, title="Distribution (Violin)"):
+    """
+    Одновимірний violin plot для dH з опційним кліпом по (vmin, vmax).
+    Повертає plotly Figure у темній темі, з відображенням box та meanline.
+    """
+    vals = diff_array[np.isfinite(diff_array)].ravel()
+    if clip_range is not None:
+        vmin, vmax = clip_range
+        vals = vals[(vals >= vmin) & (vals <= vmax)]
+
+    fig = go.Figure()
+    if vals.size == 0:
+        fig.update_layout(
+            template="plotly_dark",
+            annotations=[dict(text="No data after clipping", showarrow=False, x=0.5, y=0.5)]
+        )
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
+        return fig
+
+    fig.add_trace(go.Violin(
+        y=vals,
+        box_visible=True,
+        meanline_visible=True,
+        points="outliers",   # показувати лише викиди
+        opacity=0.9,
+        name=""
+    ))
+    fig.update_layout(
+        template="plotly_dark",
+        title=title,
+        margin=dict(l=40, r=10, t=24, b=40),
+        showlegend=False
+    )
+    fig.update_yaxes(title_text="dH (m)", zeroline=False,
+                     gridcolor="rgba(255,255,255,0.08)")
+    fig.update_xaxes(visible=False)
+    return fig
+
 def pixel_area_m2_from_ref_dem(ref_dem) -> float:
     """
     Оцінка площі пікселя в м² за референсним DEM (xdem.DEM).

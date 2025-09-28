@@ -21,6 +21,8 @@ from utils.dem_tools import (
     diff_to_base64_png,
     raster_bounds_ll,
     plotly_histogram_figure,
+    plotly_violin_figure,
+    plotly_ecdf_figure,
     read_binary_with_meta,
     align_boolean_pair,
     crop_to_common_extent,
@@ -33,10 +35,11 @@ from utils.dem_tools import (
 
 # ---------- Константи UI ----------
 
+# ---------- Константи UI ----------
 MAIN_MAP_HEIGHT = 480
-RIGHT_PANEL_WIDTH = 380
-MAP_MAX_WIDTH = "50%"   # карта займає до 70% ширини
-
+RIGHT_PANEL_WIDTH = 360
+MAP_WIDTH_PX = 980           # ← максимальна ширина карти (пікселі)
+ZOOM_DEFAULT = 10            # ← бажаний стартовий зум
 
 # ---------- Логи ----------
 
@@ -205,44 +208,52 @@ def basin_layer(geojson: dict) -> dict:
 def build_dem_url(colormap="viridis"):
     return f"{TC_BASE}/singleband/dem/fab_dem/{{z}}/{{x}}/{{y}}.png?colormap={colormap}&stretch_range=[250,2200]"
 
-def view_from_geojson_bbox(gj, fallback=None):
+def view_from_geojson_bbox(gj, fallback=None, zoom_default=10):
     try:
         xs, ys = [], []
         for feat in gj.get("features", []):
             def _walk(c):
-                if isinstance(c[0], (float, int)):  # [x,y]
+                if isinstance(c[0], (float, int)):
                     xs.append(c[0]); ys.append(c[1])
                 else:
                     for cc in c: _walk(cc)
             _walk(feat["geometry"]["coordinates"])
         west, east = min(xs), max(xs)
         south, north = min(ys), max(ys)
-        lon = (west + east) / 2
-        lat = (south + north) / 2
-        # груба оцінка масштабу (deck.gl fitBounds аналог спрощено)
-        span = max(east - west, north - south)
-        zoom = max(6.0, min(12.0, 8.8 - np.log2(span/4)))  # підженемо під Європу
-        return {"longitude": float(lon), "latitude": float(lat), "zoom": float(zoom), "pitch": 0, "bearing": 0}
+        lon = (west + east) / 2.0
+        lat = (south + north) / 2.0
+        # фіксуємо зум (можна легко змінити)
+        return {"longitude": float(lon), "latitude": float(lat),
+                "zoom": float(zoom_default), "pitch": 0, "bearing": 0}
     except Exception:
-        return fallback or {"longitude": 25.03, "latitude": 47.8, "zoom": 10}
+        return fallback or {"longitude": 25.03, "latitude": 47.8, "zoom": float(zoom_default)}
 
-def build_spec(dem_url, diff_bitmap, basin, init_view=None, map_style="mapbox://styles/mapbox/light-v11"):
+def build_spec(dem_url, diff_bitmap, basin, init_view=None,
+               map_style="mapbox://styles/mapbox/light-v11"):
     layers = []
     if dem_url: layers.append(tile_layer("dem-tiles", dem_url, opacity=0.85))
     if diff_bitmap: layers.append(diff_bitmap)
     if basin: layers.append(basin_layer(basin))
-    spec = {
+
+    init_vs = init_view or (
+        view_from_geojson_bbox(basin, fallback={"longitude":25.03,"latitude":47.8,"zoom":ZOOM_DEFAULT},
+                               zoom_default=ZOOM_DEFAULT) if basin
+        else {"longitude":25.03,"latitude":47.8,"zoom":ZOOM_DEFAULT}
+    )
+
+    return json.dumps({
         "mapStyle": map_style,
-        "initialViewState": init_view or view_from_geojson_bbox(basin, fallback={"longitude":25.03,"latitude":47.8,"zoom":10}) if basin else {"longitude":25.03,"latitude":47.8,"zoom":8},
-        "controller": True,     # зручно масштабувати колесом
+        "initialViewState": init_vs,
+        "controller": True,
         "layers": layers,
-    }
-    return json.dumps(spec)
+    })
 
 
 # ---------- Layout (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
 
-layout = html.Div(
+layout =  html.Div(
+    [
+    html.Div(
     [
         html.H3("DEM Difference Analysis"),
         html.Div(
@@ -355,22 +366,33 @@ layout = html.Div(
                                 "overflow": "hidden",
                                 "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
                                 "backgroundColor": "#111",
-                                "width": "100%",
+                                "width": f"{MAP_WIDTH_PX}px",  # ← щоб не розтягувалась
                             },
                         ),
 
                         # Права панель (Гістограма + Легенда)
+                        # Права панель (графіки + легенда)
                         html.Div(
                             [
-                                # html.H4("Histogram of Elevation Errors", style={"marginTop": 0}),
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "210px"},  # було 260px
-                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]}
+                                    style={"height": "200px"},
+                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                                 ),
-                                html.Hr(style={'borderColor': 'rgba(255,255,255,0.15)'}),
-                                # НОВЕ МІСЦЕ ДЛЯ ЛЕГЕНДИ: під гістограмою
+                                dcc.Graph(
+                                    id="violin",
+                                    figure=empty_dark_figure(180, "Violin will appear after run"),
+                                    style={"height": "170px", "marginTop": "6px"},
+                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                                ),
+                                dcc.Graph(
+                                    id="ecdf",
+                                    figure=empty_dark_figure(180, "ECDF will appear after run"),
+                                    style={"height": "170px", "marginTop": "6px"},
+                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                                ),
+                                html.Hr(style={"borderColor": "rgba(255,255,255,0.15)"}),
                                 html.Div(
                                     id="legend-box",
                                     style={
@@ -389,10 +411,11 @@ layout = html.Div(
                                 "height": f"{MAIN_MAP_HEIGHT}px",
                             },
                         ),
+
                     ],
                     style={
                         "display": "grid",
-                        "gridTemplateColumns": f"minmax(0,1fr) {RIGHT_PANEL_WIDTH}px",
+                        "gridTemplateColumns": f"{MAP_WIDTH_PX}px {RIGHT_PANEL_WIDTH}px",  # ← фіксована ширина карти
                         "gap": "10px",
                         "alignItems": "start",
                         "gridColumn": "2 / 3",
@@ -428,20 +451,29 @@ layout = html.Div(
                 "gridTemplateRows": "auto auto"
             },
         ),
-        html.Div(id="deck-events",
-                 style={
-                     "fontFamily": "monospace",
-                     "marginTop": "16px",
-                     "padding": "8px",
-                     "backgroundColor": "#1e1e1e",  # Чорний фон для темної теми
-                     "color": "#eee",  # Світлий колір тексту для темної теми
-                     "borderRadius": "4px",
-                     "border": "1px solid rgba(255,255,255,0.15)",
-                 }
-                 ),
-    ]
+        html.Div(
+            id="deck-events",
+            style={
+                "fontFamily": "monospace",
+                "marginTop": "16px",
+                "padding": "8px",
+                "backgroundColor": "#1e1e1e",
+                "color": "#eee",
+                "borderRadius": "4px",
+                "border": "1px solid rgba(255,255,255,0.15)",
+            }
+        ),
+    ],
+        id="page-container",
+        style={
+            "maxWidth": "1420px",  # ← обмежуємо загальну ширину сторінки
+            "margin": "0 auto",  # ← центруємо по горизонталі
+            "padding": "0 16px"  # ← невеликий внутрішній відступ, щоб контент не лип до країв
+        },
+    )
+    ],
+    style={"width": "100%"}
 )
-
 # ---------- Службові (TOOLTIPS/СТИЛІ) ----------
 
 TOOLTIP_TEXTS = {
@@ -464,6 +496,7 @@ TOOLTIP_TEXTS = {
     "p95": "95th Percentile (P95). Upper bound of the central 90% of differences.",
     "outlier_%": "Percentage of outliers where |dH - median| > 3 * NMAD. Indicator of data inconsistency/noise.",
 }
+
 
 # Стилі для підсвічування
 WARNING_STYLE = {"color": "gold", "fontWeight": "bold"}
@@ -615,6 +648,8 @@ def show_evt(evt):
     Output("deck-main", "spec"),
     Output("hist", "figure"),
     Output("stats", "children"),
+    Output("violin", "figure"),
+    Output("ecdf", "figure"),
     Output("legend-box", "children"),  # <-- OUTPUT ДЛЯ ЛЕГЕНДИ
     Input("run", "n_clicks"),
     State("dem1", "value"),
@@ -641,7 +676,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     ])
 
     if not dem1 or not dem2:
-        return no_update, no_update, "No DEMs available.", initial_legend_content
+        return no_update, no_update, no_update, no_update, "No DEMs available.", initial_legend_content
     if dem1 == dem2 and len(DEM_LIST) > 1:
         dem2 = next((d for d in DEM_LIST if d != dem1), dem2)
 
@@ -717,7 +752,9 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             ])
 
             spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
-            return json.dumps(spec), fig, _flood_stats_table(st), html.Div(flood_legend_component)
+            empty = empty_dark_figure(160, "")
+            spec_obj = json.loads(spec)
+            return json.dumps(spec_obj), fig, empty, empty, _flood_stats_table(st), html.Div(flood_legend_component)
 
         except Exception as e:
             logger.exception("Flood compare error: %s", e)
@@ -730,7 +767,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         diff, ref = compute_dem_difference(p1, p2)
     except Exception as e:
         logger.exception("Diff error: %s", e)
-        return no_update, no_update, f"Computation error: {e}", initial_legend_content
+        return no_update, no_update, no_update, no_update, f"Computation error: {e}", initial_legend_content
 
     # Діапазон відображення (vmin, vmax)
     try:
@@ -762,7 +799,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         diff_bitmap = bitmap_layer("diff-bitmap", img_uri, bounds)
     except Exception as e:
         logger.exception("Overlay build error: %s", e)
-        return no_update, no_update, f"Rendering error (overlay): {e}", initial_legend_content
+        return no_update, no_update, no_update, no_update, f"Rendering error (overlay): {e}", initial_legend_content
 
     # Легенда: використовуємо отримані vmin, vmax, палітру RdBu_r та центр 0
     # Встановлюємо center=0, якщо 0 знаходиться в межах [vmin, vmax], інакше центр не потрібен
@@ -794,9 +831,11 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         ], style={"textAlign": "left"})
     ], style={"padding": "6px 8px", "background": "#1e1e1e", "borderRadius": "8px"})
 
+    clip = (vmin, vmax)
     # Гістограма
-    hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=(vmin, vmax), density=False, cumulative=False)
-
+    hist_fig = plotly_histogram_figure(diff, bins=60, clip_range=clip, density=False, cumulative=False)
+    violin_fig = plotly_violin_figure(diff, clip_range=clip, title="Distribution (Violin)")
+    ecdf_fig = plotly_ecdf_figure(diff, clip_range=clip, title="ECDF of dH")
     # Статистика: Basic + Robust
     basic = calculate_error_statistics(diff)
     robust = robust_stats(diff, clip=(1, 99))
@@ -808,4 +847,4 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     spec_obj = json.loads(spec)
 
     # Повертаємо 4 значення
-    return json.dumps(spec_obj), hist_fig, stats_tbl, html.Div(legend_component)
+    return json.dumps(spec_obj), hist_fig, violin_fig, ecdf_fig, stats_tbl, html.Div(legend_component)
