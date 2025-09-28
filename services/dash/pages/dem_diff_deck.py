@@ -21,8 +21,8 @@ from utils.dem_tools import (
     diff_to_base64_png,
     raster_bounds_ll,
     plotly_histogram_figure,
-    plotly_violin_figure,
-    plotly_ecdf_figure,
+    # plotly_violin_figure,
+    # plotly_ecdf_figure,
     read_binary_with_meta,
     align_boolean_pair,
     crop_to_common_extent,
@@ -36,10 +36,10 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 
 # ---------- Константи UI ----------
-MAIN_MAP_HEIGHT = 480
+MAIN_MAP_HEIGHT = 500
 RIGHT_PANEL_WIDTH = 500
-MAP_WIDTH_PX = 340           # ← максимальна ширина карти (пікселі)
-ZOOM_DEFAULT = 12            # ← бажаний стартовий зум
+MAP_WIDTH_PX = 400           # ← максимальна ширина карти (пікселі)
+ZOOM_DEFAULT = 20            # ← бажаний стартовий зум
 
 # ---------- Логи ----------
 
