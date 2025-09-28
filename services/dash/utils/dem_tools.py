@@ -194,3 +194,100 @@ def raster_bounds_ll(ref_dem):
         west, east = min(lon), max(lon)
         south, north = min(lat), max(lat)
         return [[south, west], [north, east]]
+# utils/dem_tools.py (додати імпорти вгорі)
+import plotly.graph_objects as go
+import pandas as pd
+
+# --- Flood: читання як бінарних масок ---
+def read_binary_raster(path) -> np.ndarray:
+    """Читає raster і повертає bool-маску (True = затоплено). Вважаємо >0 або ==1 як затоплено."""
+    with rasterio.open(path) as src:
+        a = src.read(1, masked=False)
+        nod = src.nodata
+    mask_valid = np.isfinite(a) if nod is None else (a != nod) & np.isfinite(a)
+    # універсально: будь-яке позитивне/ненульове значення = затоплено
+    flooded = (a > 0) & mask_valid
+    return flooded
+
+def pixel_area_m2_from_ref_dem(ref_dem) -> float:
+    """Оцінка площі пікселя в м² на основі affine transform (наближення для projected CRS)."""
+    with rasterio.open(ref_dem.filename) as src:
+        tr = src.transform
+    # |a| * |e| ~ розмір пікселя (для ортогональних пікселів)
+    return float(abs(tr.a) * abs(tr.e))
+
+# --- Метрики flood A vs B ---
+def flood_metrics(A: np.ndarray, B: np.ndarray, px_area_m2: float) -> dict:
+    A = A.astype(bool); B = B.astype(bool)
+    tp = np.sum(A & B); fp = np.sum(~A & B); fn = np.sum(A & ~B)
+    iou = tp / (tp + fp + fn) if (tp + fp + fn) else np.nan
+    precision = tp / (tp + fp) if (tp + fp) else np.nan
+    recall = tp / (tp + fn) if (tp + fn) else np.nan
+    f1 = (2 * precision * recall / (precision + recall)) if (np.isfinite(precision) and np.isfinite(recall) and (precision + recall)) else np.nan
+    area_A = float(np.sum(A) * px_area_m2)
+    area_B = float(np.sum(B) * px_area_m2)
+    d_area = abs(area_A - area_B)
+    return {"IoU": float(iou), "F1": float(f1), "precision": float(precision), "recall": float(recall),
+            "area_A_m2": area_A, "area_B_m2": area_B, "delta_area_m2": d_area}
+
+# --- Plotly: гістограма для dH (щоб не PNG) ---
+def plotly_histogram_figure(diff_array, bins=60, clip_range=(-50, 50), density=False, cumulative=False, title="Histogram of Elevation Errors"):
+    vals = diff_array[np.isfinite(diff_array)]
+    vals = vals[(vals > clip_range[0]) & (vals < clip_range[1])]
+    fig = go.Figure()
+    if vals.size == 0:
+        fig.update_layout(template="plotly_dark",
+                          annotations=[dict(text="No data after clipping", showarrow=False, x=0.5, y=0.5)])
+        fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
+        return fig
+    counts, edges = np.histogram(vals, bins=bins, density=density)
+    centers = 0.5*(edges[:-1]+edges[1:])
+    y = np.cumsum(counts) if cumulative else counts
+    if cumulative and density and y[-1] > 0: y = y / y[-1]
+    fig.add_bar(x=centers, y=y, name=("Cumulative" if cumulative else "Count"))
+    fig.update_layout(template="plotly_dark", title=title, xaxis_title="Error (m)",
+                      yaxis_title=("Cumulative density" if (cumulative and density) else ("Cumulative count" if cumulative else ("Density" if density else "Frequency"))),
+                      margin=dict(l=8,r=8,t=28,b=38), bargap=0.05)
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
+    return fig
+
+# --- Plotly: стовпчики площ затоплення і «перекриття» ---
+def plotly_flood_areas_figure(stats: dict, title="Flooded area comparison"):
+    df = pd.DataFrame([
+        {"Scenario": "DEM 1", "Area (km²)": stats["area_A_m2"]/1e6},
+        {"Scenario": "DEM 2", "Area (km²)": stats["area_B_m2"]/1e6},
+        {"Scenario": "Δ |A−B|", "Area (km²)": stats["delta_area_m2"]/1e6},
+    ])
+    fig = go.Figure(go.Bar(x=df["Scenario"], y=df["Area (km²)"], text=[f"{v:.2f}" for v in df["Area (km²)"]], textposition="auto"))
+    fig.update_layout(template="plotly_dark", title=title, yaxis_title="Area (km²)", margin=dict(l=8,r=8,t=28,b=38))
+    return fig
+
+# --- Готуємо 3-класний overlay для flood порівняння ---
+def flood_compare_overlay_png(A: np.ndarray, B: np.ndarray, ref_dem, colors=((0,0,0,0), (255,0,0,180), (0,255,0,180), (255,255,0,180))):
+    """
+    Класи: 0=none, 1=only A, 2=only B, 3=both
+    Повертає base64 PNG для BitmapLayer.
+    """
+    # 0 none, 1 A\B, 2 B\A, 3 A∩B
+    cls = np.zeros(A.shape, dtype=np.uint8)
+    onlyA = A & ~B
+    onlyB = B & ~A
+    both  = A & B
+    cls[onlyA] = 1; cls[onlyB] = 2; cls[both] = 3
+
+    # матриця RGBA
+    pal = np.array(colors, dtype=np.uint8)  # 4x4
+    rgba = pal[cls]  # HxWx4
+
+    with rasterio.open(ref_dem.filename) as src:
+        b = src.bounds
+    extent = [b.left, b.right, b.bottom, b.top]
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.imshow(rgba, extent=extent, origin="upper")
+    ax.axis("off")
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, transparent=True)
+    plt.close(fig)
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
