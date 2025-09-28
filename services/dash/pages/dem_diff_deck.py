@@ -214,7 +214,7 @@ def build_spec(
 ) -> str:
     layers = []
     if dem_url:
-        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.75))
+        layers.append(tile_layer("dem-tiles", dem_url, opacity=0.85))
     if diff_bitmap:
         layers.append(diff_bitmap)
     if basin:
@@ -348,7 +348,7 @@ layout = html.Div(
                         # Права панель (Гістограма + Легенда)
                         html.Div(
                             [
-                                html.H4("Histogram of Elevation Errors", style={"marginTop": 0}),
+                                # html.H4("Histogram of Elevation Errors", style={"marginTop": 0}),
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(
@@ -416,7 +416,17 @@ layout = html.Div(
                 "gridTemplateRows": "auto auto"
             },
         ),
-        html.Div(id="deck-events", style={"fontFamily": "monospace", "marginTop": "6px"}),
+        html.Div(id="deck-events",
+                 style={
+                     "fontFamily": "monospace",
+                     "marginTop": "16px",
+                     "padding": "8px",
+                     "backgroundColor": "#1e1e1e",  # Чорний фон для темної теми
+                     "color": "#eee",  # Світлий колір тексту для темної теми
+                     "borderRadius": "4px",
+                     "border": "1px solid rgba(255,255,255,0.15)",
+                 }
+                 ),
     ]
 )
 
@@ -586,6 +596,9 @@ def show_evt(evt):
     return f"{evt.get('eventType')} @ {evt.get('coordinate')}"
 
 # ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
+# pages/dem_diff_deck.py
+
+# ... (Код до функції run_diff)
 
 # ---------- Основний колбек (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
 
@@ -593,7 +606,7 @@ def show_evt(evt):
     Output("deck-main", "spec"),
     Output("hist", "figure"),
     Output("stats", "children"),
-    Output("legend-box", "children"),
+    Output("legend-box", "children"),  # <-- OUTPUT ДЛЯ ЛЕГЕНДИ
     Input("run", "n_clicks"),
     State("dem1", "value"),
     State("dem2", "value"),
@@ -649,7 +662,6 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             return no_update, no_update, "Flood layer not found for selected DEM/HAND/level.", initial_legend_content
 
         try:
-            # ... (Обчислення flood метрик та overlay) ...
             A, A_tx, A_crs, A_w, A_h, _ = read_binary_with_meta(p1)
             B, B_tx, B_crs, B_w, B_h, _ = read_binary_with_meta(p2)
             A_aligned, B_aligned = align_boolean_pair(A, A_tx, A_crs, A_w, A_h, B, B_tx, B_crs, B_w, B_h)
@@ -692,7 +704,6 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             logger.exception("Flood compare error: %s", e)
             return no_update, no_update, f"Flood comparison error: {e}", initial_legend_content
 
-
     # ---------- dH (continuous) (Порівняння DEM) ----------
     p1 = _find_path_for(dem1, cat)
     p2 = _find_path_for(dem2, cat)
@@ -702,13 +713,22 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         logger.exception("Diff error: %s", e)
         return no_update, no_update, f"Computation error: {e}", initial_legend_content
 
-    # Діапазон відображення (vmin, vmax) - ВИКОРИСТОВУЄМО ТІЛЬКИ ДИНАМІЧНИЙ ДІАПАЗОН
+    # Діапазон відображення (vmin, vmax)
     try:
+        # ВИКОРИСТОВУЄМО ДИНАМІЧНИЙ ДІАПАЗОН (1-99 перцентиль)
         q1, q99 = np.nanpercentile(diff, [1, 99])
         vmin, vmax = float(q1), float(q99)
-        # Якщо обрано "dem", і перцентилі занадто вузькі, використовуємо фіксований діапазон.
-        if (cat or "").lower() == "dem" and (abs(vmin) < 1.0 or abs(vmax) < 1.0):
-             vmin, vmax = -25.0, 25.0
+
+        # Якщо перцентилі занадто вузькі або DEM, повертаємося до фіксованого/ширшого діапазону
+        # (Це логіка для забезпечення візуального контрасту)
+        if (cat or "").lower() == "dem" or (abs(vmax - vmin) < 5.0):  # Якщо діапазон менше 5м
+            vmin, vmax = -25.0, 25.0
+            # Якщо медіана сильно зміщена, центруємо діапазон навколо неї
+            median = np.nanmedian(diff)
+            if abs(median) > 5.0 and abs(median) < 20.0:
+                vmin = median - 25.0
+                vmax = median + 25.0
+
         # Фінальна перевірка на NaN
         if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
             vmin, vmax = -10.0, 10.0
@@ -717,7 +737,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
     # Overlay PNG
     try:
-        # Використовуємо RdBu_r. Червоний = низьке (негативне), Синій = високе (позитивне)
+        # img_uri тепер створюється на основі vmin/vmax
         img_uri = diff_to_base64_png(diff, ref, vmin=vmin, vmax=vmax, figsize=(8, 8))
         bounds = raster_bounds_ll(ref)
         diff_bitmap = bitmap_layer("diff-bitmap", img_uri, bounds)
@@ -726,20 +746,22 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
         return no_update, no_update, f"Rendering error (overlay): {e}", initial_legend_content
 
     # Легенда: використовуємо отримані vmin, vmax, палітру RdBu_r та центр 0
-    legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)", center=0)
+    # Встановлюємо center=0, якщо 0 знаходиться в межах [vmin, vmax], інакше центр не потрібен
+    center = 0.0 if (vmin < 0 and vmax > 0) else None
+    legend_uri = make_colorbar_datauri(vmin, vmax, cmap="RdBu_r", label="ΔH (m)", center=center)
 
     # Створюємо HTML, який буде вставлений у legend-box
     legend_content_html = f"""
     <div>
       <div style='font-weight:700;margin-bottom:6px'>dH = {dem2} − {dem1}</div>
-      <img src='{legend_uri}' style='height:160px;display:block;margin:6px auto 4px'/>
-      <div style='text-align:center;font-size:11px;line-height:1.4'>
-        <span style='color:#6699ff'>BLUE: + Change</span><br/>
-        DEM₂ is **HIGHER** (Uplift/Bias)<br/>
-        <span style='color:#ff6666'>RED: − Change</span><br/>
-        DEM₂ is **LOWER** (Subsidence/Erosion)<br/>
-        <hr style='border-color:rgba(255,255,255,0.1); margin: 6px 0'/>
-        Range: [{vmin:.2f} m, {vmax:.2f} m] (1st–99th Pct)
+      <img src='{legend_uri}' style='height:160px;display:block;margin:6px auto 4px; border: 1px solid rgba(255,255,255,0.1);'/>
+      <div style='text-align:left;font-size:12px;line-height:1.4;margin-top:10px;'>
+        <div style='color:#6699ff;'>• BLUE: + Change</div>
+        <div style='margin-left: 15px; font-size:11px; color:#aaa;'>DEM₂ is **HIGHER** (Uplift/Bias)</div>
+        <div style='color:#ff6666; margin-top:5px;'>• RED: − Change</div>
+        <div style='margin-left: 15px; font-size:11px; color:#aaa;'>DEM₂ is **LOWER** (Subsidence/Erosion)</div>
+        <hr style='border-color:rgba(255,255,255,0.1); margin: 8px 0'/>
+        <div style='font-size:12px; font-weight:700;'>Range: [{vmin:.2f} m, {vmax:.2f} m] (Visual Extent)</div>
       </div>
     </div>"""
 
@@ -751,8 +773,15 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
     robust = robust_stats(diff, clip=(1, 99))
     stats_tbl = _dh_stats_tables(basic, robust)
 
-    # deck.gl spec
+    # deck.gl spec: додаємо diff_bitmap
     spec = build_spec(build_dem_url("terrain"), diff_bitmap, basin_json)
 
     # Повертаємо 4 значення
     return json.dumps(spec), hist_fig, stats_tbl, html.Div(legend_content_html)
+
+
+@app.callback(Output("deck-events", "children"), Input("deck-main", "lastEvent"))
+def show_evt(evt):
+    if not evt:
+        return ""
+    return f"{evt.get('eventType')} @ {evt.get('coordinate')}"
