@@ -5,6 +5,7 @@ import traceback
 import os, sys, logging
 import dash_deckgl
 import logging
+import dash_bootstrap_components as dbc
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
@@ -76,22 +77,18 @@ for mod in (
 
 
 
-navbar = html.Div(
-    [
-        dcc.Link("Dashboard ", href="/dashboard", className="btn btn-primary", style={"marginRight": "28px"}),
-        dcc.Link("DEM Difference", href="/dem-diff", className="btn btn-secondary", style={"marginRight": "28px"}),
-        dcc.Link("Flood Scenarios", href="/flood-dem-diif", className="btn btn-secondary", style={"marginRight": "28px"}),
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
+        dbc.NavItem(dbc.NavLink("DEM Difference", href="/dem-diff")),
+        dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href="/flood-dem-diif")),
     ],
-    style={
-        "padding": "10px 20px",
-        "position": "sticky",
-        "top": "0",
-        "zIndex": 1100,
-        "backgroundColor": "#222",
-        "width": "100%",
-    },
+    brand="GeoHydroAI",
+    color="dark",
+    dark=True,
+    sticky="top",
+    class_name="py-1"
 )
-
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])
 
