@@ -809,28 +809,58 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
 
     # Створюємо HTML, який буде вставлений у legend-box
     legend_component = html.Div([
-        html.Div(f"Elevation Difference (dH): {dem2} (Test) − {dem1} (Ref)",
-                 title="dH = DEM_Test - DEM_Ref. Positive means DEM_Test is higher.",
-                 style={"fontWeight": 700, "marginBottom": "4px", "fontSize": "12px", "cursor": "help"}),        html.Img(src=legend_uri, style={
-            "height": "100px",  # було 160px
-            "display": "block",
-            "margin": "4px auto 2px",
-            "border": "1px solid rgba(255,255,255,0.1)",
-            "borderRadius": "6px"
-        }),
+        html.Div(
+            f"Elevation Difference (dH): {dem2} (Test) − {dem1} (Ref)",
+            title="dH = DEM_Test - DEM_Ref. Positive means DEM_Test is higher.",
+            style={"fontWeight": "bold", "marginBottom": "6px", "fontSize": "13px"}
+        ),
+
+        # Основний рядок: шкала + підписи
+        html.Div([
+            html.Div([  # підписи
+                html.Div(f"{vmax:.2f} m", style={"fontSize": "11px", "marginBottom": "auto"}),
+                html.Div("0", style={"fontSize": "11px", "fontWeight": "bold", "color": "#ccc", "margin": "auto 0"}),
+                html.Div(f"{vmin:.2f} m", style={"fontSize": "11px", "marginTop": "auto"}),
+            ], style={
+                "display": "flex",
+                "flexDirection": "column",
+                "justifyContent": "space-between",
+                "marginRight": "6px",  # відступ від бару
+                "textAlign": "right"  # вирівнювання
+            }),
+
+            html.Img(
+                src=legend_uri,
+                style={
+                    "height": "220px",  # витягнута по висоті
+                    "border": "1px solid rgba(255,255,255,0.2)",
+                    "borderRadius": "4px"
+                }
+            )
+        ], style={"display": "flex", "flexDirection": "row", "alignItems": "stretch"}),
+
+        # Додатковий опис (опційно залишити як у тебе)
         html.Div([
             html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
                      style={"lineHeight": "1.3", "fontSize": "11px"}),
             html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
                      style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+
             html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
                      style={"marginTop": "4px", "lineHeight": "1.3", "fontSize": "11px"}),
             html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
                      style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+
             html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "6px 0"}),
-            html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m", style={"fontSize": "11px", "fontWeight": 700}),
-        ], style={"textAlign": "left"})
-    ], style={"padding": "6px 8px", "background": "#1e1e1e", "borderRadius": "8px"})
+            html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m",
+                     style={"fontSize": "11px", "fontWeight": "700"})
+        ], style={"marginTop": "6px"})
+    ], style={
+        "padding": "10px",
+        "background": "#1e1e1e",
+        "borderRadius": "6px",
+        "textAlign": "left"
+    })
 
     clip = (vmin, vmax)
     # Гістограма
