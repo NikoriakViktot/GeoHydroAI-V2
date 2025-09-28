@@ -225,8 +225,8 @@ def update_dashboard(n_clicks, tab, cdf_data,
             dcc.Loading(
                 type="circle",
                 children=[
-                    dcc.Graph(id="tab4-best-dem", figure=empty_dark_figure("Waiting for data…")),
-                    dcc.Graph(id="tab4-all-dem", figure=empty_dark_figure("Waiting for data…")),
+                    dcc.Graph(id="tab4-best-dem", figure=empty_dark_figure(text="Waiting for data…")),
+                    dcc.Graph(id="tab4-all-dem", figure=empty_dark_figure(text="Waiting for data…")),
                 ]
             )
         ])

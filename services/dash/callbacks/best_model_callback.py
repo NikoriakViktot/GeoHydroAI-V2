@@ -68,11 +68,11 @@ def update_best_dem_tab(n_clicks, groupby, dem, lulc, landform, slope, hand_togg
                 fig2 = build_grouped_nmad_barplot(df, x_col="hand_class",
                                                   title="NMAD of each DEM within HAND classes")
             else:
-                return empty_dark_figure("No data"), empty_dark_figure("No data")
+                return empty_dark_figure(text="Error loading data"), empty_dark_figure(text="Error loading data")
 
         except Exception as e:
             logger.exception("Failed to update best DEM tab: %s", e)
-            return empty_dark_figure("Error loading data"), empty_dark_figure("Error loading data")
+            return empty_dark_figure(text="Error loading data"), empty_dark_figure(text="Error loading data")
 
     return fig1, fig2
 

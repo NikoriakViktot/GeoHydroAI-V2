@@ -132,9 +132,14 @@ def apply_dark_theme(fig: go.Figure) -> go.Figure:
     )
     return fig
 
+def empty_dark_figure(*args, height: int = 600, text: str | None = None) -> go.Figure:
+    if args:
+        first = args[0]
+        if isinstance(first, str) and text is None:
+            text = first
+        elif isinstance(first, (int, float)):
+            height = int(first)
 
-def empty_dark_figure(height: int = 600, text: str | None = None) -> go.Figure:
-    """Blank dark figure placeholder with optional centered text."""
     fig = go.Figure()
     fig.update_layout(
         plot_bgcolor="#20232A",
@@ -148,13 +153,9 @@ def empty_dark_figure(height: int = 600, text: str | None = None) -> go.Figure:
     if text:
         fig.add_annotation(
             text=text,
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
             font=dict(size=16, color="#AAA", family="monospace"),
-            xanchor="center",
-            yanchor="middle",
+            xanchor="center", yanchor="middle",
         )
     return fig
