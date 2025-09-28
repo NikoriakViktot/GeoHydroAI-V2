@@ -272,6 +272,34 @@ def plotly_histogram_figure(diff_array, bins=60, clip_range=(-50, 50), density=F
     fig.update_xaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
     fig.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.08)")
     return fig
+def pixel_area_m2_from_ref_dem(ref_dem) -> float:
+    """
+    Оцінка площі пікселя в м² за референсним DEM (xdem.DEM).
+    Підтримує як проєктовані CRS (в метрах), так і географічні (в градусах).
+    """
+    with rasterio.open(ref_dem.filename) as ds:
+        tr = ds.transform
+        crs = ds.crs
+        px_w = abs(tr.a)      # розмір пікселя по X (в одиницях CRS)
+        px_h = abs(tr.e)      # розмір пікселя по Y (в одиницях CRS)
+
+        if crs and crs.is_projected:
+            # CRS у метрах -> площа = ширина * висота
+            return float(px_w * px_h)
+
+        # Географічний CRS (градуси): оцінюємо метри/градус на широті центру
+        b = ds.bounds
+        lat_c = 0.5 * (b.top + b.bottom)
+
+        # наближені формули метрів за градус довготи/широти (залежить від широти)
+        # джерело: стандартні геодезичні апроксимації
+        rad = np.deg2rad(lat_c)
+        m_per_deg_lat = 111132.92 - 559.82*np.cos(2*rad) + 1.175*np.cos(4*rad) - 0.0023*np.cos(6*rad)
+        m_per_deg_lon = 111412.84*np.cos(rad) - 93.5*np.cos(3*rad) + 0.118*np.cos(5*rad)
+
+        w_m = px_w * m_per_deg_lon
+        h_m = px_h * m_per_deg_lat
+        return float(w_m * h_m)
 
 # --- Plotly: стовпчики площ затоплення і «перекриття» ---
 def plotly_flood_areas_figure(stats: dict, title="Flooded area comparison"):
