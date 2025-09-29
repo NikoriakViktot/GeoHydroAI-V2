@@ -377,7 +377,7 @@ layout =  html.Div(
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "220px"},
+                                    style={"height": "200px"},
                                     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                                 ),
                                 # dcc.Graph(
@@ -396,7 +396,7 @@ layout =  html.Div(
                                 html.Div(
                                     id="legend-box",
                                     style={
-                                         "height": "220px",
+                                         "height": "200px",
                                          "padding": "8px 10px",
                                         "fontFamily": "monospace",
                                         "fontSize": "12px",
@@ -813,7 +813,6 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
             f"Elevation Difference (dH): {dem2} (Test) − {dem1} (Ref)",
             style={"fontWeight": "bold", "marginBottom": "6px", "fontSize": "13px"}
         ),
-
         html.Div([
             # Ліва колонка: шкала з підписами
             html.Div([
@@ -823,13 +822,13 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
                     html.Img(
                         src=legend_uri,
                         style={
-                            "height": "220px",
+                            "height": "200px",
                             "border": "1px solid rgba(255,255,255,0.2)",
                             "borderRadius": "4px",
                             "margin": "0 4px"
                         }
                     ),
-                    # Підпис 0 посередині шкали
+                    # 0 посередині
                     html.Div("0 m", style={
                         "position": "absolute",
                         "top": "50%",
@@ -846,28 +845,38 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
                 "alignItems": "center"
             }),
 
-            # Права колонка: текстові пояснення
+            # Права колонка: RED вгорі, BLUE внизу
             html.Div([
-                html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
-                         style={"lineHeight": "1.3", "fontSize": "11px"}),
-                html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
-                         style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+                # 🔴 Червоний зверху
+                html.Div([
+                    html.Div([html.Span("• RED: − Change", style={"color": "#ff6666"})],
+                             style={"lineHeight": "1.3", "fontSize": "11px"}),
+                    html.Div(f"{dem2} is LOWER than {dem1} (Subsidence/Erosion)",
+                             style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+                ], style={"marginBottom": "auto"}),
 
-                html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
-                         style={"marginTop": "6px", "lineHeight": "1.3", "fontSize": "11px"}),
-                html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
-                         style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
-
-                html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "8px 0"}),
-                html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m",
-                         style={"fontSize": "11px", "fontWeight": 700}),
-            ], style={"textAlign": "left"})
+                # 🔵 Синій внизу
+                html.Div([
+                    html.Div([html.Span("• BLUE: + Change", style={"color": "#6699ff"})],
+                             style={"lineHeight": "1.3", "fontSize": "11px"}),
+                    html.Div(f"{dem2} is HIGHER than {dem1} (Uplift/Bias)",
+                             style={"marginLeft": "14px", "fontSize": "10px", "color": "#aaa"}),
+                ], style={"marginTop": "auto"})
+            ], style={
+                "display": "flex",
+                "flexDirection": "column",
+                "justifyContent": "space-between"
+            })
         ], style={
             "display": "grid",
-            "gridTemplateColumns": "30% 70%",  # ← ширини колонок
-            "gap": "12px",
-            "alignItems": "center"
-                })
+            "gridTemplateColumns": "30% 70%",
+            "alignItems": "stretch",
+            "gap": "8px"
+        }),
+
+        html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "6px 0"}),
+        html.Div(f"Range: [{vmin:.2f}, {vmax:.2f}] m",
+                 style={"fontSize": "11px", "fontWeight": 700}),
     ], style={
         "padding": "10px",
         "background": "#1e1e1e",
