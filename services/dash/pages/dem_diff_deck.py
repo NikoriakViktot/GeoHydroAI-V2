@@ -251,228 +251,212 @@ def build_spec(dem_url, diff_bitmap, basin, init_view=None,
 
 # ---------- Layout (ФІНАЛЬНИЙ ОНОВЛЕНИЙ) ----------
 
-layout =  html.Div(
+# ---------- LAYOUT (чистий варіант) ----------
+layout = html.Div(
     [
-    html.Div(
-    [
-        html.H3("DEM Difference Analysis"),
         html.Div(
             [
-                # Ліва панель (Controls)
+                html.H3("DEM Difference Analysis"),
+
+                # === Головна сітка: ліві контролі + (карта | права панель) ===
                 html.Div(
                     [
-                        dcc.Dropdown(
-                            id="dem1",
-                            options=[{"label": d, "value": d} for d in DEM_LIST],
-                            value=(
-                                "copernicus_dem"
-                                if "copernicus_dem" in DEM_LIST
-                                else (DEM_LIST[0] if DEM_LIST else None)
-                            ),
-                            style={"marginBottom": "10px", "fontSize": "14px"},
-                        ),
-                        dcc.Dropdown(
-                            id="dem2",
-                            options=[{"label": d, "value": d} for d in DEM_LIST],
-                            value=(
-                                "srtm_dem"
-                                if "srtm_dem" in DEM_LIST
-                                else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)
-                            ),
-                            style={"marginBottom": "10px", "fontSize": "14px"},
-                        ),
-                        dcc.Dropdown(
-                            id="cat",
-                            options=[{"label": c, "value": c} for c in CATEGORY_LIST],
-                            value=(
-                                "dem"
-                                if "dem" in CATEGORY_LIST
-                                else (CATEGORY_LIST[0] if CATEGORY_LIST else None)
-                            ),
-                            style={"marginBottom": "8px", "fontSize": "14px"},
-                        ),
-                        # Параметри тільки для flood_scenarios
+                        # --- Ліва панель (контроли) ---
                         html.Div(
                             [
-                                html.Label(
-                                    "HAND model", style={"marginBottom": "4px"}
+                                dcc.Dropdown(
+                                    id="dem1",
+                                    options=[{"label": d, "value": d} for d in DEM_LIST],
+                                    value=("copernicus_dem" if "copernicus_dem" in DEM_LIST else (DEM_LIST[0] if DEM_LIST else None)),
+                                    style={"marginBottom": "10px", "fontSize": "14px"},
                                 ),
                                 dcc.Dropdown(
-                                    id="flood_hand",
-                                    options=[
-                                        {"label": h, "value": h} for h in FLOOD_HANDS
-                                    ],
-                                    value=(FLOOD_HANDS[0] if FLOOD_HANDS else None),
-                                    style={"marginBottom": "8px"},
-                                ),
-                                html.Label(
-                                    "Flood level", style={"marginBottom": "4px"}
+                                    id="dem2",
+                                    options=[{"label": d, "value": d} for d in DEM_LIST],
+                                    value=("srtm_dem" if "srtm_dem" in DEM_LIST else (DEM_LIST[1] if len(DEM_LIST) > 1 else None)),
+                                    style={"marginBottom": "10px", "fontSize": "14px"},
                                 ),
                                 dcc.Dropdown(
-                                    id="flood_level",
-                                    options=[
-                                        {"label": f, "value": f} for f in FLOOD_LEVELS
-                                    ],
-                                    value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None),
+                                    id="cat",
+                                    options=[{"label": c, "value": c} for c in CATEGORY_LIST],
+                                    value=("dem" if "dem" in CATEGORY_LIST else (CATEGORY_LIST[0] if CATEGORY_LIST else None)),
+                                    style={"marginBottom": "8px", "fontSize": "14px"},
                                 ),
-                            ],
-                            id="flood_opts",
-                            style={"display": "none", "marginBottom": "10px"},
-                        ),
-                        html.Button(
-                            "Compute Difference",
-                            id="run",
-                            style={
-                                "backgroundColor": "#1f77b4",
-                                "color": "white",
-                                "border": "none",
-                                "borderRadius": "6px",
-                                "padding": "6px 12px",
-                                "cursor": "pointer",
-                                "fontWeight": "bold",
-                                "fontSize": "14px",
-                                "width": "100%",
-                            },
-                        ),
-                    ],
-                    style={
-                        "border": "1px solid rgba(255,255,255,0.15)",
-                        "width": "180px",
-                        "padding": "12px",
-                        "backgroundColor": "#1e1e1e",
-                        "borderRadius": "8px",
-                    },
-                ),
-                # Права зона (Карта + Гістограма)
-                html.Div(
-                    [
-                        # Карта (ТЕПЕР БЕЗ ОВЕРЛЕЮ ЛЕГЕНДИ)
-                        html.Div(
-                            [
-                                dash_deckgl.DashDeckgl(
-                                    id="deck-main",
-                                    spec=build_spec(build_dem_url("viridis"), None, basin_json),
-                                    height=MAIN_MAP_HEIGHT,
-                                    cursor_position="bottom-right",
-                                    events=["hover"],
-                                    mapbox_key=MAPBOX_ACCESS_TOKEN,
-                                ),
-                                # !!! html.Div(id="legend-box") ВИДАЛЕНО ЗВІДСИ
-                            ],
-                            style={
-                                # !!! position: relative ВИДАЛЕНО
-                                "border": "1px solid rgba(255,255,255,0.15)",
-                                "borderRadius": "8px",
-                                "overflow": "hidden",
-                                "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
-                                "backgroundColor": "#111",
-                                "width": f"{MAP_WIDTH_PX}px",  # ← щоб не розтягувалась
-                            },
-                        ),
-
-                        # Права панель (Гістограма + Легенда)
-                        # Права панель (графіки + легенда)
-                        html.Div(
-                            [
-                                dcc.Graph(
-                                    id="hist",
-                                    figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "160px", "flex": "0 0 160px", "marginBottom": "6px"},
-                                    config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
-                                ),
-                                html.Hr(style={"borderColor": "rgba(255,255,255,0.15)", "margin": "6px 0"}),
-
-                                # Легенда займає решту висоти панелі, без зовнішнього скролу
+                                # Параметри тільки для flood_scenarios
                                 html.Div(
-                                    id="legend-box",
+                                    [
+                                        html.Label("HAND model", style={"marginBottom": "4px"}),
+                                        dcc.Dropdown(
+                                            id="flood_hand",
+                                            options=[{"label": h, "value": h} for h in FLOOD_HANDS],
+                                            value=(FLOOD_HANDS[0] if FLOOD_HANDS else None),
+                                            style={"marginBottom": "8px"},
+                                        ),
+                                        html.Label("Flood level", style={"marginBottom": "4px"}),
+                                        dcc.Dropdown(
+                                            id="flood_level",
+                                            options=[{"label": f, "value": f} for f in FLOOD_LEVELS],
+                                            value=(FLOOD_LEVELS[0] if FLOOD_LEVELS else None),
+                                        ),
+                                    ],
+                                    id="flood_opts",
+                                    style={"display": "none", "marginBottom": "10px"},
+                                ),
+                                html.Button(
+                                    "Compute Difference",
+                                    id="run",
                                     style={
-                                        "flex": "1 1 auto",
-                                        "minHeight": 0,
-                                        # !!! важливо для правильного перерахунку висоти у flex-контейнері
-                                        "overflowY": "auto",  # якщо легенда довша — скролиться тільки вона
-                                        "padding": "8px 10px",
-                                        "fontFamily": "monospace",
-                                        "fontSize": "12px",
-                                        "background": "#1e1e1e",
+                                        "backgroundColor": "#1f77b4",
+                                        "color": "white",
+                                        "border": "none",
                                         "borderRadius": "6px",
+                                        "padding": "6px 12px",
+                                        "cursor": "pointer",
+                                        "fontWeight": "bold",
+                                        "fontSize": "14px",
+                                        "width": "100%",
                                     },
                                 ),
                             ],
                             style={
-                                "width": f"{RIGHT_PANEL_WIDTH}px",
-                                "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
-                                "paddingLeft": "10px",
-                                "height": f"{MAIN_MAP_HEIGHT}px",
-                                "display": "flex",  # робимо колонку Flex
-                                "flexDirection": "column",
-                                "gap": "4px",
-                                "overflow": "hidden",  # вимикаємо скрол у всієї правої панелі
-                                "boxSizing": "border-box",
+                                "border": "1px solid rgba(255,255,255,0.15)",
+                                "width": "180px",
+                                "padding": "12px",
+                                "backgroundColor": "#1e1e1e",
+                                "borderRadius": "8px",
                             },
                         ),
 
-                    ],
-                    style={
-                        "display": "grid",
-                        "gridTemplateColumns": f"{MAP_WIDTH_PX}px {RIGHT_PANEL_WIDTH}px",  # ← фіксована ширина карти
-                        "gap": "10px",
-                        "alignItems": "start",
-                        "gridColumn": "2 / 3",
-                    },
-                ),
-
-                # НОВИЙ БЛОК: Статистика під картою
-                html.Div(
-                    [
-                        html.H4("Analysis Results", style={"marginTop": "15px", "marginBottom": "5px"}),
+                        # --- Права зона: карта + (гістограма, легенда) ---
                         html.Div(
-                            id="stats",
+                            [
+                                # Карта
+                                html.Div(
+                                    [
+                                        dash_deckgl.DashDeckgl(
+                                            id="deck-main",
+                                            spec=build_spec(build_dem_url("viridis"), None, basin_json),
+                                            height=MAIN_MAP_HEIGHT,
+                                            cursor_position="bottom-right",
+                                            events=["hover"],
+                                            mapbox_key=MAPBOX_ACCESS_TOKEN,
+                                        ),
+                                    ],
+                                    style={
+                                        "border": "1px solid rgba(255,255,255,0.15)",
+                                        "borderRadius": "8px",
+                                        "overflow": "hidden",
+                                        "boxShadow": "0 4px 16px rgba(0,0,0,0.3)",
+                                        "backgroundColor": "#111",
+                                        "width": f"{MAP_WIDTH_PX}px",   # фіксуємо ширину карти
+                                    },
+                                ),
+
+                                # Права панель (висока гістограма + компактна легенда)
+                                html.Div(
+                                    [
+                                        dcc.Graph(
+                                            id="hist",
+                                            figure=empty_dark_figure(220, "Press “Compute Difference”"),
+                                            style={
+                                                "height": "300px",     # ↑ збільшили
+                                                "flex": "0 0 300px",
+                                                "marginBottom": "6px",
+                                            },
+                                            config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                                        ),
+                                        html.Hr(
+                                            style={"borderColor": "rgba(255,255,255,0.15)", "margin": "6px 0"}
+                                        ),
+                                        html.Div(
+                                            id="legend-box",
+                                            style={
+                                                "flex": "0 0 200px",   # ↓ обмежили легенду
+                                                "maxHeight": "200px",
+                                                "minHeight": "160px",
+                                                "overflowY": "auto",
+                                                "padding": "8px 10px",
+                                                "fontFamily": "monospace",
+                                                "fontSize": "12px",
+                                                "background": "#1e1e1e",
+                                                "borderRadius": "6px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "width": f"{RIGHT_PANEL_WIDTH}px",
+                                        "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
+                                        "paddingLeft": "10px",
+                                        "height": f"{MAIN_MAP_HEIGHT}px",
+                                        "display": "flex",
+                                        "flexDirection": "column",
+                                        "gap": "4px",
+                                        "overflow": "hidden",
+                                        "boxSizing": "border-box",
+                                    },
+                                ),
+                            ],
                             style={
-                                "fontFamily": "monospace",
-                                "backgroundColor": "#1e1e1e",
-                                "padding": "15px",
-                                "borderRadius": "8px",
-                                "border": "1px solid rgba(255,255,255,0.15)",
-                            }
+                                "display": "grid",
+                                "gridTemplateColumns": f"{MAP_WIDTH_PX}px {RIGHT_PANEL_WIDTH}px",
+                                "gap": "10px",
+                                "alignItems": "start",
+                                "gridColumn": "2 / 3",
+                            },
+                        ),
+
+                        # --- Статистика під картою ---
+                        html.Div(
+                            [
+                                html.H4("Analysis Results", style={"marginTop": "15px", "marginBottom": "5px"}),
+                                html.Div(
+                                    id="stats",
+                                    style={
+                                        "fontFamily": "monospace",
+                                        "backgroundColor": "#1e1e1e",
+                                        "padding": "15px",
+                                        "borderRadius": "8px",
+                                        "border": "1px solid rgba(255,255,255,0.15)",
+                                    },
+                                ),
+                            ],
+                            style={"gridColumn": "2 / 3", "marginTop": "10px"},
                         ),
                     ],
                     style={
-                        "gridColumn": "2 / 3",
-                        "marginTop": "10px"
-                    }
+                        "display": "grid",
+                        "gridTemplateColumns": "230px 1fr",
+                        "gap": "10px",
+                        "alignItems": "start",
+                        "gridTemplateRows": "auto auto",
+                    },
+                ),
+
+                # Лог подій deck.gl (необов'язково)
+                html.Div(
+                    id="deck-events",
+                    style={
+                        "fontFamily": "monospace",
+                        "marginTop": "16px",
+                        "padding": "8px",
+                        "backgroundColor": "#1e1e1e",
+                        "color": "#eee",
+                        "borderRadius": "4px",
+                        "border": "1px solid rgba(255,255,255,0.15)",
+                    },
                 ),
             ],
+            id="page-container",
             style={
-                "display": "grid",
-                "gridTemplateColumns": "230px 1fr",
-                "gap": "10px",
-                "alignItems": "start",
-                "gridTemplateRows": "auto auto"
+                "maxWidth": "1420px",   # обмежуємо загальну ширину сторінки
+                "margin": "0 auto",     # центруємо
+                "padding": "0 16px",    # невеликий внутрішній відступ
             },
-        ),
-        html.Div(
-            id="deck-events",
-            style={
-                "fontFamily": "monospace",
-                "marginTop": "16px",
-                "padding": "8px",
-                "backgroundColor": "#1e1e1e",
-                "color": "#eee",
-                "borderRadius": "4px",
-                "border": "1px solid rgba(255,255,255,0.15)",
-            }
-        ),
+        )
     ],
-        id="page-container",
-        style={
-            "maxWidth": "1420px",  # ← обмежуємо загальну ширину сторінки
-            "margin": "0 auto",  # ← центруємо по горизонталі
-            "padding": "0 16px"  # ← невеликий внутрішній відступ, щоб контент не лип до країв
-        },
-    )
-    ],
-    style={"width": "100%"}
+    style={"width": "100%"},
 )
+
 # ---------- Службові (TOOLTIPS/СТИЛІ) ----------
 
 TOOLTIP_TEXTS = {
