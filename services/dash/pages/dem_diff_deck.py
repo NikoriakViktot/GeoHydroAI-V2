@@ -36,7 +36,7 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 
 # ---------- Константи UI ----------
-MAIN_MAP_HEIGHT = 500
+MAIN_MAP_HEIGHT = 550
 RIGHT_PANEL_WIDTH = 600
 MAP_WIDTH_PX = 600           # ← максимальна ширина карти (пікселі)
 ZOOM_DEFAULT = 9            # ← бажаний стартовий зум
@@ -359,7 +359,7 @@ layout = html.Div(
                                             id="hist",
                                             figure=empty_dark_figure(220, "Press “Compute Difference”"),
                                             style={
-                                                "height": "220px",     # ↑ збільшили
+                                                "height": "200px",     # ↑ збільшили
                                                 "flex": "0 0 260px",
                                                 "marginBottom": "6px",
                                             },
@@ -371,15 +371,12 @@ layout = html.Div(
                                         html.Div(
                                             id="legend-box",
                                             style={
-                                                "flex": "0 0 160px",   # ↓ обмежили легенду
-                                                "maxHeight": "200px",
-                                                "minHeight": "160px",
-                                                "overflowY": "auto",
                                                 "padding": "8px 10px",
                                                 "fontFamily": "monospace",
                                                 "fontSize": "12px",
                                                 "background": "#1e1e1e",
                                                 "borderRadius": "6px",
+                                                "overflowY": "visible",  # ← більше не скролиться
                                             },
                                         ),
                                     ],
