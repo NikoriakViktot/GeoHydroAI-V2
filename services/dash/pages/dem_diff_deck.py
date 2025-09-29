@@ -36,7 +36,7 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 
 # ---------- Константи UI ----------
-MAIN_MAP_HEIGHT = 600
+MAIN_MAP_HEIGHT = 550
 RIGHT_PANEL_WIDTH = 600
 MAP_WIDTH_PX = 600           # ← максимальна ширина карти (пікселі)
 ZOOM_DEFAULT = 9            # ← бажаний стартовий зум
