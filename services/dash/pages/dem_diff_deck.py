@@ -359,8 +359,8 @@ layout = html.Div(
                                             id="hist",
                                             figure=empty_dark_figure(220, "Press “Compute Difference”"),
                                             style={
-                                                "height": "300px",     # ↑ збільшили
-                                                "flex": "0 0 300px",
+                                                "height": "220px",     # ↑ збільшили
+                                                "flex": "0 0 260px",
                                                 "marginBottom": "6px",
                                             },
                                             config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
@@ -371,7 +371,7 @@ layout = html.Div(
                                         html.Div(
                                             id="legend-box",
                                             style={
-                                                "flex": "0 0 200px",   # ↓ обмежили легенду
+                                                "flex": "0 0 160px",   # ↓ обмежили легенду
                                                 "maxHeight": "200px",
                                                 "minHeight": "160px",
                                                 "overflowY": "auto",
