@@ -377,30 +377,24 @@ layout =  html.Div(
                                 dcc.Graph(
                                     id="hist",
                                     figure=empty_dark_figure(220, "Press “Compute Difference”"),
-                                    style={"height": "200px"},
+                                    style={"height": "160px", "flex": "0 0 160px", "marginBottom": "6px"},
                                     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                                 ),
-                                # dcc.Graph(
-                                #     id="violin",
-                                #     figure=empty_dark_figure(180, "Violin will appear after run"),
-                                #     style={"height": "170px", "marginTop": "6px"},
-                                #     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
-                                # ),
-                                # dcc.Graph(
-                                #     id="ecdf",
-                                #     figure=empty_dark_figure(180, "ECDF will appear after run"),
-                                #     style={"height": "170px", "marginTop": "6px"},
-                                #     config={"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
-                                # ),
-                                html.Hr(style={"borderColor": "rgba(255,255,255,0.15)"}),
+                                html.Hr(style={"borderColor": "rgba(255,255,255,0.15)", "margin": "6px 0"}),
+
+                                # Легенда займає решту висоти панелі, без зовнішнього скролу
                                 html.Div(
                                     id="legend-box",
                                     style={
-                                         "height": "200px",
-                                         "padding": "8px 10px",
+                                        "flex": "1 1 auto",
+                                        "minHeight": 0,
+                                        # !!! важливо для правильного перерахунку висоти у flex-контейнері
+                                        "overflowY": "auto",  # якщо легенда довша — скролиться тільки вона
+                                        "padding": "8px 10px",
                                         "fontFamily": "monospace",
                                         "fontSize": "12px",
                                         "background": "#1e1e1e",
+                                        "borderRadius": "6px",
                                     },
                                 ),
                             ],
@@ -408,8 +402,12 @@ layout =  html.Div(
                                 "width": f"{RIGHT_PANEL_WIDTH}px",
                                 "maxWidth": f"{RIGHT_PANEL_WIDTH}px",
                                 "paddingLeft": "10px",
-                                "overflowY": "auto",
                                 "height": f"{MAIN_MAP_HEIGHT}px",
+                                "display": "flex",  # робимо колонку Flex
+                                "flexDirection": "column",
+                                "gap": "4px",
+                                "overflow": "hidden",  # вимикаємо скрол у всієї правої панелі
+                                "boxSizing": "border-box",
                             },
                         ),
 
@@ -822,7 +820,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
                     html.Img(
                         src=legend_uri,
                         style={
-                            "height": "200px",
+                            "height": "160px",
                             "border": "1px solid rgba(255,255,255,0.2)",
                             "borderRadius": "4px",
                             "margin": "0 4px"
