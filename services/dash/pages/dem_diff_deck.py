@@ -36,7 +36,7 @@ from utils.dem_tools import (
 # ---------- Константи UI ----------
 
 # ---------- Константи UI ----------
-MAIN_MAP_HEIGHT = 550
+MAIN_MAP_HEIGHT = 600
 RIGHT_PANEL_WIDTH = 600
 MAP_WIDTH_PX = 600           # ← максимальна ширина карти (пікселі)
 ZOOM_DEFAULT = 9            # ← бажаний стартовий зум
@@ -376,6 +376,8 @@ layout = html.Div(
                                                 "fontSize": "12px",
                                                 "background": "#1e1e1e",
                                                 "borderRadius": "6px",
+                                                "marginTop": "4px",  # ↑ Підняти ближче до графіка
+                                                "marginBottom": "0px",
                                                 "overflowY": "visible",  # ← більше не скролиться
                                             },
                                         ),
