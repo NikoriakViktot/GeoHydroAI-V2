@@ -154,6 +154,16 @@ class DuckDBData:
             logger.error("get_unique_lulc_names failed: %s", e)
             return []
 
+    def get_unique_landform(self, dem):
+        landform_col = f"{dem}_landform"
+        sql = f""" SELECT DISTINCT {landform_col}        
+             FROM '{self.parquet_file}' 
+            WHERE {landform_col} IS NOT NULL 
+            AND atl03_cnf = 4 AND atl08_class = 1
+           ORDER BY {landform_col} """
+        df = self.query(sql)
+        return [{"label": x, "value": x} for x in df[landform_col].dropna().tolist()]
+
     # --- 9. Dropdowns ---
     def get_track_dropdown_options(self, year):
         df = self.get_unique_tracks(year)
