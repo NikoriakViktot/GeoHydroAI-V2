@@ -40,7 +40,7 @@ api_app = FastAPI(
 )
 root_app = FastAPI()
 
-root_app.mount("/api", api_app)
+root_app.mount("/api/", api_app)
 
 # Додатково, якщо потрібно, root_app може реагувати на `/`
 @root_app.get("/")
