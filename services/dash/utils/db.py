@@ -135,37 +135,24 @@ class DuckDBData:
 
     # --- 8. LULC/landform для фільтрів ---
 
-
     def get_unique_lulc_names(self, dem: str | None):
-        # якщо DEM невідомий — нічого не фільтруємо і нічого не ламаємо
         if not dem:
             logger.warning("get_unique_lulc_names: DEM is None -> returning empty list")
             return []
         try:
             sql = f"""
                 SELECT DISTINCT lulc_name
-                FROM '{self.path}'
+                FROM '{self.parquet_file}'
                 WHERE delta_{dem} IS NOT NULL AND lulc_name IS NOT NULL
+                ORDER BY lulc_name
             """
-            df = duckdb.query(sql).to_df()
-            if "lulc_name" not in df:
+            df = self.query(sql)
+            if df.empty or "lulc_name" not in df.columns:
                 return []
             return [{"label": x, "value": x} for x in df["lulc_name"].dropna().tolist()]
         except Exception as e:
             logger.error("get_unique_lulc_names failed: %s", e)
             return []
-    def get_unique_landform(self, dem):
-        landform_col = f"{dem}_landform"
-        sql = f"""
-            SELECT DISTINCT {landform_col}
-            FROM '{self.parquet_file}'
-            WHERE {landform_col} IS NOT NULL
-            AND atl03_cnf = 4 AND atl08_class = 1
-            ORDER BY {landform_col}
-        """
-        df = self.query(sql)
-        return [{"label": x, "value": x} for x in df[landform_col].dropna().tolist()]
-
 
     # --- 9. Dropdowns ---
     def get_track_dropdown_options(self, year):

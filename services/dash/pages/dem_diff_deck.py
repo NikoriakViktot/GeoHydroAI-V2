@@ -803,7 +803,7 @@ def run_diff(n, dem1, dem2, cat, flood_hand, flood_level):
                     html.Img(
                         src=legend_uri,
                         style={
-                            "height": "160px",
+                            "height": "150px",
                             "border": "1px solid rgba(255,255,255,0.2)",
                             "borderRadius": "4px",
                             "margin": "0 4px"
