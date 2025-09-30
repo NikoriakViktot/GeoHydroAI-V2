@@ -6,7 +6,7 @@ import os, sys, logging
 import dash_deckgl
 import logging
 import dash_bootstrap_components as dbc
-
+BASE_PATH = os.getenv("BASE_PATH", "/")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
@@ -28,7 +28,7 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
-    # requests_pathname_prefix='/dem/',
+    requests_pathname_prefix=BASE_PATH if BASE_PATH != "/" else None,
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -75,20 +75,21 @@ for mod in (
 #             or p.startswith("/assets")):
 #         abort(404)
 
+def url(p: str) -> str:
+    return app.get_relative_path(p)
 
+navbar = dbc.NavbarSimple(children=[
+    dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
+    dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
+    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
+],
+    brand = "GeoHydroAI",
+    color = "dark",
+    dark = True,
+    sticky = "top",
+    class_name = "py-1"
+    )
 
-navbar = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
-        dbc.NavItem(dbc.NavLink("DEM Difference", href="/dem-diff")),
-        dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href="/flood-dem-diif")),
-    ],
-    brand="GeoHydroAI",
-    color="dark",
-    dark=True,
-    sticky="top",
-    class_name="py-1"
-)
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])
 

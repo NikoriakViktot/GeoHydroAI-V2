@@ -45,6 +45,8 @@ services:
   api:
     build:
          context: ./services/api
+    env_file:
+      - .env
     environment:
       POSTGRES_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgis:5432/${POSTGRES_DB}
       TERRACOTTA_URL: ${TERRACOTTA_URL}
@@ -76,6 +78,8 @@ services:
      build:
        context: ./services/dash
        target: dash
+     env_file:
+       - .env
      environment:
        API_URL: http://api:8000
        MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
