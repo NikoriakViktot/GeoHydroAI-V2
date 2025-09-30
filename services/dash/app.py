@@ -17,7 +17,12 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
     force=True,  # критично: перезаписати конфіг, який міг виставити gunicorn
 )
+if not BASE_PATH.startswith("/"):
+    BASE_PATH = "/" + BASE_PATH
+if not BASE_PATH.endswith("/"):
+    BASE_PATH += "/"
 
+logging.info("Dash BASE_PATH = %r", BASE_PATH)
 # Додатково: вирівняти Flask/Dash під gunicorn, якщо gunicorn вже має свої хендлери
 gunicorn_error = logging.getLogger("gunicorn.error")
 if gunicorn_error.handlers:
@@ -30,7 +35,7 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
-    requests_pathname_prefix=BASE_PATH if BASE_PATH != "/" else None,
+    requests_pathname_prefix=BASE_PATH,   # важливо
     routes_pathname_prefix=BASE_PATH,  # додай, щоб бекендові маршрути теж мали префікс
     use_pages=True,
     external_stylesheets=[
@@ -43,6 +48,8 @@ app.title = "GeoHydroAI | DEM OLAP"
 server = app.server
 def url(p: str) -> str:
     return app.get_relative_path(p)
+
+
 
 @server.route("/health")
 def health():
@@ -78,16 +85,13 @@ for mod in (
 #             or p.startswith("/assets")):
 #         abort(404)
 
-def url(p: str) -> str:
-    return app.get_relative_path(p)
+
 
 navbar = dbc.NavbarSimple(children=[
     dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
     dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
-    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)",
-                            href=url("/flood-dem-diif"),
-                            external_link=True)),
-],
+    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif")))
+ ],
     brand = "GeoHydroAI",
     color = "dark",
     dark = True,
