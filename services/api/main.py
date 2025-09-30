@@ -1,14 +1,10 @@
-#services/api/main.py
-
+# services/api/main.py
 import os
 import logging
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
-
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -23,32 +19,15 @@ logger = logging.getLogger("geoapi")
 
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
-@asynccontextmanager
-async def lifespan(api_app: FastAPI):
-    logger.info("API starting...")
-    yield
-    logger.info("API stopping...")
-
-api_app = FastAPI(
+app = FastAPI(
     title="GeoHydroAI API",
     default_response_class=ORJSONResponse,
-    lifespan=lifespan,
-    root_path="/api",                 # важливо
-    docs_url="/docs",                 # буде доступно як /api/docs
-    redoc_url="/redoc",               # /api/redoc
-    openapi_url="/openapi.json",      # /api/openapi.json
+    root_path="/api",            # <-- ключове!
+    docs_url="/docs",            # підсумковий шлях: /api/docs
+    redoc_url="/redoc",          #                 /api/redoc
+    openapi_url="/openapi.json", #                 /api/openapi.json
 )
-root_app = FastAPI()
 
-root_app.mount("/api/", api_app)
-
-# Додатково, якщо потрібно, root_app може реагувати на `/`
-@root_app.get("/")
-def read_root():
-    return {"message": "Welcome to root"}
-
-# “root_app” — це фактичний застосунок, який запускаєте
-app = root_app
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
@@ -58,12 +37,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# Роутери під /api/*
 app.include_router(icesat_router)
 app.include_router(compare_router)
 app.include_router(dem_router)
 
-# Health
+# Health перевірки під /api/...
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 def health():
     return {"status": "ok"}
