@@ -6,8 +6,10 @@ import os, sys, logging
 import dash_deckgl
 import logging
 import dash_bootstrap_components as dbc
-BASE_PATH = os.getenv("BASE_PATH", "/")
+
+BASE_PATH = os.getenv("BASE_PATH", "/dem/")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
@@ -81,7 +83,9 @@ def url(p: str) -> str:
 navbar = dbc.NavbarSimple(children=[
     dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
     dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
-    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
+    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)",
+                            href=url("/flood-dem-diif"),
+                            external_link=True)),
 ],
     brand = "GeoHydroAI",
     color = "dark",
