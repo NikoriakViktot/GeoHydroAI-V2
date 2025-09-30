@@ -31,6 +31,7 @@ if gunicorn_error.handlers:
 app = dash.Dash(
     __name__,
     requests_pathname_prefix=BASE_PATH if BASE_PATH != "/" else None,
+    routes_pathname_prefix=BASE_PATH,  # додай, щоб бекендові маршрути теж мали префікс
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
