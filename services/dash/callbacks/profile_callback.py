@@ -186,9 +186,9 @@ def update_profile(track_rgt_spot, dem, date,
                             df_ice,
                             transition_covariance=10 ** kq,  # Q_base
                             observation_covariance=kr,  # R
-                            gap_break=180.0
+                            gap_break=100.0
                         )
-                        interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
+                        interpolated_df = smooth_df[["distance_m", "kalman_smooth", "segment_id"]].rename(
                             columns={"kalman_smooth": "orthometric_height"}
                         )
                     # elif interp_method == "kalman":

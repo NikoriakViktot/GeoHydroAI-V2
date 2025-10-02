@@ -64,64 +64,64 @@ def kalman_smooth(
     df: pd.DataFrame,
     y_col: str = "orthometric_height",
     x_col: str = "distance_m",
-    transition_covariance: float = 1e-2,   # Q_base
-    observation_covariance: float = 0.8,   # R
-    gap_break: float = 50.0,              # м; не згладжувати через такі розриви
-    robust_premed: bool = True,            # легка rolling-median перед Калманом
-    roll_win: int = 11,                    # вікно для rolling-median (у точках)
+    transition_covariance: float = 1e-2,
+    observation_covariance: float = 0.9,
+    gap_break: float = 100.0,
+    robust_premed: bool = True,
+    roll_win: int = 11,
 ):
     if df.empty:
         out = df.copy()
         out["kalman_smooth"] = np.nan
+        out["segment_id"] = np.nan
         return out
 
     d = df.sort_values(x_col).copy()
     y = d[y_col].to_numpy(dtype=float)
     x = d[x_col].to_numpy(dtype=float)
 
-    # розбиваємо на сегменти за великими прогалинами
+    # розбивка на сегменти
     gaps = np.where(np.diff(x) > gap_break)[0] + 1
     idx_splits = np.split(np.arange(len(d)), gaps)
 
-    smoothed = np.full_like(y, np.nan, dtype=float)
+    smoothed   = np.full_like(y, np.nan, dtype=float)
+    segment_id = np.full(len(d), np.nan, dtype=float)
 
-    for idx in idx_splits:
+    for seg_no, idx in enumerate(idx_splits, start=1):
         if len(idx) == 0:
             continue
         yy = y[idx].astype(float)
 
-        # легкий пре-денойз (необов'язково)
         if robust_premed and len(idx) >= roll_win:
-            s = pd.Series(yy)
+            s   = pd.Series(yy)
             med = s.rolling(roll_win, center=True, min_periods=1).median().to_numpy()
-            e = yy - med
+            e   = yy - med
             mad = 1.4826 * np.nanmedian(np.abs(e[np.isfinite(e)])) if np.isfinite(e).any() else 0.0
             if mad > 0:
                 yy = np.where(np.abs(e) > 4 * mad, med, yy)
 
-        # локальні нечислові замінимо на медіану сегмента
         if not np.isfinite(yy).any():
             continue
         seg_med = np.nanmedian(yy[np.isfinite(yy)])
         yy = np.where(np.isfinite(yy), yy, seg_med)
 
-        # масштабуємо Q по кроку вздовж треку
-        dx = np.diff(x[idx])
+        dx     = np.diff(x[idx])
         med_dx = np.median(dx) if len(dx) else 1.0
-        scale = np.r_[med_dx, dx] / max(med_dx, 1e-6)                # довжина T
-        q_step = np.clip(transition_covariance * scale, 1e-4, 1e-1)  # межі для стабільності
-        q_step = q_step.reshape(-1, 1, 1)                             # (T,1,1) — time-varying Q
+        scale  = np.r_[med_dx, dx] / max(med_dx, 1e-6)
+        q_step = np.clip(transition_covariance * scale, 1e-4, 1e-1).reshape(-1, 1, 1)
 
         kf = KalmanFilter(
             initial_state_mean=yy[0],
-            transition_matrices=np.ones((len(idx), 1, 1)),   # дозволяє time-varying параметри
+            transition_matrices=np.ones((len(idx), 1, 1)),
             observation_matrices=np.ones((len(idx), 1, 1)),
-            transition_covariance=q_step,                    # ← Q_t
-            observation_covariance=observation_covariance,   # константний R
+            transition_covariance=q_step,
+            observation_covariance=observation_covariance,
         )
         state_means, _ = kf.smooth(yy)
         smoothed[idx] = state_means.ravel()
+        segment_id[idx] = seg_no
 
     out = d.copy()
     out["kalman_smooth"] = smoothed
+    out["segment_id"]    = segment_id  # ← головне
     return out

@@ -39,19 +39,42 @@ def build_profile_figure_with_hand(
 
     # Калман/інтерпольована лінія (поважає gap-break через NaN)
     if isinstance(interpolated_df, pd.DataFrame) and not interpolated_df.empty:
-        fig.add_trace(go.Scatter(
-            x=interpolated_df["distance_m"],
-            y=interpolated_df["orthometric_height"],
-            mode="lines",
-            line=dict(width=1.6, dash="solid"),
-            name=("Interpolated ("
-                  + (interp_method or "smooth")
-                  + (f", Q={q_label}" if q_label is not None else "")
-                  + (f", R={r_label}" if r_label is not None else "")
-                  + ")"),
-            opacity=0.9,
-            connectgaps=False  # ← важливо: не зшивати прогалини
-        ))
+        if "segment_id" in interpolated_df.columns and interpolated_df["segment_id"].notna().any():
+            # окремий трейс на сегмент
+            first = True
+            name_common = ("Interpolated ("
+                           + (interp_method or "kalman")
+                           + (f", Q={q_label}" if q_label is not None else "")
+                           + (f", R={r_label}" if r_label is not None else "")
+                           + ")")
+            for seg_id, g in interpolated_df.groupby("segment_id", sort=True):
+                g = g.sort_values("distance_m")
+                fig.add_trace(go.Scatter(
+                    x=g["distance_m"],
+                    y=g["orthometric_height"],
+                    mode="lines",
+                    line=dict(width=1.6),
+                    name=name_common if first else name_common,  # однакове ім'я
+                    showlegend=first,  # легенду показати лише для ПЕРШОГО
+                    opacity=0.9,
+                    connectgaps=False
+                ))
+                first = False
+        else:
+            # fallback: один трейс (якщо segment_id немає)
+            fig.add_trace(go.Scatter(
+                x=interpolated_df["distance_m"],
+                y=interpolated_df["orthometric_height"],
+                mode="lines",
+                line=dict(width=1.6),
+                name=("Interpolated ("
+                      + (interp_method or "kalman")
+                      + (f", Q={q_label}" if q_label is not None else "")
+                      + (f", R={r_label}" if r_label is not None else "")
+                      + ")"),
+                opacity=0.9,
+                connectgaps=False
+            ))
 
     # Метрики похибки: якщо є калман-профіль -> delta_*_kalman, інакше delta_*
     err_text = None
