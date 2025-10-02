@@ -114,6 +114,8 @@ services:
       - ./certbot/www:/var/www/certbot:ro
       - certs:/etc/letsencrypt:ro
       - /var/www/geoai-front:/var/www/geoai-front:ro
+      - /var/www/geoai-reports:/var/www/geoai-reports:ro
+
     restart: unless-stopped
     networks: [web]
 
