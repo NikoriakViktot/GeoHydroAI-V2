@@ -92,7 +92,7 @@ navbar = dbc.NavbarSimple(children=[
     dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
     dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
     dbc.NavItem(dbc.NavLink("FFA Report", href="https://geohydroai.org/reports/ffa_report_en.html", target="_blank")),
-    dbc.NavItem(dbc.NavLink("Cross Section", href="https://geohydroai.org/cross_section_dashboard", target="_blank")),
+    dbc.NavItem(dbc.NavLink("Cross Section", href="https://geohydroai.org/reports/cross_section_dashboard.html", target="_blank")),
  ],
     brand = "GeoHydroAI",
     color = "dark",
