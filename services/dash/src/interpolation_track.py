@@ -66,7 +66,7 @@ def kalman_smooth(
     x_col: str = "distance_m",
     transition_covariance: float = 1e-2,   # Q_base
     observation_covariance: float = 0.8,   # R
-    gap_break: float = 180.0,              # м; не згладжувати через такі розриви
+    gap_break: float = 50.0,              # м; не згладжувати через такі розриви
     robust_premed: bool = True,            # легка rolling-median перед Калманом
     roll_win: int = 11,                    # вікно для rolling-median (у точках)
 ):
