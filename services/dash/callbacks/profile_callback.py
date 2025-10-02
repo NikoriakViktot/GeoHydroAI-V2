@@ -12,6 +12,9 @@ import pandas as pd
 import logging
 import config as S
 from layout.tracks_map_tab import basin_json, basin_bounds
+from utils.style import empty_dark_figure
+from pyproj import Geod
+import numpy as np
 
 from src.interpolation_track import (
         kalman_smooth,
@@ -103,12 +106,6 @@ def add_distance_m(df, lon_col="x", lat_col="y"):
         df["distance_m"] = np.arange(len(df))
     return df
 
-from utils.style import empty_dark_figure
-from pyproj import Geod
-import numpy as np
-import pandas as pd
-import logging
-logger = logging.getLogger(__name__)
 
 @callback(
     Output("track_profile_graph", "figure"),
