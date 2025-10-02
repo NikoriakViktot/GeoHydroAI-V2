@@ -38,24 +38,90 @@ def interpolate_spline(df_ice, grid=None, s=0):
         return None
 
 
+# def kalman_smooth(
+#     df,
+#     y_col="orthometric_height",
+#     transition_covariance=1e-3,     # Q, типово для сильного згладжування
+#     observation_covariance=3.0      # R, типово для "відсікання" викидів
+# ):
+#     if df.empty:
+#         return df.copy()
+#     values = df[y_col].values
+#
+#     kf = KalmanFilter(
+#         initial_state_mean=values[0],
+#         transition_matrices=[1],
+#         observation_matrices=[1],
+#         transition_covariance=transition_covariance,
+#         observation_covariance=observation_covariance,
+#     )
+#     state_means, _ = kf.smooth(values)
+#     df_result = df.copy()
+#     df_result["kalman_smooth"] = state_means
+#     return df_result
+
 def kalman_smooth(
-    df,
-    y_col="orthometric_height",
-    transition_covariance=1e-3,     # Q, типово для сильного згладжування
-    observation_covariance=3.0      # R, типово для "відсікання" викидів
+    df: pd.DataFrame,
+    y_col: str = "orthometric_height",
+    x_col: str = "distance_m",
+    transition_covariance: float = 1e-2,   # Q_base
+    observation_covariance: float = 0.8,   # R
+    gap_break: float = 180.0,              # м; не згладжувати через такі розриви
+    robust_premed: bool = True,            # легка rolling-median перед Калманом
+    roll_win: int = 11,                    # вікно для rolling-median (у точках)
 ):
     if df.empty:
-        return df.copy()
-    values = df[y_col].values
+        out = df.copy()
+        out["kalman_smooth"] = np.nan
+        return out
 
-    kf = KalmanFilter(
-        initial_state_mean=values[0],
-        transition_matrices=[1],
-        observation_matrices=[1],
-        transition_covariance=transition_covariance,
-        observation_covariance=observation_covariance,
-    )
-    state_means, _ = kf.smooth(values)
-    df_result = df.copy()
-    df_result["kalman_smooth"] = state_means
-    return df_result
+    d = df.sort_values(x_col).copy()
+    y = d[y_col].to_numpy(dtype=float)
+    x = d[x_col].to_numpy(dtype=float)
+
+    # розбиваємо на сегменти за великими прогалинами
+    gaps = np.where(np.diff(x) > gap_break)[0] + 1
+    idx_splits = np.split(np.arange(len(d)), gaps)
+
+    smoothed = np.full_like(y, np.nan, dtype=float)
+
+    for idx in idx_splits:
+        if len(idx) == 0:
+            continue
+        yy = y[idx].astype(float)
+
+        # легкий пре-денойз (необов'язково)
+        if robust_premed and len(idx) >= roll_win:
+            s = pd.Series(yy)
+            med = s.rolling(roll_win, center=True, min_periods=1).median().to_numpy()
+            e = yy - med
+            mad = 1.4826 * np.nanmedian(np.abs(e[np.isfinite(e)])) if np.isfinite(e).any() else 0.0
+            if mad > 0:
+                yy = np.where(np.abs(e) > 4 * mad, med, yy)
+
+        # локальні нечислові замінимо на медіану сегмента
+        if not np.isfinite(yy).any():
+            continue
+        seg_med = np.nanmedian(yy[np.isfinite(yy)])
+        yy = np.where(np.isfinite(yy), yy, seg_med)
+
+        # масштабуємо Q по кроку вздовж треку
+        dx = np.diff(x[idx])
+        med_dx = np.median(dx) if len(dx) else 1.0
+        scale = np.r_[med_dx, dx] / max(med_dx, 1e-6)                # довжина T
+        q_step = np.clip(transition_covariance * scale, 1e-4, 1e-1)  # межі для стабільності
+        q_step = q_step.reshape(-1, 1, 1)                             # (T,1,1) — time-varying Q
+
+        kf = KalmanFilter(
+            initial_state_mean=yy[0],
+            transition_matrices=np.ones((len(idx), 1, 1)),   # дозволяє time-varying параметри
+            observation_matrices=np.ones((len(idx), 1, 1)),
+            transition_covariance=q_step,                    # ← Q_t
+            observation_covariance=observation_covariance,   # константний R
+        )
+        state_means, _ = kf.smooth(yy)
+        smoothed[idx] = state_means.ravel()
+
+    out = d.copy()
+    out["kalman_smooth"] = smoothed
+    return out

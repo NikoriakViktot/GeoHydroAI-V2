@@ -181,17 +181,30 @@ def update_profile(track_rgt_spot, dem, date,
                     if interp_method == "linear":
                         grid = np.linspace(df_ice["distance_m"].min(), df_ice["distance_m"].max(), 300)
                         interpolated_df = interpolate_linear(df_ice, grid=grid)
+
                     elif interp_method == "kalman":
                         kq = kalman_q if isinstance(kalman_q, (int, float)) else -1  # 10**-1 = 0.1
                         kr = kalman_r if isinstance(kalman_r, (int, float)) else 0.6
                         smooth_df = kalman_smooth(
                             df_ice,
-                            transition_covariance=10 ** kq,
-                            observation_covariance=kr
+                            transition_covariance=10 ** kq,  # Q_base
+                            observation_covariance=kr,  # R
+                            gap_break=180.0
                         )
                         interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
                             columns={"kalman_smooth": "orthometric_height"}
                         )
+                    # elif interp_method == "kalman":
+                    #     kq = kalman_q if isinstance(kalman_q, (int, float)) else -1  # 10**-1 = 0.1
+                    #     kr = kalman_r if isinstance(kalman_r, (int, float)) else 0.6
+                    #     smooth_df = kalman_smooth(
+                    #         df_ice,
+                    #         transition_covariance=10 ** kq,
+                    #         observation_covariance=kr
+                    #     )
+                    #     interpolated_df = smooth_df[["distance_m", "kalman_smooth"]].rename(
+                    #         columns={"kalman_smooth": "orthometric_height"}
+                    #     )
 
         # 7) Малюємо (твоя функція — з п. A)
         fig = build_profile_figure_with_hand(
