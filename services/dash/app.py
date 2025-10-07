@@ -1,11 +1,9 @@
-# app.py
 import dash
 from dash import html, dcc
-import traceback
 import os, sys, logging
 import dash_deckgl
-import logging
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output, State
 
 BASE_PATH = os.getenv("BASE_PATH", "/dem/")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -15,7 +13,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler(sys.stdout)],
-    force=True,  # критично: перезаписати конфіг, який міг виставити gunicorn
+    force=True,
 )
 if not BASE_PATH.startswith("/"):
     BASE_PATH = "/" + BASE_PATH
@@ -29,14 +27,12 @@ if gunicorn_error.handlers:
     root.handlers = gunicorn_error.handlers
     root.setLevel(gunicorn_error.level)
 
-# external_stylesheets = [
-#     "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
-# ]
 app = dash.Dash(
     __name__,
     requests_pathname_prefix=BASE_PATH,
     routes_pathname_prefix=BASE_PATH,
     use_pages=True,
+    # Використовуємо Bootstrap, що забезпечує більшість стилів
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
     ],
@@ -49,12 +45,11 @@ def url(p: str) -> str:
     return app.get_relative_path(p)
 
 
-
 @server.route("/health")
 def health():
     return "ok", 200
 
-# ІМПОРТИ КОЛБЕКІВ — без navigate
+# ІМПОРТИ КОЛБЕКІВ
 for mod in (
     "callbacks.main_callbacks",
     "callbacks.sidebar_drawer",
@@ -69,20 +64,74 @@ for mod in (
         logging.exception("FATAL: failed to import %s", mod)
         raise
 
-navbar = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
-        dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
-        dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
-        dbc.NavItem(dbc.NavLink("FFA Report", href="https://geohydroai.org/reports/ffa_report_en.html", target="_blank")),
-        dbc.NavItem(dbc.NavLink("Cross Section", href="https://geohydroai.org/reports/cross_section_dashboard.html", target="_blank")),
-    ],
-    brand="GeoHydroAI",
+
+# Функція для створення елемента навігації у стилі кнопки
+def nav_button(text, href, target="_self"):
+    return dbc.NavItem(
+        dcc.Link(
+            text,
+            href=href,
+            className="nav-link nav-button-style",
+            target=target,
+        ),
+        className="mx-1",
+    )
+
+
+navbar = dbc.Navbar(
+    dbc.Container(
+        [
+            # *** ВИПРАВЛЕНО ***
+            # Видалено target="_blank", щоб уникнути TypeError.
+            # Посилання на зовнішній звіт залишилося.
+            dbc.NavbarBrand(
+                "GeoHydroAI",
+                href="https://www.geohydroai.org/reports/accuracy_dem_story.html",
+                class_name="me-auto"
+            ),
+
+            # Кнопка-гамбургер для мобільних пристроїв
+            dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+
+            # Контент, що згортається (навигация)
+            dbc.Collapse(
+                dbc.Nav(
+                    [
+                        nav_button("Dashboard", url("/dashboard")),
+                        nav_button("DEM Difference", url("/dem-diff")),
+                        nav_button("Flood Scenarios (Map)", url("/flood-dem-diif")),
+                        nav_button("FFA Report", "https://geohydroai.org/reports/ffa_report_en.html", target="_blank"),
+                        nav_button("Cross Section", "https://geohydroai.org/reports/cross_section_dashboard.html",
+                                   target="_blank"),
+                    ],
+                    className="justify-content-end", # Вирівнювання праворуч
+                    navbar=True,
+                ),
+                id="navbar-collapse",
+                is_open=False,
+                navbar=True,
+            ),
+        ],
+        fluid=True,
+    ),
     color="dark",
     dark=True,
     sticky="top",
     class_name="py-1 gh-navbar",
+    expand="lg",
 )
+
+
+# Колбек для роботи кнопки-гамбургера (toggler)
+@app.callback(
+    Output("navbar-collapse", "is_open"),
+    [Input("navbar-toggler", "n_clicks")],
+    [State("navbar-collapse", "is_open")],
+)
+def toggle_navbar_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])

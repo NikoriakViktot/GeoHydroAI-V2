@@ -1,21 +1,44 @@
-/*assets/01-dropdown-fix.css*/
-/* --- dcc.Dropdown (react-select v1) --- */
-.Select { position: relative; overflow: visible; }
-.Select-menu-outer{
-  position: absolute;
-  z-index: 999999 !important;  /* МАКС явний пріоритет */
-  max-height: 70vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  background: #1f2937;
-  color: #e5e7eb;
-  border: 1px solid #374151;
+/* Дозволити, щоб випадаючий список не обрізався */
+.Select {
+  position: relative !important;
+  overflow: visible !important;
 }
-.Select-option { background: #1f2937; color: #e5e7eb; }
-.Select-option.is-focused { background: #374151; color: #fff; }
-.Select-option.is-selected { background: #2563eb; color: #fff; }
 
-/* --- НІХТО НЕ МАЄ Обрізати меню --- */
+/* Меню відкривається вліво від кнопки */
+.Select-menu-outer {
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  transform-origin: top right !important;
+  z-index: 999999 !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  background: #1f2937 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #374151 !important;
+}
+
+/* Стилі елементів списку як кнопки */
+.Select-option {
+  display: block;
+  padding: 0.5em 1em !important;
+  margin: 0.1em 0 !important;
+  border-radius: 4px !important;
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+}
+.Select-option.is-focused {
+  background-color: #2563eb !important;
+  color: #fff !important;
+}
+.Select-option.is-selected {
+  background-color: #3b82f6 !important;
+  color: #fff !important;
+}
+
+/* Щоби ніякий контейнер не обрізав меню */
 .container, .container-fluid, .row, [class*="col-"],
 .card, .card-body, .accordion, .accordion-item, .accordion-collapse,
 .dbc-collapse, .offcanvas, .offcanvas-body, .modal, .tab-content,
@@ -23,15 +46,127 @@
   overflow: visible !important;
 }
 
-/* --- Шапка нижче за меню --- */
+/* Щоби navbar / шапка була нижче за меню */
 .gh-navbar, .navbar, .navbar.sticky-top, .navbar.fixed-top,
 .offcanvas, .offcanvas-backdrop {
   z-index: 1050 !important;
 }
 
-/* Відступ під sticky navbar, щоб меню не лізло під неї */
-body { padding-top: 56px; }
-@media (max-width: 480px){
-  .Select-control, .Select-menu-outer, .Select-option { font-size: 16px; } /* щоб iOS не зумило */
-  body { padding-top: 64px; }
+/* Відступ під шапку, щоб контент не був схований */
+body {
+  padding-top: 15px !important;
+}
+@media (max-width: 480px) {
+  body {
+    padding-top: 15px !important;
+  }
+  .Select-control, .Select-menu-outer, .Select-option {
+    font-size: 16px !important;
+  }
+}
+
+/* Синій фон navbar і стилі для лінків */
+.gh-navbar {
+  background-color: #1e40af !important;
+  border-bottom: 2px solid #2563eb !important;
+}
+.gh-navbar .navbar-brand {
+  color: #ffffff !important;
+}
+.gh-navbar .nav-link {
+  color: #e5e7eb !important;
+}
+.gh-navbar .nav-link:hover, .gh-navbar .nav-link:focus {
+  color: #ffffff !important;
+}
+/* Іконка гамбургера світла */
+.gh-navbar .navbar-toggler-icon {
+  filter: invert(1) !important;
+}
+
+/* Суперспецифічне правило для дропдаун меню всередині навбара чи контейнера */
+div.Select div.Select-menu-outer,
+.Select-menu-outer {
+  position: absolute !important;
+  right: 0px !important;
+  left: auto !important;
+  transform-origin: top right !important;
+  z-index: 2147483647 !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  background: #1f2937 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #374151 !important;
+}
+
+/* Опції як кнопки */
+div.Select div.Select-option,
+.Select-option {
+  display: block !important;
+  padding: 0.5em 1em !important;
+  margin: 0.1em 0 !important;
+  border-radius: 4px !important;
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+}
+div.Select div.Select-option.is-focused,
+.Select-option.is-focused {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+div.Select div.Select-option.is-selected,
+.Select-option.is-selected {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Додаткові стилі для перетворення NavLink на кнопку */
+.nav-button-style {
+    display: inline-block;
+    padding: 0.5rem 1rem !important;
+    margin: 0.1em 0 !important;
+    border-radius: 4px !important;
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer !important;
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Стиль при наведенні курсора */
+.nav-button-style:hover,
+.nav-button-style:focus {
+    background-color: #2563eb !important;
+    color: #fff !important;
+    text-decoration: none;
+    border-color: #3b82f6 !important;
+}
+
+/* Стиль для активного посилання (якщо Dash додає клас 'active') */
+.nav-button-style.active {
+    background-color: #3b82f6 !important;
+    color: #fff !important;
+}
+
+/* Забезпечення, що навлінк всередині навбара не перебиває стилі */
+.gh-navbar .navbar-nav .nav-link {
+    padding-left: var(--bs-navbar-nav-link-padding-x, 0.5rem) !important;
+    padding-right: var(--bs-navbar-nav-link-padding-x, 0.5rem) !important;
+}
+/* Додайте це для гарантованого вирівнювання праворуч на великих екранах */
+.gh-navbar .collapse {
+    /* Це стандартне правило Bootstrap, але переконаємося, що воно застосовується */
+    justify-content: flex-end; /* Переміщує вміст праворуч */
+}
+
+/* Якщо 'lg' недостатньо, спробуйте змусити його не згортатися на великих екранах */
+@media (min-width: 992px) { /* 992px - це breakpoint 'lg' */
+    .gh-navbar .navbar-collapse {
+        display: flex !important;
+        flex-grow: 1; /* Дозволяє зайняти весь простір */
+    }
 }
