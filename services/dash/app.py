@@ -23,7 +23,6 @@ if not BASE_PATH.endswith("/"):
     BASE_PATH += "/"
 
 logging.info("Dash BASE_PATH = %r", BASE_PATH)
-# Додатково: вирівняти Flask/Dash під gunicorn, якщо gunicorn вже має свої хендлери
 gunicorn_error = logging.getLogger("gunicorn.error")
 if gunicorn_error.handlers:
     root = logging.getLogger()
@@ -35,8 +34,8 @@ if gunicorn_error.handlers:
 # ]
 app = dash.Dash(
     __name__,
-    requests_pathname_prefix=BASE_PATH,   # важливо
-    routes_pathname_prefix=BASE_PATH,  # додай, щоб бекендові маршрути теж мали префікс
+    requests_pathname_prefix=BASE_PATH,
+    routes_pathname_prefix=BASE_PATH,
     use_pages=True,
     external_stylesheets=[
         "https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/darkly/bootstrap.min.css"
@@ -55,11 +54,6 @@ def url(p: str) -> str:
 def health():
     return "ok", 200
 
-# from flask import Response
-# @server.route("/_dash-component-suites/dash_deckgl/dash_deckgl.min.js.map")
-# def _dash_deckgl_sourcemap():
-#     return Response("{}", mimetype="application/json")
-
 # ІМПОРТИ КОЛБЕКІВ — без navigate
 for mod in (
     "callbacks.main_callbacks",
@@ -75,31 +69,20 @@ for mod in (
         logging.exception("FATAL: failed to import %s", mod)
         raise
 
-    # from flask import abort, request
-# # server = app.server
-# @server.before_request
-# def block_non_dem():
-#     p = request.path
-#     if not (p.startswith("/dem/")
-#             or p.startswith("/_dash")
-#             or p.startswith("/assets")):
-#         abort(404)
-
-
-
-navbar = dbc.NavbarSimple(children=[
-    dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
-    dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
-    dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
-    dbc.NavItem(dbc.NavLink("FFA Report", href="https://geohydroai.org/reports/ffa_report_en.html", target="_blank")),
-    dbc.NavItem(dbc.NavLink("Cross Section", href="https://geohydroai.org/reports/cross_section_dashboard.html", target="_blank")),
- ],
-    brand = "GeoHydroAI",
-    color = "dark",
-    dark = True,
-    sticky = "top",
-    class_name = "py-1"
-    )
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Dashboard", href=url("/dashboard"))),
+        dbc.NavItem(dbc.NavLink("DEM Difference", href=url("/dem-diff"))),
+        dbc.NavItem(dbc.NavLink("Flood Scenarios (Map)", href=url("/flood-dem-diif"))),
+        dbc.NavItem(dbc.NavLink("FFA Report", href="https://geohydroai.org/reports/ffa_report_en.html", target="_blank")),
+        dbc.NavItem(dbc.NavLink("Cross Section", href="https://geohydroai.org/reports/cross_section_dashboard.html", target="_blank")),
+    ],
+    brand="GeoHydroAI",
+    color="dark",
+    dark=True,
+    sticky="top",
+    class_name="py-1 gh-navbar",
+)
 
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, dash.page_container])
