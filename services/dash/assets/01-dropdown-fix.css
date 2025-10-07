@@ -1,44 +1,37 @@
 /*assets/01-dropdown-fix.css*/
-
-/* щоби дропдауни були ВИЩЕ за шапку */
-.gh-navbar,
-.navbar,
-.navbar.sticky-top,
-.navbar.fixed-top,
-.offcanvas,
-.offcanvas-backdrop {
-  z-index: 1050; /* дропдаун має 20000, тож буде поверх */
-}
-
-/* якщо контент під шапкою притискається — дай відступ під sticky navbar */
-body { padding-top: 56px; }
-@media (max-width: 480px){ body { padding-top: 64px; } }
-
-
-/* --- dcc.Dropdown (react-select v1) — ПІДНЯТИ НАД УСІМ --- */
+/* --- dcc.Dropdown (react-select v1) --- */
 .Select { position: relative; overflow: visible; }
 .Select-menu-outer{
   position: absolute;
-  z-index: 20000 !important;    /* вище за navbar/offcanvas */
+  z-index: 999999 !important;  /* МАКС явний пріоритет */
   max-height: 70vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  background: #1f2937;
+  color: #e5e7eb;
+  border: 1px solid #374151;
 }
-
-/* Якщо дропдауни всередині карт/акордеонів — не обрізати */
-.card, .accordion, .accordion-item, .accordion-collapse,
-.dbc-collapse, .offcanvas, .offcanvas-body, .modal, .tab-content {
-  overflow: visible !important;
-}
-
-/* --- Контраст для темної теми (Bootswatch Darkly) --- */
-.Select-control,
-.Select-menu-outer { background: #1f2937; color: #e5e7eb; border-color: #374151; }
 .Select-option { background: #1f2937; color: #e5e7eb; }
 .Select-option.is-focused { background: #374151; color: #fff; }
 .Select-option.is-selected { background: #2563eb; color: #fff; }
 
-/* iOS/Android: щоб не зумило інпут */
+/* --- НІХТО НЕ МАЄ Обрізати меню --- */
+.container, .container-fluid, .row, [class*="col-"],
+.card, .card-body, .accordion, .accordion-item, .accordion-collapse,
+.dbc-collapse, .offcanvas, .offcanvas-body, .modal, .tab-content,
+#page-content, #page-container, #content, main, section {
+  overflow: visible !important;
+}
+
+/* --- Шапка нижче за меню --- */
+.gh-navbar, .navbar, .navbar.sticky-top, .navbar.fixed-top,
+.offcanvas, .offcanvas-backdrop {
+  z-index: 1050 !important;
+}
+
+/* Відступ під sticky navbar, щоб меню не лізло під неї */
+body { padding-top: 56px; }
 @media (max-width: 480px){
-  .Select-control, .Select-menu-outer, .Select-option { font-size: 16px; }
+  .Select-control, .Select-menu-outer, .Select-option { font-size: 16px; } /* щоб iOS не зумило */
+  body { padding-top: 64px; }
 }
