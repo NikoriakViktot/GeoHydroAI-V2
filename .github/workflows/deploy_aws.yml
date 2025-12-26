@@ -20,6 +20,6 @@ jobs:
           ls -la docker-compose.yml
           # деплой
           docker compose -f docker-compose.yml pull || true
-          docker compose -f docker-compose.yml up -d --build
+          docker compose -f docker-compose.yml up -d 
           docker image prune -f || true
 
