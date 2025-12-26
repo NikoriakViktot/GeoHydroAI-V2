@@ -128,16 +128,24 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - certs:/etc/letsencrypt
-    entrypoint: /bin/sh
-    networks: [web]
+    networks: [ web ]
+
 
   certbot-renewer:
     image: certbot/certbot:latest
     volumes:
       - ./certbot/www:/var/www/certbot
       - certs:/etc/letsencrypt
-    entrypoint: /bin/sh -c 'while :; do certbot renew --webroot -w /var/www/certbot --quiet --deploy-hook "nginx -s reload"; sleep 12h; done'
-    networks: [ web ]
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: >
+      /bin/sh -c '
+      while :; do
+        certbot renew --webroot -w /var/www/certbot --quiet
+        docker exec geoai-nginx nginx -s reload
+        sleep 12h
+      done'
+    networks: [web]
+
 
     # Команди запускатимеш вручну через `docker compose run --rm certbot ...`
 
