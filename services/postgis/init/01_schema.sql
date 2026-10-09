@@ -1,6 +1,1 @@
-CREATE TABLE IF NOT EXISTS icesat_points(
-  id BIGSERIAL PRIMARY KEY,
-  height DOUBLE PRECISION NOT NULL,
-  geom GEOMETRY(POINTZ,4326) NOT NULL
-);
-CREATE INDEX IF NOT EXISTS ix_icesat_geom ON icesat_points USING GIST(geom);
+-- Таблиці ICESat-2 (icesat_points, icesat_nmad) визначено в 02_icesat.sql

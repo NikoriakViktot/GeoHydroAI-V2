@@ -17,6 +17,9 @@ POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg://postgres:postgres
 _engine = create_engine(POSTGRES_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False, future=True)
 
+def get_engine():
+    return _engine
+
 def get_sync_session() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:

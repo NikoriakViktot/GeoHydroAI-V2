@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from di import get_sync_session
-from routers.icesat import router as icesat_router
+from routers.icesat_v2 import router as icesat_router
 from routers.compare import router as compare_router
 from routers.dem import router as dem_router
 

@@ -1,10 +1,9 @@
 #callbacks/best_model_callback.py
 import dash
 import logging
-import duckdb
 from dash import html, dcc, Output, Input, State, callback
 from utils.plots import build_best_dem_barplot, build_grouped_nmad_barplot
-from registry import get_db
+from registry import get_db, icesat_connection
 from utils.style import empty_dark_figure
 
 db = get_db("nmad")
@@ -34,7 +33,7 @@ landform_names = {
 )
 def update_best_dem_tab(n_clicks, groupby, dem, lulc, landform, slope, hand_toggle, hand_range):
     hand_range_ = hand_range if hand_toggle and "on" in hand_toggle else None
-    with duckdb.connect() as con:
+    with icesat_connection() as con:
         try:
             if groupby == "lulc":
                 df = db.get_nmad_grouped_by_lulc(con, slope_range=slope,

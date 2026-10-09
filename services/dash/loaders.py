@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import geopandas as gpd
 from utils.db import DuckDBData
+from utils.api_data import ApiData
 
 def _must_exist(p: Path | str) -> str:
     p = Path(p)
@@ -13,6 +14,10 @@ def _must_exist(p: Path | str) -> str:
 @lru_cache
 def get_db_nmad(path: str) -> DuckDBData:
     return DuckDBData(_must_exist(path))
+
+@lru_cache
+def get_api_data(base_url: str) -> ApiData:
+    return ApiData(base_url)
 
 @lru_cache
 def read_parquet(path: str) -> pd.DataFrame:

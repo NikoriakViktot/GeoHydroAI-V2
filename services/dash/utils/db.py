@@ -263,6 +263,16 @@ class DuckDBData:
         df = con.execute(sql).fetchdf()
         return df.iloc[0].to_dict()
 
+    def get_filtered_stats_all(self, con, dems, slope_range=None, hand_range=None, lulc=None, landform=None):
+        out = []
+        for d in dems:
+            s = self.get_filtered_stats(con, d, slope_range=slope_range, hand_range=hand_range,
+                                        lulc=lulc, landform=landform)
+            if s:
+                s["DEM"] = d
+                out.append(s)
+        return out
+
     # utils/db.py
 
     def get_dem_stats_sql(self, con, dem_key, hand_range=None):

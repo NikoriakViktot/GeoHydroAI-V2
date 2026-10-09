@@ -2,7 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Any, Dict
 import config as S
-from loaders import get_db_nmad, read_parquet, read_gpkg_4326
+import contextlib
+import duckdb
+from loaders import get_api_data, get_db_nmad, read_parquet, read_gpkg_4326
 
 @dataclass(frozen=True)
 class DataRegistry:
@@ -32,6 +34,9 @@ registry = DataRegistry(
     dbs={
         "nmad":           lambda: get_db_nmad(str(S.NMAD_PARQUET)),
         "tracks":         lambda: get_db_nmad(str(S.TRACKS_PARQUET)),
+    } if S.ICESAT_BACKEND == "duckdb" else {
+        "nmad":           lambda: get_api_data(S.API_URL),
+        "tracks":         lambda: get_api_data(S.API_URL),
     },
 )
 
@@ -41,4 +46,8 @@ def get_df(key: str):
 def get_db(key: str):
     return registry.db(key)
 
-__all__ = ["DataRegistry", "registry", "get_df", "get_db"]
+def icesat_connection():
+    """DuckDB-з'єднання для методів DuckDBData(con, ...); для API-бекенда не потрібне."""
+    return duckdb.connect() if S.ICESAT_BACKEND == "duckdb" else contextlib.nullcontext()
+
+__all__ = ["DataRegistry", "registry", "get_df", "get_db", "icesat_connection"]

@@ -2,6 +2,7 @@ from dash import callback, Output, Input
 import dash_leaflet as dl
 import duckdb, pandas as pd, dash
 import config as S
+from registry import get_db
 
 T_TRACKS = f"read_parquet('{S.TRACKS_PARQUET.as_posix()}')"
 app = dash.get_app()
@@ -97,8 +98,8 @@ def update_map_markers(selected_profile, hand_range, hand_toggle):
         else None
     )
 
-    gj = get_geojson_for_date(track, rgt, spot, dem, date,
-                              hand_range_for_query, step=50)
+    fetch = get_db("tracks").get_geojson_for_date if S.ICESAT_BACKEND == "api" else get_geojson_for_date
+    gj = fetch(track, rgt, spot, dem, date, hand_range_for_query, step=50)
     feats = gj.get("features", [])
     if not feats:
         return []

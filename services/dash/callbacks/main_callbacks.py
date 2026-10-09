@@ -2,7 +2,7 @@
 from __future__ import annotations
 import io, logging, os
 from typing import Any, Iterable, Optional, Tuple
-import dash, duckdb, pandas as pd
+import dash, pandas as pd
 from dash import Input, Output, State, callback, dcc, html
 import dash
 
@@ -10,7 +10,7 @@ from callbacks.cdf_callback import get_cdf_tab
 from layout.main_tab import render_main_tab
 from layout.tracks_map_tab import tracks_map_layout
 from layout.tracks_profile_tab import profile_tab_layout
-from registry import registry as R
+from registry import registry as R, icesat_connection
 from utils.plots import build_dem_stats_bar, build_error_box, build_error_hist
 from utils.table import format_selected_filters, get_filtered_table_title
 from utils.style import apply_dark_theme
@@ -150,54 +150,34 @@ def update_dashboard(n_clicks, tab, cdf_data,
         )
 
     if tab == "tab-1":
-        with duckdb.connect() as con:
-            # Sample для hist/box (по активному DEM, по floodplain)
+        with icesat_connection() as con:
+            # Sample для hist/box (по активному DEM)
             dff_plot = db.get_filtered_sample(
                 con, dem,
                 slope_range=slope, hand_range=hand_range_,
                 lulc=lulc, landform=landform, sample_n=20_000
             )
-            # Floodplain (HAND) table
-            stats_hand = []
-            for d in dem_list:
-                s = db.get_dem_stats_sql(con, d, hand_range=hand_range_)
-                if s:
-                    s['DEM'] = d
-                    stats_hand.append(s)
-            # All territory table
-            stats_all = []
-            for d in dem_list:
-                s = db.get_dem_stats_sql(con, d, hand_range=None)
-                if s:
-                    s['DEM'] = d
-                    stats_all.append(s)
-            columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
-
-            # --- Barplot для всіх DEM по поточних фільтрах ---
-            filtered_stats_all_dems = []
-            for d in dem_list:
-                s = db.get_filtered_stats(
-                    con, d,
-                    slope_range=slope,
-                    hand_range=hand_range_,
-                    lulc=lulc,
-                    landform=landform
-                )
-                if s:
-                    s['DEM'] = d
-                    filtered_stats_all_dems.append(s)
-            for d in filtered_stats_all_dems:
-                if "DEM" in d:
-                    d["DEM"] = d["DEM"].replace("_", " ").upper()
-            filtered_bar = build_dem_stats_bar(
-                filtered_stats_all_dems,
-                width=420, height=270
+            # --- Barplot і таблиця для всіх DEM по поточних фільтрах ---
+            filtered_stats_all_dems = db.get_filtered_stats_all(
+                con, dem_list,
+                slope_range=slope,
+                hand_range=hand_range_,
+                lulc=lulc,
+                landform=landform
             )
-            # Графіки для активного DEM
-            hist_fig = build_error_hist(dff_plot, dem, width=260, height=270)
-            box_fig = build_error_box(dff_plot, dem, width=260, height=270)
-            filtered_table_title = get_filtered_table_title(lulc, landform, slope, hand_range_)
-            filters_summary = format_selected_filters(lulc, landform, slope, hand_range_)
+        columns = [{"name": k, "id": k} for k in ["DEM", "N_points", "MAE", "RMSE", "Bias"]]
+        for d in filtered_stats_all_dems:
+            if "DEM" in d:
+                d["DEM"] = d["DEM"].replace("_", " ").upper()
+        filtered_bar = build_dem_stats_bar(
+            filtered_stats_all_dems,
+            width=420, height=270
+        )
+        # Графіки для активного DEM
+        hist_fig = build_error_hist(dff_plot, dem, width=260, height=270)
+        box_fig = build_error_box(dff_plot, dem, width=260, height=270)
+        filtered_table_title = get_filtered_table_title(lulc, landform, slope, hand_range_)
+        filters_summary = format_selected_filters(lulc, landform, slope, hand_range_)
 
         return render_main_tab(
             hist_fig, box_fig, filtered_bar,

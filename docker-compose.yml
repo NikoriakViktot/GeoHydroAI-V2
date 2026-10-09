@@ -10,6 +10,8 @@ x-logging: &logging
 services:
   postgis:
     build: ./services/postgis
+    # тюнінг під хост 7.6 GB RAM / 2 vCPU (таблиці icesat_* ~ кілька GB)
+    command: postgres -c shared_buffers=1GB -c work_mem=32MB -c maintenance_work_mem=512MB -c max_wal_size=4GB -c effective_cache_size=4GB
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}

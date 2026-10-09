@@ -12,3 +12,7 @@ CDF_PARQUET             = DATA_DIR / "cdf_precomputed.parquet"
 INITIAL_SAMPLE_PARQUET  = DATA_DIR / "initial_sample.parquet"
 INITIAL_STATS_PARQUET   = DATA_DIR / "initial_stats.parquet"
 STATS_ALL_PARQUET       = DATA_DIR / "stats_all_cached.parquet"
+
+# джерело даних ICESat: "api" (PostGIS через API) або "duckdb" (parquet напряму, для відкату)
+ICESAT_BACKEND          = os.getenv("ICESAT_BACKEND", "api").strip().lower()
+API_URL                 = os.getenv("API_URL", "http://api:8000")
