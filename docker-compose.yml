@@ -118,8 +118,10 @@ services:
       - /var/www/geoai-front:/var/www/geoai-front:ro
       - /var/www/geoai-reports:/var/www/geoai-reports:ro
 
+    # nginx не перечитує сертифікати сам: reload кожні 6 год підхоплює оновлені certbot-renewer'ом
+    command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -s reload; done & exec nginx -g 'daemon off;'"]
     restart: unless-stopped
-    networks: [web]
+    networks: [web, python_course]
 
 
   # одноразовий запуск для випуску серта (ручний запуск командою нижче)
@@ -129,6 +131,7 @@ services:
       - ./certbot/www:/var/www/certbot
       - certs:/etc/letsencrypt
     networks: [ web ]
+    profiles: [manual]
 
 
   certbot-renewer:
@@ -136,14 +139,14 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - certs:/etc/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock
+    # reload nginx робить сам nginx (див. command у сервісі nginx)
     entrypoint: >
       /bin/sh -c '
       while :; do
         certbot renew --webroot -w /var/www/certbot --quiet
-        docker exec geoai-nginx nginx -s reload
         sleep 12h
       done'
+    restart: unless-stopped
     networks: [web]
 
 
@@ -157,3 +160,7 @@ volumes:
 
 networks:
   web: {}
+  # мережа проєкту Python_Curse — nginx проксує python-course на web:9000
+  python_course:
+    external: true
+    name: python_curse_default
