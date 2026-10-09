@@ -54,6 +54,8 @@ check 200 "/tiles/swb_boundaries/9/298/172" "MVT swb_boundaries"
 check_header "/tiles/rivers/6/37/21" "^cache-control: public, max-age=3600"
 # terracotta, catalog, reports
 check 200 "/tc/keys"                 "terracotta"
+check 200 "/tc/metadata/curve_number/cn2_grid" "CN II raster registered"
+check 200 "/tc/singleband/curve_number/cn2_grid/6/37/21.png?colormap=rdylgn_r&stretch_range=%5B40,95%5D" "CN II raster tile"
 check 301 "/catalog"                 "-> /catalog/"
 check 200 "/catalog/health"          "catalog-api"
 check 403 "/reports/"                "no directory listing"
