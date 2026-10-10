@@ -54,6 +54,7 @@ check 200 "/tiles/swb_boundaries/9/298/172" "MVT swb_boundaries"
 check 200 "/tiles/apsfr_reaches/5/18/10"  "official APSFR river reaches (DSNS)"
 check 200 "/tiles/apsfr_points/7/73/43"   "official APSFR territories (DSNS)"
 check 200 "/tiles/dsns_flood_hazard/11/1157/703" "DSNS flood hazard map (Opir)"
+check 200 "/tiles/catchments/10/582/355" "post catchments (42194 Yablunytsia)"
 check_header "/tiles/rivers/6/37/21" "^cache-control: public, max-age=3600"
 # terracotta, catalog, reports
 check 200 "/tc/keys"                 "terracotta"
