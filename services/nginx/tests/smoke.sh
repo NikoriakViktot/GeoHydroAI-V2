@@ -51,6 +51,9 @@ for s in rivers river_system lakes basins soils posts; do check 200 "/tiles/$s/6
 check 200 "/tiles/sea_waters/6/37/22"  "MVT sea_waters (Black Sea tile)"
 check 204 "/tiles/sea_waters/6/37/21"  "empty tile over land = 204, not an error"
 check 200 "/tiles/swb_boundaries/9/298/172" "MVT swb_boundaries"
+check 200 "/tiles/apsfr_reaches/5/18/10"  "official APSFR river reaches (DSNS)"
+check 200 "/tiles/apsfr_points/7/73/43"   "official APSFR territories (DSNS)"
+check 200 "/tiles/dsns_flood_hazard/11/1157/703" "DSNS flood hazard map (Opir)"
 check_header "/tiles/rivers/6/37/21" "^cache-control: public, max-age=3600"
 # terracotta, catalog, reports
 check 200 "/tc/keys"                 "terracotta"
