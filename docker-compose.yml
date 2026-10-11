@@ -130,6 +130,8 @@ services:
       # the whole directory, not the single file: a single-file bind mount pins the inode, so after
       # `git reset --hard` replaced nginx.conf the container kept serving the old copy
       - ./services/nginx:/etc/nginx/geoai:ro
+      # secrets kept outside git, pulled in by `include` (catalog X-API-Key); see services/nginx/nginx.conf
+      - /home/ubuntu/geoai-catalog/nginx:/etc/nginx/secrets/catalog:ro
       - ./certbot/www:/var/www/certbot:ro
       - certs:/etc/letsencrypt:ro
       - /var/www/geoai-front:/var/www/geoai-front:ro
