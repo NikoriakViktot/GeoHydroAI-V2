@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, Session
 # Adapters (ти вже маєш їхні реалізації або додай з попереднього меседжа)
 
 from infrastructure.postgis.repositories import PostgisDemRepository
-from infrastructure.terr_inf.client import TerracottaSampler
+from infrastructure.raster.cog_sampler import CogSampler
 from infrastructure.duckdb.repository import DuckDBDeltaRepository
 from core.usecases.compare_dem import CompareDemUseCase
 
@@ -26,7 +26,8 @@ def get_sync_session() -> Generator[Session, None, None]:
 
 def build_online_usecase() -> CompareDemUseCase:
     repo = PostgisDemRepository()
-    sampler = TerracottaSampler(base=os.getenv("TERRACOTTA_URL", "http://terracotta:5000"))
+    # Reads the COGs directly (Terracotta has no /value endpoint). Layer keys are `category/name`.
+    sampler = CogSampler()
     slope_layer = os.getenv("SLOPE_LAYER", "slope")
     hand_layer = os.getenv("HAND_LAYER", "hand")
     return CompareDemUseCase(repo_points=repo, sampler=sampler, slope_layer=slope_layer, hand_layer=hand_layer)
