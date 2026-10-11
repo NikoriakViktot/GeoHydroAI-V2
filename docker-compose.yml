@@ -27,6 +27,8 @@ services:
     networks: [web]
     logging: *logging
     restart: unless-stopped
+    mem_limit: 1536m        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
+    memswap_limit: 2g
 
 
 
@@ -53,6 +55,8 @@ services:
     networks: [web]
     logging: *logging
     restart: unless-stopped
+    mem_limit: 768m        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
+    memswap_limit: 1g
 
   api:
     build:
@@ -85,6 +89,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    mem_limit: 1g        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
+    memswap_limit: 1536m
 
 
 
@@ -106,6 +112,8 @@ services:
      ports:
        - "127.0.0.1:${DASH_PORT:-8050}:8050"   # назовні — через nginx /dem/
      restart: unless-stopped
+     mem_limit: 1536m        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
+     memswap_limit: 2g
      healthcheck:
        test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8050/health', timeout=2).read()" ]
        interval: 30s
@@ -140,6 +148,8 @@ services:
     # nginx не перечитує сертифікати сам: reload кожні 6 год підхоплює оновлені certbot-renewer'ом
     command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -c /etc/nginx/geoai/nginx.conf -s reload; done & exec nginx -c /etc/nginx/geoai/nginx.conf -g 'daemon off;'"]
     restart: unless-stopped
+    mem_limit: 256m        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
+    memswap_limit: 384m
     networks: [web, python_course]
     logging: *logging
 
