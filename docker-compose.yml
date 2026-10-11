@@ -62,6 +62,7 @@ services:
     environment:
       POSTGRES_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgis:5432/${POSTGRES_DB}
       TERRACOTTA_URL: ${TERRACOTTA_URL}
+      COG_DATA_DIR: /app/data/cogs          # same mount as terracotta; /api/raster/sample reads it
       DEFAULT_DEMS: ${DEFAULT_DEMS}
       SLOPE_LAYER: ${SLOPE_LAYER}
       HAND_LAYER: ${HAND_LAYER}

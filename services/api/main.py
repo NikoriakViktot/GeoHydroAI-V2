@@ -12,6 +12,7 @@ from di import get_sync_session
 from routers.icesat import router as icesat_router
 from routers.compare import router as compare_router
 from routers.dem import router as dem_router
+from routers.raster import router as raster_router
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO))
@@ -41,6 +42,7 @@ app.add_middleware(
 app.include_router(icesat_router)
 app.include_router(compare_router)
 app.include_router(dem_router)
+app.include_router(raster_router)
 
 # Health перевірки під /api/...
 @app.get("/healthz", status_code=status.HTTP_200_OK)
