@@ -20,6 +20,10 @@ jobs:
           ls -la docker-compose.yml
           # деплой
           docker compose -f docker-compose.yml pull || true
-          docker compose -f docker-compose.yml up -d 
+          docker compose -f docker-compose.yml up -d
+          # compose does not recreate nginx when only nginx.conf changed: check it, then reload.
+          # A broken config fails the deploy here and nginx keeps running the previous one.
+          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
+          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
           docker image prune -f || true
 
