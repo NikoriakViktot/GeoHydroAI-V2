@@ -25,5 +25,8 @@ jobs:
           # A broken config fails the deploy here and nginx keeps running the previous one.
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
+          # raster data versions for the tile URLs (cheap: stats the COG files, no reads)
+          docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
+          sudo install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
           docker image prune -f || true
 
