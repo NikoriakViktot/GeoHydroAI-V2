@@ -127,14 +127,16 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # the whole directory, not the single file: a single-file bind mount pins the inode, so after
+      # `git reset --hard` replaced nginx.conf the container kept serving the old copy
+      - ./services/nginx:/etc/nginx/geoai:ro
       - ./certbot/www:/var/www/certbot:ro
       - certs:/etc/letsencrypt:ro
       - /var/www/geoai-front:/var/www/geoai-front:ro
       - /var/www/geoai-reports:/var/www/geoai-reports:ro
 
     # nginx не перечитує сертифікати сам: reload кожні 6 год підхоплює оновлені certbot-renewer'ом
-    command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -s reload; done & exec nginx -g 'daemon off;'"]
+    command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -c /etc/nginx/geoai/nginx.conf -s reload; done & exec nginx -c /etc/nginx/geoai/nginx.conf -g 'daemon off;'"]
     restart: unless-stopped
     networks: [web, python_course]
     logging: *logging
