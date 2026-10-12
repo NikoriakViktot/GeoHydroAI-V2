@@ -68,15 +68,52 @@ if not DRIVER_PATH.exists():
     os.makedirs(DRIVER_PATH.parent, exist_ok=True)
     driver.create(keys=["category", "name"])
 
+# Terracotta 0.8 computes a dataset's statistics by reading the whole raster into memory (crick is not installed).
+# The national 30 m COGs are ~4.5 GB decompressed and killed the container (768 MB) in a restart loop on 2026-10-12.
+# Large files therefore get their metadata from an overview (max_shape), which is what tile colouring needs.
+# Files whose size and mtime did not change since the last start are not re-inserted (fast restarts); the state is
+# kept next to the sqlite database.
+# by pixel count, not file size: a compressed Byte COG of 49 MB can hold 4.5 billion pixels
+LARGE_PIXELS = int(os.getenv("TC_LARGE_PIXELS", str(50_000_000)))
+MAX_SHAPE = (4096, 4096)
+STATE = DRIVER_PATH.parent / "indexed.json"
+try:
+    state = json.loads(STATE.read_text())
+except (OSError, ValueError):
+    state = {}
+reindex = os.getenv("TC_REINDEX") == "1"
+known = set(driver.get_datasets().keys()) if not reindex else set()
+new_state = {}
+
 # --- Додати дані в Terracotta + зібрати index
 with driver.connect():
     for record in find_files(GEOTIFF_DIR):
         try:
-            driver.insert({"category": record["category"], "name": record["name"]}, record["path"])
-            print(f"✅ inserted: {record['category']}/{record['name']}")
+            st = os.stat(record["path"])
+            sig = f"{st.st_size}:{st.st_mtime_ns}"
+            key = (record["category"], record["name"])
+            new_state[record["path"]] = sig
             index_list.append(record)
+            if not reindex and state.get(record["path"]) == sig and key in known:
+                continue
+            metadata = None
+            import rasterio
+            with rasterio.open(record["path"]) as src:
+                large = src.width * src.height > LARGE_PIXELS
+            if large:
+                from terracotta import raster
+                metadata = raster.compute_metadata(record["path"], max_shape=MAX_SHAPE)
+            driver.insert({"category": record["category"], "name": record["name"]}, record["path"], metadata=metadata)
+            print(f"✅ inserted: {record['category']}/{record['name']}" + (" (metadata from an overview)" if metadata else ""), flush=True)
         except Exception as e:
-            print(f"❌ failed: {record['name']} — {e}")
+            print(f"❌ failed: {record['name']} — {e}", flush=True)
+
+try:
+    tmp = STATE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(new_state))
+    os.replace(tmp, STATE)
+except OSError as e:
+    print(f"⚠️ index state not saved: {e}")
 
 # --- Зберегти metadata.json для Dash
 with open("metadata.json", "w") as f:
