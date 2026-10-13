@@ -1,29 +1,80 @@
+# GeoHydroAI-V2 infra (nginx, Terracotta, PostGIS, certbot) -> the EC2 server, compose project `geoai` in /home/ubuntu/geoai.
+#
+# 1. build  — GitHub-hosted runner: the Terracotta image (services/tc_app) -> ghcr.io/<owner>/geoai-terracotta:<sha> (+ :latest).
+#             Nothing is built on the production host any more (server audit 2026-10-13).
+# 2. deploy — self-hosted runner ON THE SERVER: resets /home/ubuntu/geoai to origin/main, pulls the image, tags it
+#             geoai-terracotta:latest for the compose file, `compose up -d --no-build`, checks + reloads nginx,
+#             regenerates raster-versions.json.
 name: Deploy (self-hosted)
 
 on:
   push:
     branches: [ "main" ]
+    paths-ignore: ["docs/**", "**.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-geoai
+  cancel-in-progress: false
+
+env:
+  IMAGE: geoai-terracotta
+  REGISTRY: ghcr.io
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, Linux, X64]
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: echo "image=$REGISTRY/${GITHUB_REPOSITORY_OWNER,,}/$IMAGE" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: services/tc_app
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+            ${{ steps.meta.outputs.image }}:latest
+          labels: org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
 
+  deploy:
+    needs: build
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Deploy from /home/ubuntu/geoai
         run: |
-          set -e
+          set -euo pipefail
           cd /home/ubuntu/geoai
-          # оновити код з GitHub
           git fetch --all
           git reset --hard origin/main
-          # перевірка що compose-файл є тут
           ls -la docker-compose.yml
-          # деплой
-          docker compose -f docker-compose.yml pull || true
-          # rebuild only the Terracotta image (its indexer is code in this repo). `up -d --build` rebuilt every image and
-          # the postgis Dockerfile no longer builds (apt.postgresql.org dropped bullseye), which failed the deploy.
-          docker compose -f docker-compose.yml build terracotta
-          docker compose -f docker-compose.yml up -d --remove-orphans
+          REMOTE="${{ needs.build.outputs.image }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
+          docker pull "$REMOTE:$GITHUB_SHA"
+          docker logout "$REGISTRY" || true
+          docker image inspect "$IMAGE:latest" >/dev/null 2>&1 && docker image tag "$IMAGE:latest" "$IMAGE:previous" || true
+          docker image tag "$REMOTE:$GITHUB_SHA" "$IMAGE:latest"
+          docker image rm "$REMOTE:$GITHUB_SHA" >/dev/null 2>&1 || true
+          docker compose -f docker-compose.yml pull --ignore-buildable || true
+          docker compose -f docker-compose.yml up -d --no-build --remove-orphans
           # compose does not recreate nginx when only nginx.conf changed: check it, then reload.
           # A broken config fails the deploy here and nginx keeps running the previous one.
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
@@ -32,4 +83,3 @@ jobs:
           docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
           sudo install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
           docker image prune -f || true
-
