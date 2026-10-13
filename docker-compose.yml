@@ -8,8 +8,13 @@ x-logging: &logging
     max-file: "3"
 
 services:
+  # The ONE PostgreSQL/PostGIS instance of the host (server audit 2026-10-13): databases `geohydro` (hydro layers for
+  # Martin + geoai-api v1), `platform` (geoai-django) and `course_db` (Python_Curse). The custom image
+  # (./services/postgis: pgvector, ogr_fdw, parquet_fdw) no longer builds and none of those extensions was used,
+  # so the official image is enough; the data directory is the same PG 16 / PostGIS 3.5 and needs no migration.
   postgis:
-    build: ./services/postgis
+    image: postgis/postgis:16-3.5
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "work_mem=8MB", "-c", "max_connections=120"]
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -24,15 +29,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 15
-    networks: [web]
+    # python_course: the Python_Curse containers reach this instance as `geoai-postgis-1` on their own network
+    networks: [web, python_course]
     logging: *logging
     restart: unless-stopped
     oom_score_adj: -500     # the kernel kills a worker before the database (server audit 2026-10-13)
-    mem_limit: 1g           # RSS 66 MB + shared_buffers 128 MB in practice; was 1536m (server audit 2026-10-13)
-    memswap_limit: 1g
-
-
-
+    mem_limit: 1536m        # three databases: shared_buffers 256 MB + per-connection work_mem
+    memswap_limit: 1536m
 
   terracotta:
     build: ./services/tc_app
