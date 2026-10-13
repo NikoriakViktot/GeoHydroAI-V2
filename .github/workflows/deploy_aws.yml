@@ -23,7 +23,7 @@ jobs:
           # rebuild only the Terracotta image (its indexer is code in this repo). `up -d --build` rebuilt every image and
           # the postgis Dockerfile no longer builds (apt.postgresql.org dropped bullseye), which failed the deploy.
           docker compose -f docker-compose.yml build terracotta
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml up -d --remove-orphans
           # compose does not recreate nginx when only nginx.conf changed: check it, then reload.
           # A broken config fails the deploy here and nginx keeps running the previous one.
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
