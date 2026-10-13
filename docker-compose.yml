@@ -38,6 +38,7 @@ services:
     memswap_limit: 1536m
 
   terracotta:
+    image: geoai-terracotta:latest   # built on GitHub and pulled from GHCR by deploy_aws.yml; `build` is for local use
     build: ./services/tc_app
     environment:
       COG_DATA_DIR: /app/data/cogs
