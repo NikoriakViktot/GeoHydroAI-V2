@@ -62,7 +62,10 @@ services:
     mem_limit: 768m        # host has 7.8 GB RAM; architecture review 2026-10-11, finding 8
     memswap_limit: 1g
 
+  # geoai-api v1 (FastAPI: DEM-vs-ICESat-2 tooling, /api/raster/sample): retired 2026-10-13, the raster probe lives in
+  # hydro-api now (/v1/hydro/raster/sample). Not started by `docker compose up`; `--profile legacy up -d api` brings it back.
   api:
+    profiles: [legacy]
     build:
          context: ./services/api
     env_file:
@@ -138,7 +141,7 @@ services:
     image: nginx:stable
     container_name: geoai-nginx
     # без цього nginx може стартувати раніше за upstream'и і впасти з "host not found"
-    depends_on: [api, terracotta]
+    depends_on: [terracotta]
     ports:
       - "80:80"
       - "443:443"
