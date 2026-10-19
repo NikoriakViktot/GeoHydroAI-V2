@@ -1,0 +1,10 @@
+[Unit]
+Description=SYNOP collection 40 min after every main synoptic term (00, 03 … 21 UTC)
+
+[Timer]
+OnCalendar=*-*-* 00/3:40:00 UTC
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
