@@ -20,6 +20,7 @@ service. It also fronts a second domain (python-course) for an unrelated project
 | `= /raster-versions.json` | static | no-cache |
 | `^~ /api/v1/internal/` | **403** | defence in depth for Django callbacks |
 | `^~ /api/v1/`, `= /api/schema`, `= /api/docs` | `platform-api:8000` | body 50 MB (yearbook uploads), read 120 s |
+| `^~ /api/v1/labs/` | `platform-api:8000` | body 50 MB, **buffered** by nginx (book uploads from slow uplinks must not hold a gunicorn worker past its 60 s timeout) |
 | `^~ /api/` | `api:8000` (geoai-api v1: `/raster/sample`, `/healthz`, legacy compare/icesat) | server defaults (2 GB body, 3600 s) |
 | `^~ /v1/hydro/admin/` | **403** | |
 | `^~ /v1/hydro`, `~ ^/llms(-full)?\.txt$` | `hydro-api:8000` | body 2 MB, read 120 s |
