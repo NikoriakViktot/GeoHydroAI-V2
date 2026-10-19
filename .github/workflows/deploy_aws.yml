@@ -78,6 +78,8 @@ jobs:
           # compose does not recreate nginx when only nginx.conf changed: check it, then reload.
           # A broken config fails the deploy here and nginx keeps running the previous one.
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
+          # a recreated nginx (new volume / image) may not have written its PID yet: wait for it, then reload
+          for i in $(seq 1 30); do docker exec geoai-nginx sh -c 'test -s /run/nginx.pid' && break; sleep 1; done
           docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
           # raster data versions for the tile URLs (cheap: stats the COG files, no reads)
           docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
