@@ -222,10 +222,24 @@ with tab_era5:
         hourly = df.set_index("time").groupby([pd.Grouper(freq="1h"), "stage"]).size().unstack(fill_value=0)
         st.bar_chart(hourly, height=220)
         st.dataframe(df.sort_values("time", ascending=False).head(50), hide_index=True, use_container_width=True)
-        errs = [l for l in text.splitlines()[-3000:] if ERR.search(l) and "RuntimeWarning" not in l]
-        if errs:
-            with st.expander(f"Помилки й попередження ({len(errs)})"):
-                st.code("\n".join(errs[-100:]), language="log")
+        # errors of the running process apart from the history: old OOM kills looked like a live problem (2026-10-19)
+        lines = [l for l in text.splitlines() if ERR.search(l) and "RuntimeWarning" not in l]
+        start = pd.Timestamp(p["since"].replace(" UTC", ""), tz="UTC") if p.get("since") else None
+        def at(l):
+            try:
+                return pd.Timestamp(l.split()[0]).tz_convert("UTC")
+            except Exception:  # noqa: BLE001
+                return None
+        now_errs = [l for l in lines if start is not None and (t := at(l)) is not None and t >= start]
+        old_errs = [l for l in lines if l not in now_errs]
+        if now_errs:
+            st.error(f"Помилки поточного запуску (з {p['since']}): {len(now_errs)}")
+            st.code("\n".join(now_errs[-100:]), language="log")
+        else:
+            st.success(f"Поточний запуск (з {p['since']}) без помилок.")
+        if old_errs:
+            with st.expander(f"Історія: помилки попередніх запусків ({len(old_errs)}) — вже не актуальні"):
+                st.code("\n".join(old_errs[-100:]), language="log")
     era5()
 
 # ---------------------------------------------------------------- control
