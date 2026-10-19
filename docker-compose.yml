@@ -152,6 +152,8 @@ services:
       - ./services/nginx:/etc/nginx/geoai:ro
       # secrets kept outside git, pulled in by `include` (catalog X-API-Key); see services/nginx/nginx.conf
       - /home/ubuntu/geoai-catalog/nginx:/etc/nginx/secrets/catalog:ro
+      # basic-auth users of /ops/ (services/ops/README.md), outside git
+      - /home/ubuntu/geoai-ops/nginx:/etc/nginx/secrets/ops:ro
       - ./certbot/www:/var/www/certbot:ro
       - certs:/etc/letsencrypt:ro
       - /var/www/geoai-front:/var/www/geoai-front:ro
@@ -166,6 +168,32 @@ services:
     networks: [web, python_course]
     logging: *logging
 
+
+  # Ops dashboard at /ops/ (Streamlit, behind basic auth): containers, systemd workers, logs, ERA5-Land progress,
+  # start / stop / restart of the allowed workers. The image is built on the workstation and loaded on the host
+  # (services/ops/README.md). It controls the host (Docker socket, systemd): never expose it without the password.
+  ops:
+    image: geoai-ops:latest
+    container_name: geoai-ops
+    security_opt: ["apparmor=unconfined"]            # docker-default AppArmor denies the system D-Bus
+    environment:
+      OPS_UNITS: era5land-worker.service
+      OPS_CONTROL_UNITS: era5land-worker.service
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log/journal:/host/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket   # unit state / start / stop over the system D-Bus
+      - /proc/meminfo:/host/proc/meminfo:ro
+      - /proc/loadavg:/host/proc/loadavg:ro
+      - /home/ubuntu/geoai-ops/data:/data          # actions.log; on the root disk, so the page reports its free space
+    expose:
+      - "8501"
+    networks: [web]
+    logging: *logging
+    restart: unless-stopped
+    mem_limit: 384m
+    memswap_limit: 512m
 
   # одноразовий запуск для випуску серта (ручний запуск командою нижче)
   certbot:
