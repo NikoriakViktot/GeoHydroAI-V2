@@ -19,7 +19,7 @@ service. It also fronts a second domain (python-course) for an unrelated project
 | `/` (+ `/index.html`, `/assets/`) | static `/var/www/geoai-front/current` (SPA v2; `/app/` = legacy v2 path) | assets immutable 7 d / 1 y |
 | `= /raster-versions.json` | static | no-cache |
 | `^~ /api/v1/internal/` | **403** | defence in depth for Django callbacks |
-| `^~ /api/v1/`, `= /api/schema`, `= /api/docs` | `platform-api:8000` | body 50 MB (yearbook uploads), read 120 s |
+| `^~ /api/v1/`, `= /api/schema`, `= /api/docs` | `platform-api:8000` | body 50 MB (yearbook uploads), read 120 s; nginx's own 502/504 → `@api_busy` (503 JSON `{detail, code: "server_busy"}`, `Retry-After: 30`) |
 | `^~ /api/v1/labs/` | `platform-api:8000` | body 50 MB, **buffered** by nginx (book uploads from slow uplinks must not hold a gunicorn worker past its 60 s timeout) |
 | `^~ /api/` | `api:8000` (geoai-api v1: `/raster/sample`, `/healthz`, legacy compare/icesat) | server defaults (2 GB body, 3600 s) |
 | `^~ /v1/hydro/admin/` | **403** | |
@@ -53,6 +53,9 @@ flowchart LR
 - Every service port is `expose`d or bound to `127.0.0.1`; only nginx publishes 80/443.
 - `/api/v1/internal/` and `/v1/hydro/admin/` are never reachable from the Internet.
 - Tile caches key on the full URI incl. `?v=`; a new `raster-versions.json` is the cache-bust.
+- `/api/v1/` never shows an nginx HTML error page: when platform-api is down or too slow (a model run, a data load
+  on the 2-vCPU host) the SPA gets `503 {code: "server_busy"}` and shows a «server busy» banner. Django's own
+  responses are never rewritten (no `proxy_intercept_errors`).
 - `nginx -t` runs before every reload in `deploy_aws.yml`; a bad config keeps the old one live.
 - Secrets (catalog key) enter only through the mounted `secrets/catalog` directory, never the
   config in git.
