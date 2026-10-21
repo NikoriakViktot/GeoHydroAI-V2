@@ -97,6 +97,9 @@ jobs:
     needs: build
     runs-on: [hetzner]
     timeout-minutes: 30
+    env:
+      # the site Hetzner serves: staging.geohydroai.org until the DNS switch, then geohydroai.org (repo variable)
+      NGINX_HOST: ${{ vars.HETZNER_NGINX_HOST || 'staging.geohydroai.org' }}
     permissions:
       contents: read
       packages: read
@@ -107,7 +110,7 @@ jobs:
           set -euo pipefail
           git archive --format=tar HEAD | tar xf - -C /home/ubuntu/geoai
           cd /home/ubuntu/geoai
-          python3 scripts/ops/host_nginx.py --host staging.geohydroai.org --root .
+          python3 scripts/ops/host_nginx.py --host "$NGINX_HOST" --root .
           REMOTE="${{ needs.build.outputs.image }}"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
           docker pull "$REMOTE:$GITHUB_SHA"
@@ -121,5 +124,5 @@ jobs:
           systemctl is-active --quiet nginx || { echo "::error::host nginx is not running (journalctl -u geohydroai-nginx-reload)"; exit 1; }
           docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
           install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
-          curl -fsS --retry 5 --retry-delay 4 --retry-all-errors -o /dev/null https://staging.geohydroai.org/
+          curl -fsS --retry 5 --retry-delay 4 --retry-all-errors -o /dev/null "https://$NGINX_HOST/"
           docker image prune -f || true
