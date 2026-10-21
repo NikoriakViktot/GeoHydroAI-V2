@@ -26,7 +26,8 @@ UPSTREAMS = {
 }
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--host", required=True, help="server_name and certificate name, e.g. staging.geohydroai.org")
+ap.add_argument("--host", required=True, help="geohydroai.org = the production names and certificate as in the docker config; "
+                                              "any other name (staging.geohydroai.org) = that name and its own certificate")
 ap.add_argument("--root", default=".")
 a = ap.parse_args()
 root = pathlib.Path(a.root)
@@ -40,8 +41,10 @@ conf = (src / "nginx.conf").read_text()
 marker = "##################################################\n# PYTHON COURSE HTTP"
 if marker in conf:
     conf = conf[: conf.index(marker)].rstrip() + "\n}\n"
-conf = conf.replace("server_name geohydroai.org www.geohydroai.org;", f"server_name {a.host};")
-conf = conf.replace("/etc/letsencrypt/live/www.geohydroai.org/", f"/etc/letsencrypt/live/{a.host}/")
+PRODUCTION = a.host in ("geohydroai.org", "www.geohydroai.org")
+if not PRODUCTION:   # a staging host: its own name and certificate
+    conf = conf.replace("server_name geohydroai.org www.geohydroai.org;", f"server_name {a.host};")
+    conf = conf.replace("/etc/letsencrypt/live/www.geohydroai.org/", f"/etc/letsencrypt/live/{a.host}/")
 for k, v in UPSTREAMS.items():
     conf = conf.replace(k, v)
 conf = re.sub(r"\n\s*resolver 127\.0\.0\.11[^;]*;", "\n", conf)          # Docker's DNS: not on the host
@@ -50,7 +53,9 @@ conf = "user www-data;\npid /run/nginx.pid;\n\n" + conf
 
 code = "\n".join(line.split("#", 1)[0] for line in conf.splitlines())   # comments may name the containers
 left = [h for h in ("platform-api:", "hydro-api:", "hydro-tiles:", "catalog-api:", "geoai-ops:", "terracotta:",
-                    "127.0.0.11", "python-course", "server_name geohydroai.org") if h in code]
+                    "127.0.0.11", "python-course") if h in code]
+if not PRODUCTION and "server_name geohydroai.org" in code:
+    left.append("server_name geohydroai.org")
 if left:
     raise SystemExit(f"host_nginx: docker names left in the config ({left}); update UPSTREAMS")
 (dst / "nginx.conf").write_text(conf)
