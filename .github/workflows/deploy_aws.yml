@@ -1,10 +1,11 @@
 # GeoHydroAI-V2 infra (nginx, Terracotta, PostGIS, certbot) -> the EC2 server, compose project `geoai` in /home/ubuntu/geoai.
 #
-# 1. build  — GitHub-hosted runner: the Terracotta image (services/tc_app) -> ghcr.io/<owner>/geoai-terracotta:<sha> (+ :latest).
+# 1. build  — self-hosted runner on Hetzner (label `hetzner`): the Terracotta image (services/tc_app) -> ghcr.io/<owner>/geoai-terracotta:<sha> (+ :latest).
 #             Nothing is built on the production host any more (server audit 2026-10-13).
 # 2. deploy — self-hosted runner ON THE SERVER: resets /home/ubuntu/geoai to origin/main, pulls the image, tags it
 #             geoai-terracotta:latest for the compose file, `compose up -d --no-build`, checks + reloads nginx,
 #             regenerates raster-versions.json.
+# 3. deploy-staging — the same on Hetzner staging (staging.geohydroai.org) until the DNS switch.
 name: Deploy (self-hosted)
 
 on:
@@ -22,8 +23,9 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  # self-hosted on Hetzner (8 vCPU) since 2026-10-21: GitHub-hosted minutes cost money on this private repo
   build:
-    runs-on: ubuntu-latest
+    runs-on: [hetzner]
     timeout-minutes: 30
     permissions:
       contents: read
@@ -84,4 +86,40 @@ jobs:
           # raster data versions for the tile URLs (cheap: stats the COG files, no reads)
           docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
           sudo install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
+          docker image prune -f || true
+
+  # Hetzner staging (staging.geohydroai.org) during the move (2026-10-21). /home/ubuntu/geoai there is not a git clone:
+  # the tracked files of this commit are synced over it (untracked .env, data/, certbot/ stay), nginx gets the staging
+  # host name (scripts/ops/staging_nginx.py) and compose runs with docker-compose.staging.yml. Only the core services
+  # start: no ops dashboard there. The runner (label `hetzner`) has no sudo; it owns /home/ubuntu/geoai and /var/www.
+  deploy-staging:
+    needs: build
+    runs-on: [hetzner]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to /home/ubuntu/geoai (staging)
+        run: |
+          set -euo pipefail
+          git archive --format=tar HEAD | tar xf - -C /home/ubuntu/geoai
+          cd /home/ubuntu/geoai
+          python3 scripts/ops/staging_nginx.py --root .
+          REMOTE="${{ needs.build.outputs.image }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
+          docker pull "$REMOTE:$GITHUB_SHA"
+          docker logout "$REGISTRY" || true
+          docker image inspect "$IMAGE:latest" >/dev/null 2>&1 && docker image tag "$IMAGE:latest" "$IMAGE:previous" || true
+          docker image tag "$REMOTE:$GITHUB_SHA" "$IMAGE:latest"
+          docker image rm "$REMOTE:$GITHUB_SHA" >/dev/null 2>&1 || true
+          C="docker compose -f docker-compose.yml -f docker-compose.staging.yml"
+          $C up -d --no-build postgis terracotta nginx certbot-renewer
+          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
+          for i in $(seq 1 30); do docker exec geoai-nginx sh -c 'test -s /run/nginx.pid' && break; sleep 1; done
+          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
+          docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
+          install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
+          curl -fsS --retry 5 --retry-delay 4 --retry-all-errors -o /dev/null https://staging.geohydroai.org/
           docker image prune -f || true
