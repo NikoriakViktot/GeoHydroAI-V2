@@ -1,0 +1,19 @@
+# Hetzner staging (2026-10-21): the dump is restored into an empty cluster, so no init scripts; more memory than on AWS.
+services:
+  postgis:
+    command: ["postgres", "-c", "shared_buffers=1GB", "-c", "effective_cache_size=6GB", "-c", "work_mem=16MB", "-c", "maintenance_work_mem=512MB", "-c", "max_connections=120"]
+    volumes: !override
+      - pgdata:/var/lib/postgresql/data
+    networks: !override [web]
+    mem_limit: 4g
+    memswap_limit: 4g
+  nginx:
+    volumes: !override
+      - ./services/nginx-staging:/etc/nginx/geoai:ro
+      - /home/ubuntu/geoai-catalog/nginx:/etc/nginx/secrets/catalog:ro
+      - /home/ubuntu/geoai-ops/nginx:/etc/nginx/secrets/ops:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - certs:/etc/letsencrypt:ro
+      - /var/www/geoai-front:/var/www/geoai-front:ro
+      - /var/www/geoai-reports:/var/www/geoai-reports:ro
+    networks: !override [web]
