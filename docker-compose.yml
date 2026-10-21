@@ -52,6 +52,8 @@ services:
       - tc_tmp:/tmp
     expose:
       - "5000"
+    ports:
+      - "127.0.0.1:8050:5000"   # host nginx (Hetzner, scripts/ops/host_nginx.py); geoai-nginx uses terracotta:5000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 10s
@@ -189,6 +191,8 @@ services:
       - /home/ubuntu/geoai-ops/data:/data          # actions.log; on the root disk, so the page reports its free space
     expose:
       - "8501"
+    ports:
+      - "127.0.0.1:8501:8501"   # host nginx (Hetzner); loopback only, the page stays behind basic auth
     networks: [web]
     logging: *logging
     restart: unless-stopped
