@@ -48,3 +48,4 @@ backup_rescue.bundle
 
 
 services/nginx-staging/
+services/nginx-host/

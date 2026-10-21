@@ -89,9 +89,10 @@ jobs:
           docker image prune -f || true
 
   # Hetzner staging (staging.geohydroai.org) during the move (2026-10-21). /home/ubuntu/geoai there is not a git clone:
-  # the tracked files of this commit are synced over it (untracked .env, data/, certbot/ stay), nginx gets the staging
-  # host name (scripts/ops/staging_nginx.py) and compose runs with docker-compose.staging.yml. Only the core services
-  # start: no ops dashboard there. The runner (label `hetzner`) has no sudo; it owns /home/ubuntu/geoai and /var/www.
+  # the tracked files of this commit are synced over it (untracked .env, data/, certbot/ stay). nginx runs ON THE HOST
+  # there (owner, 2026-10-21): scripts/ops/host_nginx.py writes services/nginx-host/nginx.conf, which
+  # /etc/nginx/nginx.conf includes; a systemd path unit (geohydroai-nginx-reload.path) tests and reloads nginx when it
+  # changes, so the runner (label `hetzner`, no sudo) never needs root. Only postgis and terracotta run from this project.
   deploy-staging:
     needs: build
     runs-on: [hetzner]
@@ -106,7 +107,7 @@ jobs:
           set -euo pipefail
           git archive --format=tar HEAD | tar xf - -C /home/ubuntu/geoai
           cd /home/ubuntu/geoai
-          python3 scripts/ops/staging_nginx.py --root .
+          python3 scripts/ops/host_nginx.py --host staging.geohydroai.org --root .
           REMOTE="${{ needs.build.outputs.image }}"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
           docker pull "$REMOTE:$GITHUB_SHA"
@@ -115,10 +116,9 @@ jobs:
           docker image tag "$REMOTE:$GITHUB_SHA" "$IMAGE:latest"
           docker image rm "$REMOTE:$GITHUB_SHA" >/dev/null 2>&1 || true
           C="docker compose -f docker-compose.yml -f docker-compose.staging.yml"
-          $C up -d --no-build postgis terracotta nginx certbot-renewer
-          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
-          for i in $(seq 1 30); do docker exec geoai-nginx sh -c 'test -s /run/nginx.pid' && break; sleep 1; done
-          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
+          $C up -d --no-build postgis terracotta
+          sleep 5   # the path unit reloads the host nginx when nginx-host/nginx.conf changed
+          systemctl is-active --quiet nginx || { echo "::error::host nginx is not running (journalctl -u geohydroai-nginx-reload)"; exit 1; }
           docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
           install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
           curl -fsS --retry 5 --retry-delay 4 --retry-all-errors -o /dev/null https://staging.geohydroai.org/
