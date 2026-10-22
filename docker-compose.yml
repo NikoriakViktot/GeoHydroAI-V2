@@ -160,6 +160,8 @@ services:
       - certs:/etc/letsencrypt:ro
       - /var/www/geoai-front:/var/www/geoai-front:ro
       - /var/www/geoai-reports:/var/www/geoai-reports:ro
+      # NWP weather grids for /wx/ (geohydroai-storms workers/nwp_grids); the host nginx reads the same dir in place
+      - ./data/wx:/var/www/geoai-data/wx:ro
 
     # nginx не перечитує сертифікати сам: reload кожні 6 год підхоплює оновлені certbot-renewer'ом
     command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -c /etc/nginx/geoai/nginx.conf -s reload; done & exec nginx -c /etc/nginx/geoai/nginx.conf -g 'daemon off;'"]

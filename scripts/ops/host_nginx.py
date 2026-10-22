@@ -9,6 +9,7 @@ this file changes (no sudo for the deploy runner).
 A host nginx cannot resolve container names, so every upstream becomes a loopback port that the compose files publish:
 platform-api 8001, hydro-api 8010, hydro-tiles 8030, terracotta 8050, catalog-api 8095, geoai-ops 8501.
 Secrets stay where the host keeps them (/etc/nginx/secrets/{catalog,ops}, root-managed, never in git).
+Static weather grids (/wx/) are read from <root>/data/wx in place.
 The python-course server blocks are dropped (Python_curse stays on AWS).
 """
 import argparse
@@ -49,6 +50,9 @@ for k, v in UPSTREAMS.items():
     conf = conf.replace(k, v)
 conf = re.sub(r"\n\s*resolver 127\.0\.0\.11[^;]*;", "\n", conf)          # Docker's DNS: not on the host
 conf = conf.replace("/etc/nginx/geoai/", f"{dst.resolve()}/")
+# /wx/ weather grids: docker mounts <root>/data/wx at /var/www/geoai-data/wx; the host reads them in place. The worker
+# writes them world-readable; www-data also needs +x on /home/ubuntu, /home/ubuntu/geoai and its data/ to reach them.
+conf = conf.replace("root /var/www/geoai-data;", f"root {(root / 'data').resolve()};")
 conf = "user www-data;\npid /run/nginx.pid;\n\n" + conf
 
 code = "\n".join(line.split("#", 1)[0] for line in conf.splitlines())   # comments may name the containers
