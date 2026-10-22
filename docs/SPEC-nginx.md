@@ -30,6 +30,7 @@ service. It also fronts a second domain (python-course) for an unrelated project
 | `^~ /catalog/` | `catalog-api:8095` (only `v1/(cards\|facets\|release)`, `health`; GET/HEAD) | 10 r/s burst 30, body 16 k, read 30 s, `X-API-Key` injected from `/etc/nginx/secrets/catalog/*.conf` |
 | `^~ /dem/`, `/_dash-*` | `dash:8050` (legacy v1 explorer) | |
 | `/reports/` | static `/var/www/geoai-reports` | |
+| `^~ /wx/` | static weather grids, `<root>/data/wx` (docker: mounted at `/var/www/geoai-data/wx`), written by `workers/nwp_grids` in geohydroai-storms | GET/HEAD only; `<model>/latest.json` max-age 60, run directories `immutable` 1 y, errors `no-store`; gzip (level 1) for `.f32` and JSON; `*.partial`, `*.tmp`, `/_…` → 404; no listings |
 | `= /__whoami` | debug 200 | remove in production |
 
 Hidden files (`/\.` except `.well-known`) → 404. Port 80: ACME challenge, else 301.
