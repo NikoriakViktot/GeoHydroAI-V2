@@ -2,10 +2,8 @@
 #
 # 1. build  — self-hosted runner on Hetzner (label `hetzner`): the Terracotta image (services/tc_app) -> ghcr.io/<owner>/geoai-terracotta:<sha> (+ :latest).
 #             Nothing is built on the production host any more (server audit 2026-10-13).
-# 2. deploy — self-hosted runner ON THE SERVER: resets /home/ubuntu/geoai to origin/main, pulls the image, tags it
-#             geoai-terracotta:latest for the compose file, `compose up -d --no-build`, checks + reloads nginx,
-#             regenerates raster-versions.json.
-# 3. deploy-staging — the same on Hetzner staging (staging.geohydroai.org) until the DNS switch.
+# 2. deploy-staging — Hetzner, the production server since the DNS switch of 2026-10-21 (the job keeps its name).
+#    The former job `deploy` to the AWS EC2 server is removed (2026-10-23): see below.
 name: Deploy (self-hosted)
 
 on:
@@ -53,40 +51,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=min
 
-  deploy:
-    needs: build
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - name: Deploy from /home/ubuntu/geoai
-        run: |
-          set -euo pipefail
-          cd /home/ubuntu/geoai
-          git fetch --all
-          git reset --hard origin/main
-          ls -la docker-compose.yml
-          REMOTE="${{ needs.build.outputs.image }}"
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
-          docker pull "$REMOTE:$GITHUB_SHA"
-          docker logout "$REGISTRY" || true
-          docker image inspect "$IMAGE:latest" >/dev/null 2>&1 && docker image tag "$IMAGE:latest" "$IMAGE:previous" || true
-          docker image tag "$REMOTE:$GITHUB_SHA" "$IMAGE:latest"
-          docker image rm "$REMOTE:$GITHUB_SHA" >/dev/null 2>&1 || true
-          docker compose -f docker-compose.yml pull --ignore-buildable || true
-          docker compose -f docker-compose.yml up -d --no-build --remove-orphans
-          # compose does not recreate nginx when only nginx.conf changed: check it, then reload.
-          # A broken config fails the deploy here and nginx keeps running the previous one.
-          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -t
-          # a recreated nginx (new volume / image) may not have written its PID yet: wait for it, then reload
-          for i in $(seq 1 30); do docker exec geoai-nginx sh -c 'test -s /run/nginx.pid' && break; sleep 1; done
-          docker exec geoai-nginx nginx -c /etc/nginx/geoai/nginx.conf -s reload
-          # raster data versions for the tile URLs (cheap: stats the COG files, no reads)
-          docker exec -i geoai-terracotta-1 python - < services/tc_app/scripts/raster_versions.py > /tmp/raster-versions.json
-          sudo install -m 644 /tmp/raster-versions.json /var/www/geoai-front/raster-versions.json
-          docker image prune -f || true
+  # No deploy to the AWS server any more (owner, 2026-10-23): geohydroai.org runs on Hetzner, and the AWS nginx now also
+  # serves klinmind.com and the Python course through a server-local include that `git reset --hard` there would wipe.
+  # The AWS copy of this stack is left as it is until it is decommissioned; its GeoHydroAI-V2 runner is stopped.
 
   # Hetzner staging (staging.geohydroai.org) during the move (2026-10-21). /home/ubuntu/geoai there is not a git clone:
   # the tracked files of this commit are synced over it (untracked .env, data/, certbot/ stay). nginx runs ON THE HOST
